@@ -1,0 +1,71 @@
+
+&SimuMode
+
+    SimulationOn=0
+    SimuTimeOn=0
+    SimuTimeSweep=0.2
+    SimuTimeStep=1e5
+    SimuTimeStart=-2
+
+&Detector
+
+    Sigma0=1.7818
+    Sigma1=2.30029
+    ReferencePoints=4500
+    MaxPoints=4700
+    DetectorThresh=0.01
+    DetectorAutoGain=1e-6
+
+&TrackMaper
+
+    SearchRange=10
+
+    QCutOffNumBins=100;
+    QCutOffQuantile=0.9;
+
+    TrackerIterNum=5;
+    TrackerInitIterNum=2;
+    TrackerInitType=1;
+
+    TrackerMatchThresh=1;
+    MatchThreshModule=1;
+    MatchThreshAngle=45;
+
+
+&CamaraFrontal
+
+    CameraDevice=/dev/video0
+    SimVideoFile=sim_video
+    SimVideoNFrames=500
+    ZfX=272.72805 //815
+    ZfY=272.68508 //815
+    PPx=161.49285 //320
+    PPy=118.71345 //240
+    KcR2=0                  //-0.11465
+    KcR4=0                  //0.22545
+    ImageWidth=320
+    ImageHeight=240
+    FPS=50
+    MatchThreshold=500
+
+    VideoNetEnabled=1
+    VideoNetHost=10.73.32.54
+    VideoNetPort=2708
+
+
+    VideoSave=0
+    VideoSaveFile=EncodedVideo.mjpeg
+    VideoSaveBuffersize=200000000
+
+    EncoderType=1
+    EncoderDevice=/dev/video9
+    EdgeMapDelay=0
+
+    SaveLog=1
+    LogFile=rebvo_log.m
+
+&ProcesorConfig
+    ControlLoop=5 //5 6 7 4
+    CamaraT1=6
+    CamaraT2=7
+    CamaraT3=4

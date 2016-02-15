@@ -1,0 +1,23 @@
+
+&CamaraFrontal
+
+    ZfX=525.0 //815
+    ZfY=525.0 //815
+    PPx=319.5 //320
+    PPy=239.5 //240
+
+
+&DisplayFrontal
+
+    Host=10.73.32.135
+    Port=2708
+    ImageWidth=640
+    ImageHeight=480
+    DepthShow=5
+    TraySource=1        //0=Network, 1=Radio
+    NumberOfViews=1
+    EdgeMapSaveNumber=5;
+
+
+
+
