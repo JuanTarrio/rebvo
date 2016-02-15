@@ -1,0 +1,100 @@
+
+// ******  REBVO Configuration File ********
+// "&"  beginning sentences denote sections
+
+
+&SimuMode
+
+    SimulationOn=1
+    SimuTimeOn=0
+    SimuTimeSweep=3
+    SimuTimeStep=1e5
+    SimuTimeStart=-2
+
+&Detector
+
+    Sigma0=1.7818
+    Sigma1=2.30029
+
+    ReferencePoints=15000
+    MaxPoints=25000
+
+    DetectorThresh=0.01
+    DetectorAutoGain=1e-6
+
+    DetectorMaxThresh=0.05
+    DetectorMinThresh=0.03
+
+    DetectorPlaneFitSize=2
+    DetectorPosNegThresh=0.4
+    DetectorDoGThresh=0.095259868922420
+
+&TrackMaper
+
+    SearchRange=20
+
+    QCutOffNumBins=100;
+    QCutOffQuantile=0.9;
+
+    TrackerIterNum=10;
+    TrackerInitIterNum=2;
+    TrackerInitType=2;
+
+    TrackerMatchThresh=1;
+    MatchThreshModule=1;
+    MatchThreshAngle=45;
+
+    MatchNumThresh=2                            //Minimun number
+
+    ReweigthDistance=2				//Reweigh error residual
+	
+    RegularizeThresh=0.5			//Regularization threshold on the gradient
+
+    LocationUncertaintyMatch=2			//Modelled Pixel uncertainty on the matching step
+    ReshapeQAbsolute=1e-4			//EKF Modelled absolute error on IDEpth
+    ReshapeQRelative=1e-2			//EKF Modelled relative error on IDEpth
+    LocationUncertainty=1			//Modelled Pixel uncertainty on the correction step
+    DoReScaling=1				//Apply re-scaling after EKF
+	
+    GlobalMatchThreshold=500			//Minimun number of keyline matches required for further procesing
+
+
+&CamaraFrontal
+
+    CameraDevice=/dev/video0								//V4L Camera device
+    SimVideoFile=/home/juan/Datasets/rgbd_dataset_freiburg2_desk/sim_video		//SimCam file
+    SimVideoNFrames=500									//Number of frames to save for simulation (uncompressed video)
+    ZfX=525.0										//Camera XY focal length
+    ZfY=525.0
+    PPx=320 //319.5									//Camera principal point
+    PPy=240 //239.5
+    KcR2=0                  								//Distortion parameters (Not used in REBVO)
+    KcR4=0                  								//Set to 0
+    ImageWidth=640									//Image size
+    ImageHeight=480
+    FPS=50										//Frames per second
+    
+    VideoNetHost=10.73.32.54								//Remote host to send the data
+    VideoNetPort=2708									//Remote port
+    VideoNetEnabled=1
+
+    VideoSave=0										//Optionally save video after running
+    VideoSaveFile=EncodedVideo.mjpeg							//Video file to save to
+    VideoSaveBuffersize=200000000							//Buffer size
+
+    EncoderType=1									//Video encoder type, 0=raw,1=Motion JPEG, 2=Samsung MFC
+    EncoderDevice=/dev/video9								//If using Samsung MFC encoder, encoder device
+    EdgeMapDelay=0									//Frame delay between video and edge-maps
+
+    SaveLog=1										//Save log on-off
+    LogFile=rebvo_log.m
+    TrayFile=rebvo_tray.txt
+
+&ProcesorConfig							//Processor thread affiniy
+
+    SetAfinity=1						//Switch to set afinity on off
+    ControlLoop=5 						//Main 
+    CamaraT1=6
+    CamaraT2=7
+    CamaraT3=4
+

@@ -1185,6 +1185,9 @@ bool gl_viewer::glDrawLoop(RenderParams &rp,bool ReRender){
                 case XK_b:
                     rp.pos_tray->clear();
                     break;
+
+                case XK_End:
+                    return false;
                 }
             }
 

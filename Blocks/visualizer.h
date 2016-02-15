@@ -22,58 +22,84 @@
  *******************************************************************************/
 
 
-#ifndef UDP_PORT_H
-#define UDP_PORT_H
-#include <stdlib.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <asm/types.h>
+#ifndef DISPLAYFRONTAL_H
+#define DISPLAYFRONTAL_H
 
+#include "video_io.h"
+#include "net_keypoint.h"
+#include "crash_detector.h"
+#include "rebvo.h"
+#include "configurator.h"
+#include <iostream>
+#include <vector>
 
-#pragma pack(push,1)
-struct UDPFragmentHeader{
-    __u32 tag;
-    __u32 frag_pos;
-    __u32 frag_num;
-    __u32 frag_size;
-    __u32 pack_size;
-};
-
-#pragma pack(pop)
-
-class udp_port
+class displayFrontal
 {
-    int sock;
-    sockaddr_in si_remote;
+private:
 
-    bool error;
-    int packet_tag;
 
-    char ** r_pack_buf;
-    int *r_pack_n;
-    int *r_pack_tag;
-    int pp_size;
-    int r_pack_inx;
 
-    int max_f_size;
-    unsigned char *frag_buffer;
-    int max_p_size;
+    bool carga=true;
+
+    std::string Host;
+    int Port;
+
+    Size2D ImageSize;
+
+    double pFPS;
+    double dFPS;
+
+    bool ShowSize=false;
+
+
+    bool ShowTrails=false;
+    bool ShowDepth;
+    double depth_show_max;
+
+    net_packet_hdr* net_hdr;
+
+    double ZfX;
+
+    bool nFrame=false;
+    bool KillRemote=false;
+
+
+    int TraySource;
+
+
+    std::vector < TooN::Vector<3> > pos_tray;
+
+    TooN::Matrix<3,3> Pose;
+
+    net_keyline *net_kl;
+    int net_kln=0;
+
+    bool ShowImg=true;
+    bool ShowOldness=false;
+
+
+    double time2impact;
+    double dist2impact;
+
+    double KFix=1;
+
+
+    int ViewNumber;
+    int EdgeMapSaveNumber;
+
+    int XLibView;
 
 public:
-    udp_port(const char *remote_host, int port, bool bind_port=false\
-            , int max_pak_size=65535, int pak_pipe_size=10, int max_fragment_size =65535);
-    ~udp_port();
 
-    const bool & Error(){return error;}
+    int       Run();
+    static int OnPaint(XVideoContext *xvc, void *param);
+    static int OnPaintDepth(XVideoContext *xvc, void *param);
 
-    bool SendFragmented(unsigned char *data, int data_size, int fragment_size);
-    int  RecvFragmented(unsigned char *buffer, int buf_size, double time_out=2);
 
-    bool SendPacket(unsigned char * data, int data_size);
+    displayFrontal(Configurator &config);
+
+
+    bool Init();
 };
 
-#endif // UDP_PORT_H
+#endif // DISPLAYFRONTAL_H
