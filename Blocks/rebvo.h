@@ -231,6 +231,7 @@ public:
 
     void StartSimSave(){start_record=true;}
     void TakeSnapshot(){saveImg=true;}
+    void Reset(){system_reset=true;}
 };
 
 #endif // CAMARAFRONTAL_H

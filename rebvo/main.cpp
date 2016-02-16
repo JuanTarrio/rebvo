@@ -55,6 +55,9 @@ int main(int argn,char ** argv)
         case 'p':
             cf.TakeSnapshot();
             break;
+        case 'r':
+            cf.Reset();
+            break;
         default:
             PrintHelp();
             break;
