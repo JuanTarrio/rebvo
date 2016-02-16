@@ -23,7 +23,7 @@ int main(int argn,char ** argv)
     if(!GlobalConfig.ParseConfigFile("GlobalConfig",false))
         return false;
 
-    displayFrontal df(GlobalConfig);
+    visualizer df(GlobalConfig);
 
 
 

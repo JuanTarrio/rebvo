@@ -183,9 +183,8 @@ gl_viewer::gl_viewer(int width, int height,const char *title, float fov)
 {
 
     RenderSurface=0;
-    RenderCuad=true;
-    RenderLines=1;
-    RenderCLines=1;
+    RenderCuad=2;
+    RenderLines=2;
     RenderSigma=false;
     ColorZmax=10;
     ColorZmin=0;
@@ -878,7 +877,7 @@ void gl_viewer::renderGL(RenderParams &rp)
     switch(RenderCuad){
     case 1:
         //drawQuads(rp.c_det->V,rp.em_comp[rp.current_em].GetGEst()/20,rp.c_det->time2impact,rp.draw_crash_cuad);
-        drawQuadsR(rp.ref_err,(TooN::Vector<3>)rp.nav.G/20,rp.c_det->GetMinDist(),rp.draw_crash_cuad);
+        drawQuadsR(rp.ref_err,(TooN::Vector<3>)rp.nav.G/20,rp.d_filler->GetMinDist(),rp.draw_crash_cuad);
         break;
     case 2:
         drawCamera(0,0,0,0.05);
@@ -1171,9 +1170,6 @@ bool gl_viewer::glDrawLoop(RenderParams &rp,bool ReRender){
                     break;
                 case XK_i:
                     RenderSigma=!RenderSigma;
-                    break;
-                case XK_k:
-                    RenderCLines=(RenderCLines+1)%5;
                     break;
                 case XK_v:
                     RenderTray=!RenderTray;

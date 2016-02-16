@@ -3,46 +3,39 @@
 // "&"  beginning sentences denote sections
 
 
-&SimuMode
 
-    SimulationOn=1
-    SimuTimeOn=0
-    SimuTimeSweep=3
-    SimuTimeStep=1e5
-    SimuTimeStart=-2
+&Detector                               //The detection is based on zero crossing of the DoG
 
-&Detector
-
-    Sigma0=1.7818
+    Sigma0=1.7818                       //The 2 scales used for DoG calculation
     Sigma1=2.30029
 
-    ReferencePoints=15000
-    MaxPoints=25000
+    ReferencePoints=15000               //Reference to the number of points when autothreshold
+    MaxPoints=25000                     //Absolute maximun number of points
 
-    DetectorThresh=0.01
-    DetectorAutoGain=1e-6
+    DetectorThresh=0.01                 //Manual theshold
+    DetectorAutoGain=1e-6               //Auto threshold gain, 0=manual
 
-    DetectorMaxThresh=0.05
+    DetectorMaxThresh=0.05              //Limits for autothreshold
     DetectorMinThresh=0.03
 
-    DetectorPlaneFitSize=2
-    DetectorPosNegThresh=0.4
-    DetectorDoGThresh=0.095259868922420
+    DetectorPlaneFitSize=2                  //Window size for plane fitting to the DoG = (DetectorPlaneFitSize*2+1)^2
+    DetectorPosNegThresh=0.4                //Max percentual difference for DoG nonmaximal suppresion
+    DetectorDoGThresh=0.095259868922420     //Relation between DoG threshold and Gradient threshold ~1/Sigma0^4
 
 &TrackMaper
 
-    SearchRange=20
+    SearchRange=20                              //Pixel range for tracking and mapping
 
-    QCutOffNumBins=100;
-    QCutOffQuantile=0.9;
+    QCutOffNumBins=100;                         //Number of bins on the histogram for percentile calculation
+    QCutOffQuantile=0.9;                        //Percentile of the KLs to use
 
-    TrackerIterNum=10;
-    TrackerInitIterNum=2;
-    TrackerInitType=2;
+    TrackerIterNum=10;                          //Tracker number of iterations
+    TrackerInitType=2;                          //Tracker Initialization prior (0=zero,1=last frame,2=try both)
+    TrackerInitIterNum=2;                       //Double ititialization iteration number
 
-    TrackerMatchThresh=1;
-    MatchThreshModule=1;
-    MatchThreshAngle=45;
+    TrackerMatchThresh=1;                       //Tracking thesh on the scalar product
+    MatchThreshModule=1;                        //Matching thesh on the gradient module
+    MatchThreshAngle=45;                        //Matching thesh on the gradient angle (degrees)
 
     MatchNumThresh=2                            //Minimun number
 
@@ -59,11 +52,9 @@
     GlobalMatchThreshold=500			//Minimun number of keyline matches required for further procesing
 
 
-&CamaraFrontal
+&Camera
 
     CameraDevice=/dev/video0								//V4L Camera device
-    SimVideoFile=/home/juan/Datasets/rgbd_dataset_freiburg2_desk/sim_video		//SimCam file
-    SimVideoNFrames=500									//Number of frames to save for simulation (uncompressed video)
     ZfX=525.0										//Camera XY focal length
     ZfY=525.0
     PPx=320 //319.5									//Camera principal point
@@ -74,6 +65,11 @@
     ImageHeight=480
     FPS=50										//Frames per second
     
+
+&REBVO
+
+    CameraType=1                                                                        //0=V4L, 1=SimCam
+
     VideoNetHost=10.73.32.54								//Remote host to send the data
     VideoNetPort=2708									//Remote port
     VideoNetEnabled=1
@@ -87,8 +83,20 @@
     EdgeMapDelay=0									//Frame delay between video and edge-maps
 
     SaveLog=1										//Save log on-off
-    LogFile=rebvo_log.m
-    TrayFile=rebvo_tray.txt
+    LogFile=rebvo_log.m                                                                 //Log file in .m format
+    TrayFile=rebvo_tray.txt                                                             //Trayectory in TUM dataset format [t pos quat]
+
+
+&SimuMode
+
+
+    SimVideoFile=/home/juan/Datasets/rgbd_dataset_freiburg2_desk/sim_video                                      //SimCam video file
+    SimVideoNFrames=500						//Number of frames to save for simulation (uncompressed video)
+
+    SimuTimeOn=0                                                //Simulate time or use system time
+    SimuTimeSweep=3                                             //Simulated time sweep
+    SimuTimeStep=1e5                                            //Timestep in nanosecons
+    SimuTimeStart=-2                                            //Simulated time start
 
 &ProcesorConfig							//Processor thread affiniy
 

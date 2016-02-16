@@ -27,13 +27,12 @@
 
 #include "video_io.h"
 #include "net_keypoint.h"
-#include "crash_detector.h"
 #include "rebvo.h"
 #include "configurator.h"
 #include <iostream>
 #include <vector>
 
-class displayFrontal
+class visualizer
 {
 private:
 
@@ -49,11 +48,9 @@ private:
     double pFPS;
     double dFPS;
 
-    bool ShowSize=false;
 
 
     bool ShowTrails=false;
-    bool ShowDepth;
     double depth_show_max;
 
     net_packet_hdr* net_hdr;
@@ -75,7 +72,6 @@ private:
     int net_kln=0;
 
     bool ShowImg=true;
-    bool ShowOldness=false;
 
 
     double time2impact;
@@ -96,7 +92,7 @@ public:
     static int OnPaintDepth(XVideoContext *xvc, void *param);
 
 
-    displayFrontal(Configurator &config);
+    visualizer(Configurator &config);
 
 
     bool Init();

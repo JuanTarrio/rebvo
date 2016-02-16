@@ -117,6 +117,9 @@ class REBVO
     std::atomic_bool saveImg;
     int snap_n=0;
 
+
+    std::atomic_bool system_reset;
+
     double time;
     int encoder_type;
     std::string	encoder_dev;
@@ -129,7 +132,7 @@ class REBVO
     int VideoNetEnabled;
 
     double sim_save_nframes;
-    int simulation_on;
+    int CameraType;
 
 
     //Camara parameters
@@ -163,6 +166,7 @@ class REBVO
 
 
     std::string LogFile;
+    std::string TrayFile;
     bool SaveLog;
     uint EdgeMapDelay;
 

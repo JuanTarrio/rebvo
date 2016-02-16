@@ -162,6 +162,14 @@ namespace util{
 
     }
 
+    inline TooN::Vector<4> LieRot2Quaternion(TooN::Vector<3>W){
+        TooN::Vector<4> q;
+        double angle=norm(W);
+        q.slice<0,3>()=W/angle*sin(angle/2);
+        q[3]=cos(angle/2);
+        return q;
+    }
+
 
 
 

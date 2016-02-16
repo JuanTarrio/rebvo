@@ -16,7 +16,6 @@
 
 #include "net_keypoint.h"
 #include "depth_filler.h"
-#include "crash_detector.h"
 
 struct RenderParams{
     net_keyline **net_kl;
@@ -26,7 +25,6 @@ struct RenderParams{
     Point2DF pp;
     int net_kpn;
     depth_filler *d_filler;
-    crash_detector *c_det;
     bool draw_crash_cuad;
     std::vector<TooN::Vector<3> > *pos_tray;
     TooN::Matrix<3,3> *Pose;
@@ -92,7 +90,6 @@ class gl_viewer
     int                     RenderSurface;
     int                     RenderCuad;
     int                     RenderLines;
-    int                     RenderCLines;
     bool                    RenderSigma;
     bool                    RenderTray;
     int                     FixView;

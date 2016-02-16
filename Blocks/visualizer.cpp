@@ -32,7 +32,6 @@
 
 #include "gl_viewer.h"
 #include "depth_filler.h"
-#include "crash_detector.h"
 #include "udp_port.h"
 
 #include <TooN/so3.h>
@@ -40,9 +39,9 @@
 #define MFC_MAX_STREAM_SIZE (2*1024*1024)
 
 
-int displayFrontal::OnPaint(XVideoContext *xvc, void *param){
+int visualizer::OnPaint(XVideoContext *xvc, void *param){
 
-    displayFrontal *fc=(displayFrontal *)param;
+    visualizer *fc=(visualizer *)param;
 
 
     XSetLineAttributes(xvc->display, xvc->gc, 1, LineSolid, CapRound, JoinRound);
@@ -133,9 +132,9 @@ int displayFrontal::OnPaint(XVideoContext *xvc, void *param){
 }
 
 
-int displayFrontal::OnPaintDepth(XVideoContext *xvc, void *param){
+int visualizer::OnPaintDepth(XVideoContext *xvc, void *param){
 
-    displayFrontal *fc=(displayFrontal *)param;
+    visualizer *fc=(visualizer *)param;
 
     char msg[128];
 
@@ -257,7 +256,7 @@ int displayFrontal::OnPaintDepth(XVideoContext *xvc, void *param){
 }
 
 
-int displayFrontal::Run(){
+int visualizer::Run(){
 
     if(!carga)
         return -1;
@@ -288,8 +287,6 @@ int displayFrontal::Run(){
 
     VideoDecoder decoderMPEG4(CODEC_ID_MPEG4,frameSize.w,frameSize.h);
     VideoDecoder decoderMJPEG(CODEC_ID_MJPEG,frameSize.w,frameSize.h);
-
-    //gdImage *gdi=gdImageCreateTrueColor(frameSize.w,frameSize.h);
 
     RGB24Pixel *data_depth=new RGB24Pixel[640*520];
     memset(data_depth,0,640*520*sizeof(RGB24Pixel));
@@ -372,11 +369,7 @@ int displayFrontal::Run(){
     for(int i=0;i<glv_num;i++)
         glv[i]=new gl_viewer(ImageSize.w,ImageSize.h,"GL View",atan(ImageSize.h/2/ZfX)*360/M_PI);
 
-    crash_detector crash_det(d_filler,EMSaveNum,rp.pp,rp.zf);
-    //double time2impact=1e20,dist2impact=1e20;
-    rp.c_det=&crash_det;
     rp.draw_crash_cuad=true;
-
 
 
     gettimeofday(&t_pfps1,NULL);
@@ -520,19 +513,8 @@ recv_frame_err:
                 pos_tray.clear();
                 break;
 
-            case 's':
-                ShowSize=!ShowSize;
-                break;
-
             case 'i':
                 ShowImg=!ShowImg;
-                break;
-
-            case 'd':
-                ShowDepth=!ShowDepth;
-                break;
-            case 'o':
-                ShowOldness=!ShowOldness;
                 break;
 
             case 't':
@@ -574,7 +556,7 @@ recv_frame_err:
 
 }
 
-displayFrontal::displayFrontal(Configurator &config)
+visualizer::visualizer(Configurator &config)
 {
 
 

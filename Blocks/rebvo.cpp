@@ -27,6 +27,7 @@
 #include <TooN/so3.h>
 
 #include <iostream>
+#include "ttimer.h"
 
 using namespace std;
 
@@ -82,7 +83,7 @@ void REBVO::FirstThr(REBVO *cf){
 
     VideoCam *camara;
 
-    if(cf->simulation_on==0){
+    if(cf->CameraType==0){
 
         camara=new v4lCam(cf->CameraDevice.data(),cam.sz,cf->config_fps,cf->SimFile.data());
     }else{
@@ -403,6 +404,19 @@ void  REBVO::SecondThread(REBVO *cf){
 
         old_buf.EstimationOK=EstimationOk;
 
+        if(cf->system_reset){   //Do a depth reset to the New Edgemap
+            for (auto &kl: (*new_buf.ef)) {
+                kl.rho=RhoInit;                     //Rho & srho init point
+                kl.s_rho=RHO_MAX;
+            }
+            Pose=Identity;  //Reset trayectory
+            Pos=Zeros;
+            W=Zeros;
+            V=Zeros;
+
+            cf->system_reset=false;
+        }
+
         cf->pipe.ReleaseBuffer(1);
         cf->pipe.ReleaseBuffer(2);
 
@@ -520,7 +534,7 @@ void REBVO::ThirdThread(REBVO *cf){
 
     /****** Init log file if needed ******/
 
-    ofstream a_log;
+    ofstream a_log,t_log;
     int a_log_inx=0;
 
     if(cf->SaveLog){
@@ -528,6 +542,14 @@ void REBVO::ThirdThread(REBVO *cf){
         a_log.open(cf->LogFile.data());
         if(!a_log.is_open()){
             cout <<"\nREBVO: Cannot open log file\n";
+            cf->quit=true;
+            return;
+        }
+
+
+        t_log.open(cf->TrayFile.data());
+        if(!t_log.is_open()){
+            cout <<"\nREBVO: Cannot open trayectory file\n";
             cf->quit=true;
             return;
         }
@@ -638,7 +660,7 @@ void REBVO::ThirdThread(REBVO *cf){
 
         if(cf->SaveLog){
 
-            //******* Save navigation data directly on file ******//
+            //******* Save log data directly on file ******//
 
             a_log_inx++;
 
@@ -658,6 +680,11 @@ void REBVO::ThirdThread(REBVO *cf){
             a_log<<"K_cv("<<a_log_inx<<",:)="<<pbuf.K<<";\n";
             a_log<<"KLN_cv("<<a_log_inx<<",:)="<<pbuf.ef->KNum()<<";\n";
             a_log.flush();
+
+            //******* Save trayectory ************//
+
+            t_log << pbuf.t << " " <<pbuf.Pos << " "<<util::LieRot2Quaternion(pbuf.PoseLie)<<"\n";
+            t_log.flush();
 
         }
 
@@ -709,14 +736,15 @@ void REBVO::ThirdThread(REBVO *cf){
     if(a_log.is_open())
         a_log.close();
 
+    if(t_log.is_open())
+        t_log.close();
+
     h_log.close();
 
     return;
 
 
 }
-
-
 
 
 
@@ -731,33 +759,45 @@ REBVO::REBVO(Configurator &config)
     float pp_x;
     double kc[2];
 
-    InitOK&=config.GetConfigByName("CamaraFrontal","CameraDevice",CameraDevice,true);
-    InitOK&=config.GetConfigByName("SimuMode","SimulationOn",simulation_on,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","SimVideoFile",SimFile,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","SimVideoNFrames",sim_save_nframes,true);
+    int simu_time_on,simu_time_step;
+    double simu_time_sweep,simu_time_start;
 
-    InitOK&=config.GetConfigByName("CamaraFrontal","VideoNetHost",VideoNetHost,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","VideoNetPort",VideoNetPort,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","VideoNetEnabled",VideoNetEnabled,true);
 
-    InitOK&=config.GetConfigByName("CamaraFrontal","ImageWidth",ImageSize.w,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","ImageHeight",ImageSize.h,true);
+    InitOK&=config.GetConfigByName("Camera","CameraDevice",CameraDevice,true);
+    InitOK&=config.GetConfigByName("REBVO","CameraType",CameraType,true);
 
-    InitOK&=config.GetConfigByName("CamaraFrontal","ZfX",z_f_x,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","ZfY",z_f_y,true);
 
-    InitOK&=config.GetConfigByName("CamaraFrontal","PPx",pp_x,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","PPy",pp_y,true);
+    InitOK&=config.GetConfigByName("SimuMode","SimVideoFile",SimFile,true);
+    InitOK&=config.GetConfigByName("SimuMode","SimVideoNFrames",sim_save_nframes,true);
 
-    InitOK&=config.GetConfigByName("CamaraFrontal","KcR2",kc[0],true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","KcR4",kc[1],true);
+    InitOK&=config.GetConfigByName("SimuMode","SimuTimeOn",simu_time_on,true);
+    InitOK&=config.GetConfigByName("SimuMode","SimuTimeSweep",simu_time_sweep,true);
+    InitOK&=config.GetConfigByName("SimuMode","SimuTimeStep",simu_time_step,true);
+    InitOK&=config.GetConfigByName("SimuMode","SimuTimeStart",simu_time_start,true);
 
-    InitOK&=config.GetConfigByName("CamaraFrontal","FPS",config_fps,true);
+
+    InitOK&=config.GetConfigByName("REBVO","VideoNetHost",VideoNetHost,true);
+    InitOK&=config.GetConfigByName("REBVO","VideoNetPort",VideoNetPort,true);
+    InitOK&=config.GetConfigByName("REBVO","VideoNetEnabled",VideoNetEnabled,true);
+
+    InitOK&=config.GetConfigByName("Camera","ImageWidth",ImageSize.w,true);
+    InitOK&=config.GetConfigByName("Camera","ImageHeight",ImageSize.h,true);
+
+    InitOK&=config.GetConfigByName("Camera","ZfX",z_f_x,true);
+    InitOK&=config.GetConfigByName("Camera","ZfY",z_f_y,true);
+
+    InitOK&=config.GetConfigByName("Camera","PPx",pp_x,true);
+    InitOK&=config.GetConfigByName("Camera","PPy",pp_y,true);
+
+    InitOK&=config.GetConfigByName("Camera","KcR2",kc[0],true);
+    InitOK&=config.GetConfigByName("Camera","KcR4",kc[1],true);
+
+    InitOK&=config.GetConfigByName("Camera","FPS",config_fps,true);
     InitOK&=config.GetConfigByName("ProcesorConfig","CamaraT1",cpu0,true);
     InitOK&=config.GetConfigByName("ProcesorConfig","CamaraT2",cpu1,true);
     InitOK&=config.GetConfigByName("ProcesorConfig","CamaraT3",cpu2,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","EncoderType",encoder_type,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","EncoderDevice",encoder_dev,true);
+    InitOK&=config.GetConfigByName("REBVO","EncoderType",encoder_type,true);
+    InitOK&=config.GetConfigByName("REBVO","EncoderDevice",encoder_dev,true);
 
     InitOK&=config.GetConfigByName("Detector","Sigma0",Sigma0,true);
     InitOK&=config.GetConfigByName("Detector","Sigma1",Sigma1,true);
@@ -794,16 +834,21 @@ REBVO::REBVO(Configurator &config)
 
     InitOK&=config.GetConfigByName("TrackMaper","GlobalMatchThreshold",MatchThreshold,true);
 
-    InitOK&=config.GetConfigByName("CamaraFrontal","SaveLog",SaveLog,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","LogFile",LogFile,true);
+    InitOK&=config.GetConfigByName("REBVO","SaveLog",SaveLog,true);
+    InitOK&=config.GetConfigByName("REBVO","LogFile",LogFile,true);
+    InitOK&=config.GetConfigByName("REBVO","TrayFile",TrayFile,true);
 
-    InitOK&=config.GetConfigByName("CamaraFrontal","VideoSave",VideoSave,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","VideoSaveFile",VideoSaveFile,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","VideoSaveBuffersize",VideoSaveBuffersize,true);
-    InitOK&=config.GetConfigByName("CamaraFrontal","EdgeMapDelay",EdgeMapDelay,true);
+    InitOK&=config.GetConfigByName("REBVO","VideoSave",VideoSave,true);
+    InitOK&=config.GetConfigByName("REBVO","VideoSaveFile",VideoSaveFile,true);
+    InitOK&=config.GetConfigByName("REBVO","VideoSaveBuffersize",VideoSaveBuffersize,true);
+    InitOK&=config.GetConfigByName("REBVO","EdgeMapDelay",EdgeMapDelay,true);
 
 
     cam=new cam_model({pp_x,pp_y},{z_f_x,z_f_y},kc,ImageSize);
+
+    if(CameraType==1 && simu_time_on && !GlobalTimer.TurnSimuOn(simu_time_step,simu_time_sweep,simu_time_start)){
+            InitOK=false;
+    }
 
 }
 
@@ -818,6 +863,7 @@ bool REBVO::Init(){
 
     saveImg=false;
     start_record=false;
+    system_reset=false;
     quit=false;
     Thr0=std::thread (FirstThr,this);
 

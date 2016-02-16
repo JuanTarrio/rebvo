@@ -12,17 +12,18 @@ INCLUDEPATH += /usr/local/include/lapackpp/ \
                 ../VideoLib/\
                 ../UtilLib/\
                 ../NeonLib/
+
 LIBS += -L/usr/local/lib \
     -lX11 \
     -lv4l2 \
     -lm \
-    -lfftw3 \
     -llapack \
     -lavcodec \
     -lGL\
     -lGLU\
     -lglut\
     -lgd
+
 TEMPLATE = app
 SOURCES += main.cpp \
     ../Blocks/visualizer.cpp \
@@ -39,7 +40,6 @@ SOURCES += main.cpp \
     ../mtracklib/net_keypoint.cpp\
     ../mtracklib/gl_viewer.cpp \
     ../mtracklib/depth_filler.cpp \
-    ../mtracklib/crash_detector.cpp\
     ../UtilLib/ttimer.cpp\
     ../UtilLib/configurator.cpp \
     ../CommLib/udp_port.cpp
@@ -55,7 +55,6 @@ HEADERS += ../UtilLib/configurator.h \
     ../mtracklib/edge_tracker.h \
     ../mtracklib/gl_viewer.h \
     ../mtracklib/depth_filler.h \
-    ../mtracklib/crash_detector.h\
     ../mtracklib/iimage.h \
     ../mtracklib/sspace.h \
     ../mtracklib/iigauss.h \
