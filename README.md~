@@ -16,12 +16,19 @@ In ubuntu and most linux dist this libraries can be dowloaded directly from the
  repos, exept for TooN.
 
 -- C++11
+
 -- Linux, X11, v4l2
+
 -- OpenGL development libraries (GL,GLU,glut)
+
 -- TooN mathematical library (http://www.edwardrosten.com/cvd/toon.html)
+
 -- Lapack (for advanced TooN functions)
+
 -- LibAV (Video Codecs)
+
 -- LibGD (Image managment)
+
 -- Optionally NE10 for ARM Neon optimizations
 
 ### Compiling
@@ -39,7 +46,7 @@ correspondant line has to be uncommented in the arm makefile.
 ### Configuring the system
 
 A GlobalConfig text file can be found in each of the folders. This should be tuned to
-your camera and network. All the configuration options has to be present on the files
+your camera and network configuration. All the configuration options has to be present on the files
 in order for the system to start. The structure of the file is self explanatory.
 
 #### Basic configs in rebvo GlobalConfig
@@ -47,12 +54,17 @@ in order for the system to start. The structure of the file is self explanatory.
 This things you have to configure in order for the system to work.
 
 -- CameraDevice: the v4l2 camera device
+
 -- ZfX,Y: Camera focal length
+
 -- PPx,y: Camera principal point
+
 -- ImageWidth,Height: size to use
+
 -- FPS: Frames per Seconds
 
 -- VideoNetHost,Port: IP,Port of the host to send data to
+
 -- SetAfinity: if the set to 1, the threads has to be distributed manually in 
 		existing processors, this can increase speed
 
@@ -81,11 +93,14 @@ the camera trying to maximize translation.
 REBVO component acept the following command line comands:
 
 q: Quit
+
 r: System full reset
+
 s: Saves in SimVideoFile (rebvo GlobalConfig) SimVideoNFrames frames of
    uncomressed video for further replay. It does a direct write to disk,
    so it can loose frames depending on the system. The format is described
    in videocam.h
+
 p: Takes Snapshot of the current image
 
 
@@ -96,30 +111,42 @@ the edgemap and the image in a 3D fashion.
 #### Commands in the XLib windows
 
 q: Quit
+
 b: Clear trayectory
+
 i: Togle show image
+
 t: Show frame to frame matching
+
 z,x: Increase/Decease maximun depth in top view
 
 #### Commands in the OpenGL windows
 
 w,s,a,d: Walk the view like DukeNuke3D
 arrows: Rotate the view
+
 f,r: flight
 
 1..9: Load i view
+
 Shift+1..9: Save i view
+
 Escape: Reset View
 
 m: Togle image rendering
+
 n: Togle edgemap rendering
+
 c: Togle camera rendering
 
 t,g: Increase/decrease max distance for color scale
+
 y,h: Same fory min distance 
 
 i: Render edgemap depth uncertainty
+
 v: Render Trayectory
+
 b: Clear rayectory
 
 ,: Fix the view to world coodinates
