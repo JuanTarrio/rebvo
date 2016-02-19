@@ -54,6 +54,7 @@ SOURCES       = ../rebvo/main.cpp \
 		../VideoLib/video_encoder.cpp \
 		../VideoLib/videocam.cpp \
 		../VideoLib/simcam.cpp \
+		../VideoLib/datasetcam.cpp \
 		../mtracklib/iimage.cpp \
 		../mtracklib/sspace.cpp \
 		../mtracklib/iigauss.cpp \
@@ -74,6 +75,7 @@ OBJECTS       = main.o \
 		video_encoder.o \
 		videocam.o \
 		simcam.o \
+		datasetcam.o \
 		iimage.o \
 		sspace.o \
 		iigauss.o \
@@ -345,8 +347,7 @@ main.o: ../rebvo/main.cpp ../Blocks/rebvo.h \
 		../UtilLib/pipeline.h \
 		../CommLib/udp_port.h \
 		../mtracklib/global_tracker.h \
-		../UtilLib/ne10wrapper.h \
-		../UtilLib/ttimer.h
+		../UtilLib/ne10wrapper.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../rebvo/main.cpp
 
 rebvo.o: ../Blocks/rebvo.cpp ../Blocks/rebvo.h \
@@ -376,7 +377,8 @@ rebvo.o: ../Blocks/rebvo.cpp ../Blocks/rebvo.h \
 		../UtilLib/pipeline.h \
 		../CommLib/udp_port.h \
 		../mtracklib/global_tracker.h \
-		../UtilLib/ne10wrapper.h
+		../UtilLib/ne10wrapper.h \
+		../UtilLib/ttimer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo.o ../Blocks/rebvo.cpp
 
 video_io.o: ../VideoLib/video_io.c ../VideoLib/video_io.h
@@ -423,6 +425,14 @@ simcam.o: ../VideoLib/simcam.cpp ../VideoLib/simcam.h \
 		../VideoLib/common_types.h \
 		../UtilLib/ttimer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o simcam.o ../VideoLib/simcam.cpp
+
+datasetcam.o: ../VideoLib/datasetcam.cpp ../VideoLib/simcam.h \
+		../VideoLib/videocam.h \
+		../VideoLib/video_io.h \
+		../VideoLib/image.h \
+		../VideoLib/common_types.h \
+		../UtilLib/ttimer.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o datasetcam.o ../VideoLib/datasetcam.cpp
 
 iimage.o: ../mtracklib/iimage.cpp ../mtracklib/iimage.h \
 		../UtilLib/util.h \

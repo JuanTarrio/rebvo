@@ -99,6 +99,11 @@ public:
         return *this;
     }
 
+    void copyTo (DataType *img){
+        memcpy(img,data,bsize*sizeof(DataType));
+        return;
+    }
+
     //Batch data set
 
     void Reset(DataType d){

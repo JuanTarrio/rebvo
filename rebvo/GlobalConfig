@@ -68,7 +68,7 @@
 
 &REBVO
 
-    CameraType=1                                                                        //0=V4L, 1=SimCam
+    CameraType=2                                                                        //0=V4L, 1=SimCam, 2=Dataset cam
 
     VideoNetHost=10.73.32.54								//Remote host to send the data
     VideoNetPort=2708									//Remote port
@@ -87,7 +87,12 @@
     TrayFile=rebvo_tray.txt                                                             //Trayectory in TUM dataset format [t pos quat]
 
 
-&SimuMode
+&DataSetCamera
+
+    DataSetDir=/home/juan/Datasets/rgbd_dataset_freiburg2_desk/                  //The directory of the dataset
+    DataSetFile=rgb.txt                                                          //The file of the dataset (relative to the directory)
+
+&SimuCamera
 
 
     SimVideoFile=/home/juan/Datasets/rgbd_dataset_freiburg2_desk/sim_video                                      //SimCam video file

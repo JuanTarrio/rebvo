@@ -38,6 +38,7 @@ SOURCES +=  main.cpp \
     ../VideoLib/video_encoder.cpp \
     ../VideoLib/videocam.cpp\
     ../VideoLib/simcam.cpp \
+    ../VideoLib/datasetcam.cpp \
     ../mtracklib/iimage.cpp \
     ../mtracklib/sspace.cpp \
     ../mtracklib/iigauss.cpp \
@@ -61,6 +62,7 @@ HEADERS += ../Blocks/incfiles.h \
     ../VideoLib/videocam.h\
     ../VideoLib/simcam.h \
     ../VideoLib/common_types.h \
+    ../VideoLib/datasetcam.h \
     ../mtracklib/iimage.h \
     ../mtracklib/sspace.h \
     ../mtracklib/iigauss.h \

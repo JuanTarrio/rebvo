@@ -27,7 +27,9 @@
 #include <TooN/so3.h>
 
 #include <iostream>
+#include <iomanip>
 #include "ttimer.h"
+#include "datasetcam.h"
 
 using namespace std;
 
@@ -83,11 +85,17 @@ void REBVO::FirstThr(REBVO *cf){
 
     VideoCam *camara;
 
-    if(cf->CameraType==0){
-
-        camara=new v4lCam(cf->CameraDevice.data(),cam.sz,cf->config_fps,cf->SimFile.data());
-    }else{
+    switch(cf->CameraType){
+    case 2:
+        camara=new DataSetCam(cf->DataSetDir.data(),cf->DataSetFile.data(),cam.sz,cf->SimFile.data());
+        break;
+    case 1:
         camara=new simcam(cf->SimFile.data(),cam.sz);
+        break;
+    case 0:
+    default:
+        camara=new v4lCam(cf->CameraDevice.data(),cam.sz,cf->config_fps,cf->SimFile.data());
+        break;
     }
 
     if(camara->Error()){
@@ -683,7 +691,7 @@ void REBVO::ThirdThread(REBVO *cf){
 
             //******* Save trayectory ************//
 
-            t_log << pbuf.t << " " <<pbuf.Pos << " "<<util::LieRot2Quaternion(pbuf.PoseLie)<<"\n";
+            t_log << std::scientific<<std::setprecision(16)<< pbuf.t << " " <<pbuf.Pos << " "<<util::LieRot2Quaternion(pbuf.PoseLie)<<"\n";
             t_log.flush();
 
         }
@@ -767,13 +775,17 @@ REBVO::REBVO(Configurator &config)
     InitOK&=config.GetConfigByName("REBVO","CameraType",CameraType,true);
 
 
-    InitOK&=config.GetConfigByName("SimuMode","SimVideoFile",SimFile,true);
-    InitOK&=config.GetConfigByName("SimuMode","SimVideoNFrames",sim_save_nframes,true);
+    InitOK&=config.GetConfigByName("SimuCamera","SimVideoFile",SimFile,true);
+    InitOK&=config.GetConfigByName("SimuCamera","SimVideoNFrames",sim_save_nframes,true);
 
-    InitOK&=config.GetConfigByName("SimuMode","SimuTimeOn",simu_time_on,true);
-    InitOK&=config.GetConfigByName("SimuMode","SimuTimeSweep",simu_time_sweep,true);
-    InitOK&=config.GetConfigByName("SimuMode","SimuTimeStep",simu_time_step,true);
-    InitOK&=config.GetConfigByName("SimuMode","SimuTimeStart",simu_time_start,true);
+    InitOK&=config.GetConfigByName("SimuCamera","SimuTimeOn",simu_time_on,true);
+    InitOK&=config.GetConfigByName("SimuCamera","SimuTimeSweep",simu_time_sweep,true);
+    InitOK&=config.GetConfigByName("SimuCamera","SimuTimeStep",simu_time_step,true);
+    InitOK&=config.GetConfigByName("SimuCamera","SimuTimeStart",simu_time_start,true);
+
+
+    InitOK&=config.GetConfigByName("DataSetCamera","DataSetDir",DataSetDir,true);
+    InitOK&=config.GetConfigByName("DataSetCamera","DataSetFile",DataSetFile,true);
 
 
     InitOK&=config.GetConfigByName("REBVO","VideoNetHost",VideoNetHost,true);

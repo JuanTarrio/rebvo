@@ -134,6 +134,10 @@ class REBVO
     double sim_save_nframes;
     int CameraType;
 
+    //DSCam param
+
+    std::string DataSetFile;
+    std::string DataSetDir;
 
     //Camara parameters
     cam_model *cam;
