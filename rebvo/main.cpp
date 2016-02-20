@@ -23,11 +23,13 @@ void PrintHelp(){
 int main(int argn,char ** argv)
 {
 
+    std::string ConfigName(argn>1?argv[1]:"GlobalConfig");
+
 
     Configurator GlobalConfig;
 
     //Leo el archivo de configuracion
-    if(!GlobalConfig.ParseConfigFile("GlobalConfig",false))
+    if(!GlobalConfig.ParseConfigFile(ConfigName.data(),false))
         return -1;
 
 

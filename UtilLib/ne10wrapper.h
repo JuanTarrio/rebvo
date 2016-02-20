@@ -29,12 +29,10 @@
 
 //***************** NE10 Wrapper ****************************
 //Interface Library to use NE10 lib for Vector Calculations
-//And C implementations for non library usage 
+//And C implementations for non library usage, compile with
+//-DUSE_NE10 for library use
 //***********************************************************
-#ifdef __arm__
-#define USE_NE10
-#pragma message "Compiling using NE10"
-#endif
+
 
 //Static linear indexing of 2D fixed size vectors
 template <int cols>
@@ -52,10 +50,11 @@ inline T PairWiseVAdd(T* __restrict src,int pnum);
 
 #ifdef USE_NE10
 
+#pragma message "Compiling using NE10"
 //If compile using NE10, all  the functions wrap to NE10 equivalents, 
 //adjusting the number of points to the corresponding vectorial operation
 
-#include <NE10.h>
+#include <NE10/NE10.h>
 
 // dst=Mat[3][3]*src[3][pnum]
 template <class T>
