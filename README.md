@@ -51,7 +51,7 @@ in order for the system to start. The structure of the file is self explanatory.
 
 #### Basic configs in rebvo GlobalConfig
 
-This things you have to configure in order for the system to work.
+The things you have to configure in order for the system to work.
 
 -- CameraDevice: the v4l2 camera device
 
@@ -153,6 +153,11 @@ b: Clear trajectory
 
 End: Quit
 
+### Output files
+
+If the savelog option is enabled the system outputs 2 files, a .m log file and a
+trajectory file (timestamp tx ty tz qx qy qz qw) that can be used to benchmark
+the algorithm.
 
 ### Camera Drivers
 
@@ -164,7 +169,7 @@ Three classes are provided for camera managment:
 -- SimCamera is a simple class designed to load uncompresed video from a file. 
 
 -- DataSetCam is used to load the images from the TUM datasets used to benchmark the
-   paper.
+   paper (add the dataset directory and image file list to the config file).
 
 All three classes inherit from VideoCam class, this class is able to generate the 
 video files used by simcam. 

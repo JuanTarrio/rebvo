@@ -95,7 +95,7 @@
 &SimuCamera
 
 
-    SimVideoFile=/home/juan/Datasets/rgbd_dataset_freiburg2_desk/sim_video                                      //SimCam video file
+    SimVideoFile=sim_video                                      //SimCam video file
     SimVideoNFrames=500						//Number of frames to save for simulation (uncompressed video)
 
     SimuTimeOn=0                                                //Simulate time or use system time
