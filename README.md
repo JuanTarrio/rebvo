@@ -10,6 +10,8 @@ REBVO tracks a camera in Realtime using edges. The system is split in 2 componen
 An on-board part (rebvo itself) doing all the processing and sending data over UDP 
 and an OpenGL visualizer. 
 
+Introductory video: https://youtu.be/7pn29iGklgI
+
 ### System requirements
 
 In ubuntu and most linux dist this libraries can be downloaded directly from the
@@ -65,8 +67,11 @@ The things you have to configure in order for the system to work.
 
 -- VideoNetHost,Port: IP,Port of the host to send data to
 
--- SetAfinity: if the set to 1, the threads has to be distributed manually in 
-		existing processors, this can increase speed
+-- SetAffinity flag,CamaraTn: if the flag is set to 1, the system will use the pthread_setaffinity_np() call
+		to distribute the threads according to the CamaraT1..3 configuration.
+		This numbers have to point to existing processors or the call wil fail,
+		and this setting usually require superuser privileges.
+		Setting affinity and distributing the threads can increase speed.
 
 -- DetectorThresh: This is a fixed threshold to the edge detector only used
 	 	   if autothresh is off (DetectorAutoGain = 0)
@@ -80,6 +85,8 @@ The things you have to configure in order for the system to work.
 -- DetectorMax,MinThresh: Limits on threshold tunning, to prevent excessive 
 		   noise on images with no edges. Similar to DetectorThresh,
 		   camera dependant parameters.
+
+
 
 #### Basic configs in visualizer GlobalConfig
 
@@ -166,7 +173,8 @@ Three classes are provided for camera managment:
 -- v4lCam is a wrapper to the C functions provided in video_io for interacting with
    the v4l2 lib. 
 
--- SimCamera is a simple class designed to load uncompresed video from a file. 
+-- SimCamera is a simple class designed to load uncompresed video from a file. For compressed video
+   formats check the Video2SimCam section.
 
 -- DataSetCam is used to load the images from the TUM datasets used to benchmark the
    paper (add the dataset directory and image file list to the config file).
@@ -176,6 +184,13 @@ video files used by simcam.
 
 If you want to use your own camera loader, just write a child overwriting the virtual
 functions in VideoCam and add it to the first thread of rebvo.
+
+#### Video2SimCam Utility
+
+Currently rebvo canot load compressed video directly (a feature that is gonna be added soon), so
+a simple utility is provided in the Video2SimCam folder that uses OpenCV VideoCapture to uncompress
+the video in the SimCam format (can take a lot of disk space!).
+
 ### FAQ
 
 -- Depth is not correct, objects that are close appear far and viceversa

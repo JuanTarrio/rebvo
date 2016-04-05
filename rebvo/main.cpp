@@ -62,7 +62,7 @@ int main(int argn,char ** argv)
     PrintHelp();
 
     bool run=true;
-    while(run){
+    while(run && cf.Running()){
 
         char c;
         std::cin >> c;

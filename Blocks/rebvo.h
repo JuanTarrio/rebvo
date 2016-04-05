@@ -148,7 +148,7 @@ class REBVO
     int cpu0;
     int cpu1;
     int cpu2;
-
+    int cpuSetAffinity;
 
     //Trayectory parameters
 
@@ -236,6 +236,8 @@ public:
     void StartSimSave(){start_record=true;}
     void TakeSnapshot(){saveImg=true;}
     void Reset(){system_reset=true;}
+
+    bool Running(){return !quit;}
 };
 
 #endif // CAMARAFRONTAL_H

@@ -105,8 +105,7 @@
 
 &ProcesorConfig							//Processor thread affiniy
 
-    SetAfinity=1						//Switch to set afinity on off
-    ControlLoop=5 						//Main 
+    SetAffinity=1						//Switch to set afinity on off
     CamaraT1=6
     CamaraT2=7
     CamaraT3=4

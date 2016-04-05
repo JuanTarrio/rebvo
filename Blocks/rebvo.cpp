@@ -108,13 +108,15 @@ void REBVO::FirstThr(REBVO *cf){
 
     std::thread Thr1(SecondThread,cf);
 
-    cpu_set_t cpusetp;
+    if(cf->cpuSetAffinity){
+        cpu_set_t cpusetp;
 
-    CPU_ZERO(&cpusetp);
-    CPU_SET(cf->cpu0,&cpusetp);
-    if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
-        printf("\nThread: Can't' set CPU affinity!\n");
-        cf->quit=true;
+        CPU_ZERO(&cpusetp);
+        CPU_SET(cf->cpu0,&cpusetp);
+        if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
+            printf("\nThread: Can't' set CPU affinity!\n");
+            cf->quit=true;
+        }
     }
 
 
@@ -224,16 +226,17 @@ void  REBVO::SecondThread(REBVO *cf){
 
     //**** Set cpu Afinity for this thread *****
 
-    cpu_set_t cpusetp;
+    if(cf->cpuSetAffinity){
+        cpu_set_t cpusetp;
 
-    CPU_ZERO(&cpusetp);
-    CPU_SET(cf->cpu1,&cpusetp);
-    if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
-        printf("\nSecond Thread: No puedo setear CPU affinity!\n");
-        cf->quit=true;
-        return;
+        CPU_ZERO(&cpusetp);
+        CPU_SET(cf->cpu1,&cpusetp);
+        if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
+            printf("\nSecond Thread: No puedo setear CPU affinity!\n");
+            cf->quit=true;
+            return;
+        }
     }
-
 
 
     //***** Launch Thread 2 Pipeline thread ******
@@ -448,14 +451,16 @@ void REBVO::ThirdThread(REBVO *cf){
 
     /*****   Set cpu Afinity of the thread   ******/
 
-    cpu_set_t cpusetp;
+    if(cf->cpuSetAffinity){
+        cpu_set_t cpusetp;
 
-    CPU_ZERO(&cpusetp);
-    CPU_SET(cf->cpu2,&cpusetp);
-    if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
-        printf("\nThird Thread: No puedo setear CPU affinity!\n");
-        cf->quit=true;
-        return;
+        CPU_ZERO(&cpusetp);
+        CPU_SET(cf->cpu2,&cpusetp);
+        if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
+            printf("\nThird Thread: No puedo setear CPU affinity!\n");
+            cf->quit=true;
+            return;
+        }
     }
 
 
@@ -749,6 +754,8 @@ void REBVO::ThirdThread(REBVO *cf){
 
     h_log.close();
 
+    cf->quit=true;
+
     return;
 
 
@@ -805,6 +812,7 @@ REBVO::REBVO(Configurator &config)
     InitOK&=config.GetConfigByName("Camera","KcR4",kc[1],true);
 
     InitOK&=config.GetConfigByName("Camera","FPS",config_fps,true);
+    InitOK&=config.GetConfigByName("ProcesorConfig","SetAffinity",cpuSetAffinity,true);
     InitOK&=config.GetConfigByName("ProcesorConfig","CamaraT1",cpu0,true);
     InitOK&=config.GetConfigByName("ProcesorConfig","CamaraT2",cpu1,true);
     InitOK&=config.GetConfigByName("ProcesorConfig","CamaraT3",cpu2,true);
