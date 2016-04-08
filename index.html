@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>REBVO by JuanTarrio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">REBVO</h1>
+      <h2 class="project-tagline">Realtime Edge Based Visual Odometry for a Monocular Camera</h2>
+      <a href="https://github.com/JuanTarrio/rebvo" class="btn">View on GitHub</a>
+      <a href="https://github.com/JuanTarrio/rebvo/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/JuanTarrio/rebvo/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <p>Tarrio, J. J., &amp; Pedre, S. (2015). Realtime Edge-Based Visual Odometry
+for a Monocular Camera. In Proceedings of the IEEE International Conference
+on Computer Vision (pp. 702-710).</p>
+
+<p>REBVO tracks a camera in Realtime using edges. The system is split in 2 components.
+An on-board part (rebvo itself) doing all the processing and sending data over UDP 
+and an OpenGL visualizer. </p>
+
+<p>Introductory video: <a href="https://youtu.be/7pn29iGklgI">https://youtu.be/7pn29iGklgI</a></p>
+
+<h3>
+<a id="system-requirements" class="anchor" href="#system-requirements" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>System requirements</h3>
+
+<p>In ubuntu and most linux dist this libraries can be downloaded directly from the
+ repos, except for TooN.</p>
+
+<p>-- C++11</p>
+
+<p>-- Linux, X11, v4l2</p>
+
+<p>-- OpenGL development libraries (GL,GLU,glut)</p>
+
+<p>-- TooN mathematical library (<a href="http://www.edwardrosten.com/cvd/toon.html">http://www.edwardrosten.com/cvd/toon.html</a>)</p>
+
+<p>-- Lapack (for advanced TooN functions)</p>
+
+<p>-- LibAV (Video Codecs)</p>
+
+<p>-- LibGD (Image managment)</p>
+
+<p>-- Optionally NE10 for ARM Neon optimizations</p>
+
+<h3>
+<a id="compiling" class="anchor" href="#compiling" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Compiling</h3>
+
+<p>REBVO has been developed using QT creator, so a project file is provided in each of the
+components folder, (rebvo and visualizer). Also two makefiles are provided on each 
+of the folders, for amd64 and arm architectures. The first can easily be edited for 
+x86.</p>
+
+<h4>
+<a id="compile-using-ne10" class="anchor" href="#compile-using-ne10" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Compile using NE10</h4>
+
+<p>The system can use the NE10 for neon simd support. In order to use it, the
+correspondent line has to be uncommented in the arm makefile. </p>
+
+<h3>
+<a id="configuring-the-system" class="anchor" href="#configuring-the-system" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuring the system</h3>
+
+<p>A GlobalConfig text file can be found in each of the folders. This should be tuned to
+your camera and network configuration. All the configuration options has to be present on the files
+in order for the system to start. The structure of the file is self explanatory.</p>
+
+<h4>
+<a id="basic-configs-in-rebvo-globalconfig" class="anchor" href="#basic-configs-in-rebvo-globalconfig" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Basic configs in rebvo GlobalConfig</h4>
+
+<p>The things you have to configure in order for the system to work.</p>
+
+<p>-- CameraDevice: the v4l2 camera device</p>
+
+<p>-- ZfX,Y: Camera focal length</p>
+
+<p>-- PPx,y: Camera principal point</p>
+
+<p>-- ImageWidth,Height: size to use</p>
+
+<p>-- FPS: Frames per Seconds</p>
+
+<p>-- VideoNetHost,Port: IP,Port of the host to send data to</p>
+
+<p>-- SetAffinity flag,CamaraTn: if the flag is set to 1, the system will use the pthread_setaffinity_np() call
+        to distribute the threads according to the CamaraT1..3 configuration.
+        This numbers have to point to existing processors or the call wil fail,
+        and this setting usually require superuser privileges.
+        Setting affinity and distributing the threads can increase speed.</p>
+
+<p>-- DetectorThresh: This is a fixed threshold to the edge detector only used
+           if autothresh is off (DetectorAutoGain = 0)
+           Is a camera dependent parameter so it should be tunned for
+           best performance. </p>
+
+<p>-- ReferencePoints: If auto thresh is on (DetectorAutoGain&gt;0), number of KL
+           points to use. Ussual values are 5000 for 320x240 and 
+           15000 for 640x480 </p>
+
+<p>-- DetectorMax,MinThresh: Limits on threshold tunning, to prevent excessive 
+           noise on images with no edges. Similar to DetectorThresh,
+           camera dependant parameters.</p>
+
+<h4>
+<a id="basic-configs-in-visualizer-globalconfig" class="anchor" href="#basic-configs-in-visualizer-globalconfig" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Basic configs in visualizer GlobalConfig</h4>
+
+<p>ImageSize, Focal Length and Principal Point should match the config in rebvo.</p>
+
+<h3>
+<a id="system-usage" class="anchor" href="#system-usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>System Usage</h3>
+
+<p>Just run the two programs on the same o network connected computers and move
+the camera trying to maximize translation.</p>
+
+<p>REBVO component accept the following command line commands:</p>
+
+<p>q: Quit</p>
+
+<p>r: System full reset</p>
+
+<p>s: Saves in SimVideoFile (rebvo GlobalConfig) SimVideoNFrames frames of
+   uncompressed video for further replay. It does a direct write to disk,
+   so it can loose frames depending on the system. The format is described
+   in videocam.h</p>
+
+<p>p: Takes Snapshot of the current image</p>
+
+<p>The visualizer opens 2 kinds of windows, XLib windows (front and top) 
+displays the image and the edge detection, OpenGL windows display 
+the edgemap and the image in a 3D fashion.</p>
+
+<h4>
+<a id="commands-in-the-xlib-windows" class="anchor" href="#commands-in-the-xlib-windows" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Commands in the XLib windows</h4>
+
+<p>q: Quit</p>
+
+<p>b: Clear trajectory</p>
+
+<p>i: Toggle show image</p>
+
+<p>t: Show frame to frame matching</p>
+
+<p>z,x: Increase/Decease maximum depth in top view</p>
+
+<h4>
+<a id="commands-in-the-opengl-windows" class="anchor" href="#commands-in-the-opengl-windows" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Commands in the OpenGL windows</h4>
+
+<p>w,s,a,d: Walk the view like DukeNuke3D
+arrows: Rotate the view</p>
+
+<p>f,r: flight</p>
+
+<p>1..9: Load i view</p>
+
+<p>Shift+1..9: Save i view</p>
+
+<p>Escape: Reset View</p>
+
+<p>m: Toggle image rendering</p>
+
+<p>n: Toggle edgemap rendering</p>
+
+<p>c: Toggle camera rendering</p>
+
+<p>t,g: Increase/decrease max distance for color scale</p>
+
+<p>y,h: Same for min distance </p>
+
+<p>i: Render edgemap depth uncertainty</p>
+
+<p>v: Render Trajectory</p>
+
+<p>b: Clear trajectory</p>
+
+<p>,: Fix the view to world coordinates</p>
+
+<p>End: Quit</p>
+
+<h3>
+<a id="output-files" class="anchor" href="#output-files" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Output files</h3>
+
+<p>If the savelog option is enabled the system outputs 2 files, a .m log file and a
+trajectory file (timestamp tx ty tz qx qy qz qw) that can be used to benchmark
+the algorithm.</p>
+
+<h3>
+<a id="camera-drivers" class="anchor" href="#camera-drivers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Camera Drivers</h3>
+
+<p>Three classes are provided for camera managment:</p>
+
+<p>-- v4lCam is a wrapper to the C functions provided in video_io for interacting with
+   the v4l2 lib. </p>
+
+<p>-- SimCamera is a simple class designed to load uncompresed video from a file. For compressed video
+   formats check the Video2SimCam section.</p>
+
+<p>-- DataSetCam is used to load the images from the TUM datasets used to benchmark the
+   paper (add the dataset directory and image file list to the config file).</p>
+
+<p>All three classes inherit from VideoCam class, this class is able to generate the 
+video files used by simcam. </p>
+
+<p>If you want to use your own camera loader, just write a child overwriting the virtual
+functions in VideoCam and add it to the first thread of rebvo.</p>
+
+<h4>
+<a id="video2simcam-utility" class="anchor" href="#video2simcam-utility" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Video2SimCam Utility</h4>
+
+<p>Currently rebvo canot load compressed video directly (a feature that is gonna be added soon), so
+a simple utility is provided in the Video2SimCam folder that uses OpenCV VideoCapture to uncompress
+the video in the SimCam format (can take a lot of disk space!).</p>
+
+<h3>
+<a id="faq" class="anchor" href="#faq" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FAQ</h3>
+
+<p>-- Depth is not correct, objects that are close appear far and viceversa</p>
+
+<p>At to this point, rebvo relies only on filtering for initialization, this
+can lead to initialization errors since convergence is not warrantied. If
+the system didn't bootup right, just reset.</p>
+
+<p>-- How is rebvo someway useful if initialization can fail</p>
+
+<p>If gyroscope measurements are added to estimation the initialization
+problem disappears. That is the version used to fly quadrotors.
+If you want that version contact the authors.</p>
+
+<p>-- Why rebvo doesn't use OpenCV?</p>
+
+<p>OpenCV is great, the system originally used OpenCV for image acquisition 
+and preprocessing. 
+Then at some point we figure that it was a waste having to install
+the whole library just for image acquisition, so I write small a wrapper 
+to the V4L2 library trying to make the system easier to install and 
+less dependant on third party libraries.</p>
+
+<p>-- What about that simulation feature?</p>
+
+<p>If you use the rebvo 's' command it will save video for further repetition.
+You can visualize that video toggling CameraType to 1 (SimCamera)</p>
+
+<h3>
+<a id="contact" class="anchor" href="#contact" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contact</h3>
+
+<p>Juan Jose Tarrio</p>
+
+<p><a href="mailto:juan.tarrio@gmail.com">juan.tarrio@gmail.com</a></p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/JuanTarrio/rebvo">REBVO</a> is maintained by <a href="https://github.com/JuanTarrio">JuanTarrio</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
