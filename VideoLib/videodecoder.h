@@ -26,6 +26,10 @@ extern "C" {
 }
 #endif
 
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(54,25,0)
+#define CodecID AVCodecID
+#endif
+
 class VideoDecoder
 {
 
