@@ -18,7 +18,7 @@ CXXFLAGS      = -m64 -pipe -std=c++11 -Wno-unused-parameter -Wno-sign-compare -O
 INCPATH       = -I../visualizer -I/usr/local/include/lapackpp/ -I../Blocks -I../mtracklib -I../CommLib -I../VideoLib -I../UtilLib -I../NeonLib/ -I.
 LINK          = g++
 LFLAGS        = -m64 -Wl,-O1
-LIBS          = $(SUBLIBS) -L/usr/local/lib -lX11 -lv4l2 -lm -llapack -lavcodec -lGL -lGLU -lglut -lgd -lpthread 
+LIBS          = $(SUBLIBS) -L/usr/local/lib -lX11 -lv4l2 -lm -llapack -lavcodec -lavutil -lGL -lGLU -lglut -lgd -lpthread 
 AR            = ar cqs
 RANLIB        =
 TAR           = tar -cf
