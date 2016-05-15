@@ -24,7 +24,9 @@
  
  #include "videodecoder.h"
 
-
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(55,28,1)
+#define avcodec_alloc_frame av_frame_alloc
+#endif
 
 int LibAvInitStatus=0;
 

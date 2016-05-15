@@ -38,6 +38,10 @@
 
 #define MFC_MAX_STREAM_SIZE (2*1024*1024)
 
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(54,25,0)
+#define CODEC_ID_MPEG4 AV_CODEC_ID_MPEG4
+#define CODEC_ID_MJPEG AV_CODEC_ID_MJPEG
+#endif
 
 int visualizer::OnPaint(XVideoContext *xvc, void *param){
 
