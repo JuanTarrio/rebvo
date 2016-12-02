@@ -1,4 +1,4 @@
-﻿/******************************************************************************
+/******************************************************************************
 
    REBVO: RealTime Edge Based Visual Odometry For a Monocular Camera.
    Copyright (C) 2016  Juan José Tarrio
@@ -29,14 +29,25 @@
 using namespace TooN;
 
 
-edge_finder::edge_finder(cam_model &cam, float max_i_value)		//valor maximo de keypoints
+edge_finder::edge_finder(cam_model &cam, float max_i_value, int kl_num_max)		//valor maximo de keypoints
     :cam_mod(cam),fsz(cam_mod.sz),max_img_value(max_i_value),
-     img_mask_kl(fsz)
+     img_mask_kl(fsz),kl_size(kl_num_max),kn(0)
 {
-
-    kl=new KeyLine[KEYLINE_MAX];
-    kn=0;
+    if(kl_num_max>0)
+        kl=new KeyLine[kl_num_max];
+    else
+        kl=nullptr;
     img_mask_kl.Reset(-1);
+}
+
+edge_finder::edge_finder(const edge_finder &ef)
+    :cam_mod(ef.cam_mod),fsz(ef.cam_mod.sz),max_img_value(ef.max_img_value),
+     img_mask_kl(fsz),kl_size(ef.kn),kl(new KeyLine[kl_size]),kn(kl_size)
+{
+    img_mask_kl=ef.img_mask_kl;
+    for(int i=0;i<kn;i++)
+        kl[i]=ef.kl[i];
+
 
 }
 
@@ -90,8 +101,8 @@ void edge_finder::build_mask(sspace *ss,        //State space containing image d
 
 
 
-    if(kl_max>KEYLINE_MAX)
-        kl_max=KEYLINE_MAX;
+    if(kl_max>kl_size)
+        kl_max=kl_size;
 
     kn=0;
 
@@ -300,6 +311,8 @@ void edge_finder::join_edges(){
 
 
 
+
+
 //********************************************************************
 // UpdateThresh(): perform auto-threshold with a Proporcional-Law
 //********************************************************************
@@ -341,4 +354,32 @@ void edge_finder::detect(sspace *ss,
     l_kl_num=kn;    //Save the number of effective KL detected
 }
 
+//************************************************************************
+// dumpToBinaryFile(): Print keyline list to file
+//************************************************************************
+void edge_finder::dumpToBinaryFile(std::ofstream &file)
+{
 
+    file.write((const char *)&kn,sizeof(kn));
+    file.write((const char *)kl,sizeof(KeyLine)*kn);
+
+    std::cout <<"\nDumpped "<<kn<<" Keylines, "<<sizeof(kn)+sizeof(KeyLine)*kn<<" bytes";
+
+}
+
+//************************************************************************
+// dumpToBinaryFile(): Read keyline list from file
+//************************************************************************
+void edge_finder::readFromBinaryFile(std::ifstream &file)
+{
+
+    file.read((char *)&kn,sizeof(kn));
+
+    if(kl!=nullptr)
+        delete [] kl;
+    kl=new KeyLine[kn];
+    kl_size=kn;
+
+    file.read((char *)kl,sizeof(KeyLine)*kn);
+
+}

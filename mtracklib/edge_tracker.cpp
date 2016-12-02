@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <TooN/SVD.h>
+#include <TooN/Cholesky.h>
 
 using namespace TooN;
 
@@ -608,3 +609,136 @@ void edge_tracker::DebugMatchHisto(uint m_num_max,uint bin_num,uint *histo){
     }
 
 }
+
+
+//***********************************************************************************
+// ExtRotVel() uses forward match to estimate a RotoTranslation using linear aprox
+//***********************************************************************************
+
+bool edge_tracker::ExtRotVel(const Vector <3> &vel,     //Prevously estimated translation
+                             Matrix <6,6> &Wx,          //Output information matrix
+                             Matrix <6,6> &Rx,          //Wx^-1
+                             Vector <6> &X,             //Output incremental state
+                             const double &LocUncert)   //Location uncertainty
+{
+
+
+    int nmatch1D=0;
+    for(int i=0;i<kn;i++){
+        if(kl[i].m_id>=0)
+            nmatch1D++;
+    }
+
+
+    Matrix<> Phi=Zeros(nmatch1D,6);
+    Vector<> Y=Zeros(nmatch1D);
+
+    int j=0;
+
+    for(int i=0;i<kn;i++){
+
+        if(kl[i].m_id<0)
+            continue;
+
+        float &u_x=kl[i].u_m.x,&u_y=kl[i].u_m.y;
+        double &zf=cam_mod.zfm;
+
+        Point2DF &p_m=kl[i].p_m,&p_m_0=kl[i].p_m_0;
+
+
+        double rho_t=1/(1/kl[i].rho+vel[2]);
+        float qt_x=p_m_0.x+rho_t*(vel[0]*zf-vel[2]*p_m_0.x);
+        float qt_y=p_m_0.y+rho_t*(vel[1]*zf-vel[2]*p_m_0.y);
+
+        double &s_rho=kl[i].s_rho;
+
+        float q_x=p_m.x;
+        float q_y=p_m.y;
+
+
+        Phi(j,0) = u_x*rho_t*zf;
+        Phi(j,1) = u_y*rho_t*zf;
+        Phi(j,2) = u_x*(-rho_t*q_x)+u_y*(-rho_t*q_y);
+
+        Phi(j,3) =-u_x*q_x*q_y/zf-u_y*(zf+q_y*q_y/zf);
+        Phi(j,4) =+u_y*q_x*q_y/zf+u_x*(zf+q_x*q_x/zf);
+        Phi(j,5) =-u_x*q_y+u_y*q_x;
+
+        Y[j]=u_x*(p_m.x-qt_x)+u_y*(p_m.y-qt_y);
+
+        float dqvel=u_x*(vel[0]*zf-vel[2]*p_m_0.x)+u_y*(vel[1]*zf-vel[2]*p_m_0.y);
+        float s_y=sqrt(s_rho*s_rho*dqvel*dqvel+LocUncert*LocUncert);
+
+        Phi.slice(j,0,1,6)/=s_y;
+        Y[j]/=s_y;
+
+        j++;
+
+
+    }
+
+    if(j!=nmatch1D){
+        printf("\nExtRotVel j err %d %d!!!\n",j,nmatch1D);
+        return false;
+    }
+
+
+
+
+
+    Matrix <6,6> JtJ=Phi.T()*Phi;
+    Vector <6> JtF=Phi.T()*Y;
+
+    SVD <>SVDpTp(JtJ);
+
+    X=SVDpTp.backsub(JtF);
+    Rx=SVDpTp.get_pinv();
+    Wx=JtJ;
+
+    if(util::isNaN(Rx) || util::isNaN(X)){
+        printf("\nEdge Tracker::ExtRotVel estimation Fail!\n");
+        return false;
+    }
+
+    return true;
+
+}
+
+
+//***********************************************************************************
+// BiasCorrect() correct rototranlation vector using giroscope prior
+//***********************************************************************************
+
+void edge_tracker::BiasCorrect(TooN::Vector <6> &X,     //Previous estimated state and output state
+                               TooN::Matrix<6,6> &Wx,   //Previous estimated and output state information matrix
+                               TooN::Vector <3> &Gb,    //Previous estimated and output bias
+                               TooN::Matrix<3,3> &Wb,   //Previous estimated and output state information matrix
+                               const TooN::Matrix<3,3> &Rg,     //Giroscope meassurement covariance
+                               const TooN::Matrix<3,3> &Rb      //Giroscope bias covariance
+                               )
+{
+
+    using namespace TooN;
+
+    const Matrix<3,3> &Wg=util::Matrix3x3Inv(Rg);       //Giroscope meassurement information
+
+    Wb=util::Matrix3x3Inv(util::Matrix3x3Inv(Wb)+Rb);   //Bias uncertainty update
+
+    Matrix<6,6> Wxb=Wx;
+
+    Matrix<3,3> iWgWb=util::Matrix3x3Inv(Wg+Wb);
+
+    Wxb.slice<3,3,3,3>()+=Wg*(Identity - iWgWb*Wg);
+
+    Vector <6> X1=Wx*X;
+    X1.slice<3,3>()+=Wg*iWgWb*Wb*Gb;
+
+    X=Cholesky<6>(Wxb).get_inverse()*X1;
+
+    Gb=iWgWb*(Wg*X.slice<3,3>()+Wb*Gb);
+    Wb=Wg+Wb;
+
+    Wx.slice<3,3,3,3>()+=Wg;
+}
+
+

@@ -65,7 +65,11 @@ SOURCES       = ../rebvo/main.cpp \
 		../UtilLib/ttimer.cpp \
 		../UtilLib/ne10wrapper.cpp \
 		../UtilLib/configurator.cpp \
-		../CommLib/udp_port.cpp 
+		../CommLib/udp_port.cpp \
+		../mtracklib/keyframe.cpp \
+		../VideoLib/imugrabber.cpp \
+		../UtilLib/minimizer.cpp \
+		../mtracklib/scaleestimator.cpp 
 OBJECTS       = main.o \
 		rebvo.o \
 		video_io.o \
@@ -86,7 +90,11 @@ OBJECTS       = main.o \
 		ttimer.o \
 		ne10wrapper.o \
 		configurator.o \
-		udp_port.o
+		udp_port.o \
+		keyframe.o \
+		imugrabber.o \
+		minimizer.o \
+		scaleestimator.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -347,7 +355,9 @@ main.o: ../rebvo/main.cpp ../Blocks/rebvo.h \
 		../UtilLib/pipeline.h \
 		../CommLib/udp_port.h \
 		../mtracklib/global_tracker.h \
-		../UtilLib/ne10wrapper.h
+		../UtilLib/ne10wrapper.h \
+		../mtracklib/keyframe.h \
+		../VideoLib/imugrabber.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../rebvo/main.cpp
 
 rebvo.o: ../Blocks/rebvo.cpp ../Blocks/rebvo.h \
@@ -378,7 +388,10 @@ rebvo.o: ../Blocks/rebvo.cpp ../Blocks/rebvo.h \
 		../CommLib/udp_port.h \
 		../mtracklib/global_tracker.h \
 		../UtilLib/ne10wrapper.h \
-		../UtilLib/ttimer.h
+		../mtracklib/keyframe.h \
+		../VideoLib/imugrabber.h \
+		../UtilLib/ttimer.h \
+		../VideoLib/datasetcam.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo.o ../Blocks/rebvo.cpp
 
 video_io.o: ../VideoLib/video_io.c ../VideoLib/video_io.h
@@ -426,12 +439,13 @@ simcam.o: ../VideoLib/simcam.cpp ../VideoLib/simcam.h \
 		../UtilLib/ttimer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o simcam.o ../VideoLib/simcam.cpp
 
-datasetcam.o: ../VideoLib/datasetcam.cpp ../VideoLib/simcam.h \
-		../VideoLib/videocam.h \
-		../VideoLib/video_io.h \
+datasetcam.o: ../VideoLib/datasetcam.cpp ../UtilLib/ttimer.h \
+		../VideoLib/datasetcam.h \
 		../VideoLib/image.h \
+		../VideoLib/video_io.h \
 		../VideoLib/common_types.h \
-		../UtilLib/ttimer.h
+		../VideoLib/videocam.h \
+		../UtilLib/configurator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o datasetcam.o ../VideoLib/datasetcam.cpp
 
 iimage.o: ../mtracklib/iimage.cpp ../mtracklib/iimage.h \
@@ -545,6 +559,38 @@ udp_port.o: ../CommLib/udp_port.cpp ../CommLib/udp_port.h \
 		../UtilLib/timer.h \
 		../UtilLib/fvector.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o udp_port.o ../CommLib/udp_port.cpp
+
+keyframe.o: ../mtracklib/keyframe.cpp ../mtracklib/keyframe.h \
+		../mtracklib/edge_tracker.h \
+		../mtracklib/edge_finder.h \
+		../mtracklib/sspace.h \
+		../mtracklib/iigauss.h \
+		../mtracklib/iimage.h \
+		../UtilLib/util.h \
+		../UtilLib/timer.h \
+		../UtilLib/fvector.h \
+		../VideoLib/image.h \
+		../VideoLib/video_io.h \
+		../VideoLib/common_types.h \
+		../UtilLib/CircList.h \
+		../UtilLib/cam_model.h \
+		../UtilLib/NormalDistribution.h \
+		../mtracklib/global_tracker.h \
+		../UtilLib/ne10wrapper.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o keyframe.o ../mtracklib/keyframe.cpp
+
+imugrabber.o: ../VideoLib/imugrabber.cpp ../VideoLib/imugrabber.h \
+		../UtilLib/CircList.h \
+		../UtilLib/configurator.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o imugrabber.o ../VideoLib/imugrabber.cpp
+
+minimizer.o: ../UtilLib/minimizer.cpp ../UtilLib/minimizer.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o minimizer.o ../UtilLib/minimizer.cpp
+
+scaleestimator.o: ../mtracklib/scaleestimator.cpp ../mtracklib/scaleestimator.h \
+		../UtilLib/CircList.h \
+		../UtilLib/minimizer.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o scaleestimator.o ../mtracklib/scaleestimator.cpp
 
 ####### Install
 

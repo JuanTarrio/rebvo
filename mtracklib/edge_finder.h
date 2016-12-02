@@ -30,6 +30,7 @@
 #include "CircList.h"
 #include "cam_model.h"
 #include "image.h"
+#include <fstream>
 
 //Goal limits on Inverse Depth and Initialization
 #define RHO_MAX     20
@@ -96,6 +97,7 @@ protected:
 
 
     //**** KeyLine list ****
+    int kl_size;
     KeyLine *kl;
     int kn;         //Number of KLs
 
@@ -104,7 +106,8 @@ public:
 
 
 
-    edge_finder(cam_model &cam, float max_i_value);
+    edge_finder(cam_model &cam, float max_i_value,int kl_num_max=KEYLINE_MAX);
+    edge_finder(const edge_finder &ef);
     ~edge_finder();
 
 
@@ -134,6 +137,13 @@ public:
     iterator end(){return &kl[kn];}
 
     void annotate_keyline(int inx);
+
+    //File save/load
+
+    void dumpToBinaryFile(std::ofstream &file);
+    void readFromBinaryFile(std::ifstream &file);
+
+
 };
 
 #endif // EDGE_FINDER_H

@@ -47,6 +47,23 @@ string Configurator::ShrinkWS(string s){
     return s.substr(p1,p2-p1+1);
 }
 
+string Configurator::ShrinkNV(string s){
+    const char *p=s.data();
+    int p1,p2;
+
+    for(p1=0;p1<s.size();p1++)
+    if(p[p1]!=10 && p[p1]!=13)
+        break;
+
+    if(p1==s.size())
+    return string("");
+
+    for(p2=s.size()-1;p2>=0;p2--)
+    if(p[p2]!=10 && p[p2]!=13)
+        break;
+    return s.substr(p1,p2-p1+1);
+}
+
 
 ConfigClass* Configurator::FindClassByName(string n){
 

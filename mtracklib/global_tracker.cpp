@@ -14,6 +14,13 @@ global_tracker::global_tracker(cam_model &cam)
 
 }
 
+global_tracker::global_tracker(const global_tracker&gt)
+    :field(gt.field.Size()),cam_mod(gt.cam_mod),
+      max_r(gt.max_r),klist_f(gt.klist_f),FrameCount(gt.FrameCount)
+{
+    field=gt.field;
+}
+
 
 global_tracker::~global_tracker()
 {
@@ -133,6 +140,56 @@ inline T global_tracker::Calc_f_J(const int f_inx,      //Field image index wher
 }
 
 
+
+//*******************************************************************************************
+// Calc_f_J(): Search for KL match in axuiliary image and calc gradients, dont scale by s_rho
+//*******************************************************************************************
+
+template <class T>
+inline T global_tracker::Calc_f_J2(const int f_inx,      //Field image index where to look
+                                  T &df_dx,T &df_dy,    //Gradient vector
+                                  KeyLine &kl,          //KeyLine gradient
+                                  const Point2D<T> &p,  //Transformed KL coordinate in homogeneous
+                                  const T &max_r,       //Maximun allowed radius
+                                  const T &simil_t,     //Match threshold
+                                  int &mnum,            //Match counter
+                                  T &fi)                //Pixel residual
+{
+
+
+    if(field[f_inx].ikl<0){                 //Check for KL presence
+        df_dx=0;
+        df_dy=0;
+        return max_r;              //Return max posible error (weighted)
+    }
+
+    KeyLine &f_kl=(*klist_f)[field[f_inx].ikl]; //Field keyline
+
+    if(!Test_f_k<T>(f_kl.m_m,kl,simil_t)){
+        df_dx=0;
+        df_dy=0;
+        return max_r;          //Return max posible error (weighted)
+    }
+
+
+    T dx=p.x-f_kl.c_p.x;
+    T dy=p.y-f_kl.c_p.y;
+
+    fi=(dx*f_kl.u_m.x+dy*f_kl.u_m.y);   //Residual in the direction of the gradient
+
+
+    df_dx=f_kl.u_m.x;          //Return weigthed gradient
+    df_dy=f_kl.u_m.y;
+
+    mnum++;                             //Count match
+
+    kl.m_id_f=field[f_inx].ikl;         //Forward match
+
+    return fi;                 //weigthed residual
+
+}
+
+
 //**************************************************************************
 // TryVelRot(): Search for KL match in axuiliary image and calc gradients
 //
@@ -233,7 +290,7 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
 
 
         if(x<1|| y<1|| x>=(int)cam_mod.sz.w-1 || y>=(int)cam_mod.sz.h-1){ //If tranformed position is outside image border
-            fm[ikl]=max_r/kl.s_rho;                                       //consider it a missmatch with maximun possible residual
+            fm[ikl]=max_r;/*/kl.s_rho*/;                                       //consider it a missmatch with maximun possible residual
             if(ReWeight)
                 fm[ikl]*=weigth;
             df_dPi_x[ikl]=0;
@@ -247,7 +304,7 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
         kl.m_m.y=RM(1,0)*kl_m.x+RM(1,1)*kl_m.y;     //Temporaly rotate keylines gradient on z-axis for improved matching
 
         //Match and Calculate residuals and gradients
-        fm[ikl]=Calc_f_J<T>(y*cam_mod.sz.w+x,df_dPi_x[ikl],df_dPi_y[ikl],kl,p_pji,max_r,match_thresh,mnum,fi);
+        fm[ikl]=Calc_f_J2<T>(y*cam_mod.sz.w+x,df_dPi_x[ikl],df_dPi_y[ikl],kl,p_pji,max_r,match_thresh,mnum,fi);
 
         kl.m_m=kl_m;        //Return gradient to it's original state
 
@@ -266,6 +323,9 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
     }
 
 
+    for(int ikl=0;ikl<klist.KNum();ikl++){
+
+    }
 
     if(ProcJF){         //Estimate Jacobians using NE10Wrapper
 
@@ -299,6 +359,19 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
         Ne10::MulCVect<T>(&Jm[pnum*5],-1,RhoTmp0,pnum);
         Ne10::MlAcVect<T>(&Jm[pnum*5],&Jm[pnum*1],&Ptm[pnum*0],pnum);      //Jwz queda bien en signo
 
+
+        for(int ikl=0;ikl<klist.KNum();ikl++){
+
+            double qvel=(cam_mod.zfm*df_dPi_x[ikl]*Vt[0]+cam_mod.zfm*df_dPi_y[ikl]*Vt[1]+\
+                    (PtIm[pnum*0+ikl]*df_dPi_x[ikl]+PtIm[pnum*1+ikl]*df_dPi_y[ikl])*Vt[2]);
+            double q_rho=sqrt(klist[ikl].s_rho*qvel*klist[ikl].s_rho*qvel+1);
+            if(!ReWeight)
+                q_rho=klist[ikl].s_rho;
+            for(int j=0;j<6;j++)
+                Jm[pnum*j+ikl]/=q_rho;
+            fm[ikl]/=q_rho;
+
+        }
 
     //dRp0_dw[0]=makeVector(   0  , P0[2] ,-P0[1]);
     //dRp0_dw[1]=makeVector(-P0[2],   0   , P0[0]);
@@ -334,6 +407,17 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
         }
 
     }else{
+
+        for(int ikl=0;ikl<klist.KNum();ikl++){
+
+            double qvel=(cam_mod.zfm*df_dPi_x[ikl]*Vt[0]+cam_mod.zfm*df_dPi_y[ikl]*Vt[1]+\
+                    (PtIm[pnum*0+ikl]*df_dPi_x[ikl]+PtIm[pnum*1+ikl]*df_dPi_y[ikl])*Vt[2]);
+            double q_rho=sqrt(klist[ikl].s_rho*qvel*klist[ikl].s_rho*qvel+1);
+            if(!ReWeight)
+                q_rho=klist[ikl].s_rho;
+            fm[ikl]/=q_rho;
+        }
+
         for(int ikl=klist.KNum();ikl<pnum;ikl++){
             fm[ikl]=0;
         }
@@ -649,3 +733,248 @@ double global_tracker::Minimizer_RV(TooN::Vector<3> &Vel,       //Initial estima
 template double global_tracker::Minimizer_RV<float,false>(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0, edge_tracker &klist,double match_thresh,int iter_max,int init_type,double reweigth_distance,double &rel_error,double& rel_error_score,const double &max_s_rho,const uint& MatchNumThresh,const double& init_iter);
 template double global_tracker::Minimizer_RV<double,false>(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0, edge_tracker &klist,double match_thresh,int iter_max,int init_type,double reweigth_distance,double &rel_error,double &rel_error_score,const double &max_s_rho,const uint& MatchNumThresh,const double& init_iter);
 
+
+
+double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist,double match_thresh, double s_rho_min,uint MatchNumThresh)
+{
+
+    double score=0,f;
+
+    JtJ=Zeros;
+    JtF=Zeros;
+
+    int mnum=0;
+
+
+    for(int ikl=0;ikl<klist.KNum();ikl++){
+
+        KeyLine &kl=klist[ikl];
+
+
+        kl.m_id_f=-1;
+
+        if(kl.s_rho>s_rho_min || kl.m_num<std::min(MatchNumThresh,FrameCount)){     //If uncertainty is to hi, dont use this keyline
+                                                                                     //Also apply a thresh on the number of frames
+                                                                                    //that this keyline has been matched for
+            continue;
+        }
+
+
+        Point2D<double> p_pj;
+
+        double z_p=1.0/kl.rho+Vel[2];
+ //       if(z_p<=0)
+ //           continue;
+        double rho_p=1.0/z_p;
+
+        p_pj.x=rho_p*(Vel[0]*cam_mod.zfm-Vel[2]*kl.p_m.x)+kl.p_m.x;
+        p_pj.y=rho_p*(Vel[1]*cam_mod.zfm-Vel[2]*kl.p_m.y)+kl.p_m.y;
+
+        Point2D<double> p_pji=cam_mod.Hom2Img(p_pj);
+
+
+        int x=util::round2int_positive(p_pji.x);
+        int y=util::round2int_positive(p_pji.y);
+
+        if(x<1|| y<1|| x>=(int)cam_mod.sz.w-1 || y>=(int)cam_mod.sz.h-1){
+            f=(1/(kl.s_rho))*max_r;
+            score+=f*f;
+            continue;
+        }
+
+
+        double df_dx;
+        double df_dy;
+
+        double fi;
+
+        f=Calc_f_J<double>(y*cam_mod.sz.w+x,df_dx,df_dy,kl,p_pji,max_r,match_thresh,mnum,fi);
+
+        score+=f*f;
+
+        double jx=rho_p*cam_mod.zfm*df_dx;
+        double jy=rho_p*cam_mod.zfm*df_dy;
+        double jz=-rho_p*(p_pj.x*df_dx+p_pj.y*df_dy);
+
+
+        JtJ(0,0)+=jx*jx;
+        JtJ(1,1)+=jy*jy;
+        JtJ(2,2)+=jz*jz;
+        JtJ(0,1)+=jx*jy;
+        JtJ(0,2)+=jx*jz;
+        JtJ(1,2)+=jy*jz;
+
+        JtF[0]+=jx*f;
+        JtF[1]+=jy*f;
+        JtF[2]+=jz*f;
+
+        //step=1+(rand()&0x03);
+
+    }
+
+
+    JtJ(1,0)=JtJ(0,1);
+    JtJ(2,0)=JtJ(0,2);
+    JtJ(2,1)=JtJ(1,2);
+
+    // printf("\nMNum: %d, %d, %f\n",mnum,mnum2,score);
+
+    // std::cout<<JtJ <<"\n"<<JtF <<"\n";
+
+    return score;
+
+}
+
+
+template <class T>
+double global_tracker::TryVel_vect(TooN::Matrix<3,3> &JtJ, TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist, T match_thresh, double s_rho_min,uint MatchNumThresh){
+
+    int pnum=(klist.KNum()+0x3)&(~0x3);
+    T Jx[pnum];
+    T Jy[pnum];
+    T Jz[pnum];
+    T f[pnum];
+
+    int mnum=0;
+
+    int step=1;
+
+    int ip=0;
+    for(int ikl=0;ikl<klist.KNum();ikl+=step,ip++){
+
+        //step=1+(rand()&0x03);
+
+        KeyLine &kl=klist[ikl];
+
+        kl.m_id_f=-1;
+
+        Point2D<T>  p_pj;
+
+        double z_p=1.0/kl.rho+Vel[2];
+        if(z_p<=0)
+            continue;
+        double rho_p=1.0/z_p;
+
+        p_pj.x=rho_p*(Vel[0]*cam_mod.zfm-Vel[2]*kl.p_m.x)+kl.p_m.x;
+        p_pj.y=rho_p*(Vel[1]*cam_mod.zfm-Vel[2]*kl.p_m.y)+kl.p_m.y;
+
+        Point2D<T>  p_pji=cam_mod.Hom2Img(p_pj);
+
+
+        int x=util::round2int_positive(p_pji.x);
+        int y=util::round2int_positive(p_pji.y);
+
+        if(x<1|| y<1|| x>=(int)cam_mod.sz.w-1 || y>=(int)cam_mod.sz.h-1){
+            f[ip]=(1/(kl.s_rho))*max_r;
+            Jx[ip]=0;
+            Jy[ip]=0;
+            Jz[ip]=0;
+            continue;
+        }
+
+
+        T df_dx;
+        T df_dy;
+        T fi;
+
+        f[ip]=Calc_f_J<T>(y*cam_mod.sz.w+x,df_dx,df_dy,kl,p_pji,max_r,match_thresh,mnum,fi);
+
+
+
+        Jx[ip]=rho_p*cam_mod.zfm*df_dx;
+        Jy[ip]=rho_p*cam_mod.zfm*df_dy;
+        Jz[ip]=-rho_p*(p_pj.x*df_dx+p_pj.y*df_dy);
+
+
+
+
+
+    }
+
+
+    pnum=(ip+0x3)&(~0x3);
+
+    for(int i=ip;i<pnum;i++){
+        Jx[i]=0;
+        Jy[i]=0;
+        Jz[i]=0;
+        f[i]=0;
+    }
+
+    JtJ(0,0)=Ne10::DotProduct(Jx,Jx,pnum);
+    JtJ(1,1)=Ne10::DotProduct(Jy,Jy,pnum);
+    JtJ(2,2)=Ne10::DotProduct(Jz,Jz,pnum);
+    JtJ(0,1)=Ne10::DotProduct(Jx,Jy,pnum);
+    JtJ(0,2)=Ne10::DotProduct(Jx,Jz,pnum);
+    JtJ(1,2)=Ne10::DotProduct(Jy,Jz,pnum);
+
+    JtF[0]=Ne10::DotProduct(Jx,f,pnum);
+    JtF[1]=Ne10::DotProduct(Jy,f,pnum);
+    JtF[2]=Ne10::DotProduct(Jz,f,pnum);
+
+    JtJ(1,0)=JtJ(0,1);
+    JtJ(2,0)=JtJ(0,2);
+    JtJ(2,1)=JtJ(1,2);
+
+    // printf("\nMNum: %d, %d, %f\n",mnum,mnum2,score);
+
+    // std::cout<<JtJ <<"\n"<<JtF <<"\n";
+
+    return Ne10::DotProduct(f,f,pnum);
+
+}
+
+template <class T>
+double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  T match_thresh, int iter_max, T s_rho_min,uint MatchNumThresh){
+
+    TooN::Matrix<3,3> JtJ,ApI,JtJnew;
+    TooN::Vector<3> JtF,JtFnew;
+    TooN::Vector<3> h,Vnew;
+
+    double F=TryVel(JtJ,JtF,Vel,klist,match_thresh,s_rho_min,MatchNumThresh),Fnew;
+
+    double v=2,tau=1e-3;
+    double u=tau*TooN::max_element(JtJ).first;
+    double gain;
+
+    for(int lm_iter=0;lm_iter<iter_max;lm_iter++){
+
+        ApI=JtJ+Identity*u;
+
+        //Solve ApI*h=-g
+
+        h=util::Matrix3x3Inv(ApI)*(-JtF);
+
+        //Check step criteria
+
+         Vnew=Vel+h;
+        //Fnew=TryVel_vect<float>(JtJnew,JtFnew,Vnew,klist, knum,use_a);
+        Fnew=TryVel(JtJnew,JtFnew,Vnew,klist,match_thresh,s_rho_min,MatchNumThresh);
+
+        gain=(F-Fnew)/(0.5*h*(u*h-JtF));
+
+        if(gain>0){
+            F=Fnew;
+            Vel=Vnew;
+            JtJ=JtJnew;
+            JtF=JtFnew;
+            u*=std::max(0.33,1-((2*gain-1)*(2*gain-1)*(2*gain-1)));
+            v=2;
+        }else{
+            u*=v;
+            v*=2;
+        }
+
+
+
+    }
+
+    RVel=util::Matrix3x3Inv(JtJ);
+
+
+    return F;
+
+}
+
+template  double global_tracker::Minimizer_V<double>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  double match_thresh, int iter_max, double s_rho_min,uint MatchNumThresh);
+template  double global_tracker::Minimizer_V<float>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  float match_thresh, int iter_max, float s_rho_min,uint MatchNumThresh);

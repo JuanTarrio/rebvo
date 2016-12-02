@@ -97,6 +97,10 @@ namespace util{
 	return false;
     }
 
+    template <class T,class T1> inline T saturate(T &t,T1 limit){
+        return t>limit?limit:(t<-limit?-limit:t);
+    }
+
 
 
     template <class T>

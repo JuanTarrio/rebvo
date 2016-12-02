@@ -30,6 +30,8 @@
 #include <iomanip>
 #include "ttimer.h"
 #include "datasetcam.h"
+#include <TooN/Cholesky.h>
+#include <scaleestimator.h>
 
 using namespace std;
 
@@ -87,7 +89,7 @@ void REBVO::FirstThr(REBVO *cf){
 
     switch(cf->CameraType){
     case 2:
-        camara=new DataSetCam(cf->DataSetDir.data(),cf->DataSetFile.data(),cam.sz,cf->SimFile.data());
+        camara=new DataSetCam(cf->DataSetDir.data(),cf->DataSetFile.data(),cam.sz,cf->CamTimeScale,cf->SimFile.data());
         break;
     case 1:
         camara=new simcam(cf->SimFile.data(),cam.sz);
@@ -103,6 +105,24 @@ void REBVO::FirstThr(REBVO *cf){
         cf->quit=true;
         return;
     }
+
+    //***** Imu init *****//
+
+    switch(cf->ImuMode){
+    case 2:
+    {
+        bool error=false;
+        cf->imu=new ImuGrabber(ImuGrabber::LoadDataSet(cf->ImuFile.data(),false,cf->ImuTimeScale,error));
+        if(error){
+            cout << "Failed to initialize the imu " <<endl;
+            cf->quit=true;
+            return;
+        }
+    }
+        break;
+
+    }
+
 
     //***** Call thread 1 & set cpu afiinity ******
 
@@ -129,7 +149,6 @@ void REBVO::FirstThr(REBVO *cf){
     data=camara->GrabBuffer(t0,false);
     camara->ReleaseBuffer();
 
-
     util::timer tproc;
 
     while (!cf->quit){
@@ -145,7 +164,13 @@ void REBVO::FirstThr(REBVO *cf){
         }
 
 
-        COND_TIME_DEBUG(dt=t-t0;t0=t;)
+        if(cf->imu){
+            pbuf.imu=cf->imu->GrabAndIntegrate(t0,t);
+        }
+
+        COND_TIME_DEBUG(dt=t-t0;)
+
+        t0=t;
 
         int p_num=camara->PakNum();
 
@@ -223,6 +248,23 @@ void  REBVO::SecondThread(REBVO *cf){
     double P_Kp=5e-6;
     Matrix <3,3> P_V=Identity*1e50,P_W=Identity*1e-10;
 
+    IMUState istate;
+
+    istate.RGBias=Identity*cf->GiroBiasStdDev*cf->GiroBiasStdDev;
+    istate.RGiro=Identity*cf->GiroMeasStdDev*cf->GiroMeasStdDev;
+    istate.W_Bg=util::Matrix3x3Inv(istate.RGBias*100);
+
+    istate.Rg=cf->g_module_uncer*cf->g_module_uncer;
+    istate.Rs=Identity*cf->AcelMeasStdDev*cf->AcelMeasStdDev;
+    istate.Qbias=Identity*cf->VBiasStdDev*cf->VBiasStdDev;
+
+    istate.X=makeVector(M_PI/4,0,cf->g_module,0,0,0,0);
+    istate.P=makeVector(M_PI/16*M_PI/16*1e-2,\
+                        100,100,100,\
+                        cf->VBiasStdDev*cf->VBiasStdDev*1e4,cf->VBiasStdDev*cf->VBiasStdDev*1e4,cf->VBiasStdDev*cf->VBiasStdDev*1e4).as_diagonal();
+
+    int n_giro_init=0;
+    Vector <3> giro_init=Zeros;
 
     //**** Set cpu Afinity for this thread *****
 
@@ -273,6 +315,11 @@ void  REBVO::SecondThread(REBVO *cf){
         }
 
 
+        dt_frame=(new_buf.t-old_buf.t);
+
+        if(dt_frame<0.001)
+            dt_frame=1/cf->config_fps;
+
         COND_TIME_DEBUG(t_loop.start();)
         COND_TIME_DEBUG(tlist.clear();)
 
@@ -291,12 +338,115 @@ void  REBVO::SecondThread(REBVO *cf){
 
         P_V=Identity*1e50;
         P_W=Identity*1e50;
+
         R=Identity;
 
         //***** Use the Tracker to obtain Velocity and Rotation  ****
 
-        new_buf.gt->Minimizer_RV<double>(V,W,P_V,P_W,*old_buf.ef,cf->TrackerMatchThresh,cf->TrackerIterNum,cf->TrackerInitType,cf->ReweigthDistance,error_vel,error_score,s_rho_q,cf->MatchNumThresh,cf->TrackerInitIterNum);
+        if(cf->ImuMode>0){      //Imu data avaiable?? Use it!
 
+            if(!istate.init && cf->InitBias && n_frame>0){
+
+                giro_init+=new_buf.imu.giro*new_buf.imu.dt;
+                //giro_init+=istate.dWv;
+                if(++n_giro_init>10){
+                    istate.Bg=giro_init/n_giro_init;
+                    istate.init=true;
+                    istate.W_Bg=util::Matrix3x3Inv(istate.RGBias*1e2);
+                }
+            }
+
+
+            R=new_buf.imu.Rot;  //Use imu rotation
+
+
+            R.T()=TooN::SO3<>(istate.Bg)*R.T();
+
+            old_buf.ef->rotate_keylines(R.T()); //Apply foward prerotation to the old key lines
+
+
+            new_buf.gt->Minimizer_V<double>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->TrackerMatchThresh,cf->TrackerIterNum,s_rho_q,cf->MatchNumThresh);   //Estimate translation only
+
+
+            //***** Match from the old EdgeMap to the new one using the information from the minimization *****
+            old_buf.ef->FordwardMatch(new_buf.ef);
+
+            //***** Visual RotoTranslation estimation using forward matches
+            Matrix <6,6> R_Xv,R_Xgv,W_Xv,W_Xgv;
+            Vector <6> Xv,Xgv,Xgva;
+            EstimationOk&=new_buf.ef->ExtRotVel(istate.Vg,W_Xv,R_Xv,Xv,cf->LocationUncertainty);
+
+
+            istate.dVv=Xv.slice<0,3>();
+            istate.dWv=Xv.slice<3,3>();
+
+            Xgv=Xv;
+            W_Xgv=W_Xv;
+
+           // std::cout<<W_Xv<<"\n";
+
+            Vector <3> dgbias=Zeros;
+            edge_tracker::BiasCorrect(Xgv,W_Xgv,dgbias,istate.W_Bg,istate.RGiro,istate.RGBias);
+            istate.Bg+=dgbias;
+
+           // std::cout<<W_Xv<<W_Xgv<<istate.W_Bg;
+
+            istate.dVgv=Xgv.slice<0,3>();
+            istate.dWgv=Xgv.slice<3,3>();
+
+            //***** extract rotation matrix *****
+            SO3 <>R0(istate.dWgv);                      //R0 is a forward rotation
+            R.T()=R0.get_matrix()*R.T();                //R is a backward rotation
+
+            istate.Vgv=R0*istate.Vg+istate.dVgv;
+            V=istate.Vgv;
+
+            istate.Wgv=SO3<>(R).ln();
+
+            R_Xgv=Cholesky<6>(W_Xgv).get_inverse();
+
+
+            P_V=R_Xgv.slice<0,0,3,3>();
+            P_W=R_Xgv.slice<3,3,3,3>();
+
+
+            //Mix with accelerometer using bayesian filter
+
+
+            ScaleEstimator::EstAcelLsq4(-istate.Vgv/dt_frame,istate.Av,R,dt_frame);
+            ScaleEstimator::MeanAcel4(new_buf.imu.acel,istate.As,R);
+
+            Xgva=Xgv;
+
+
+            istate.Rv=(P_V/(dt_frame*dt_frame*dt_frame*dt_frame));
+            istate.Qrot=P_W;
+            istate.QKp=std::min((1/(1/istate.Rv(0,0)+1/istate.Rv(1,1)+1/istate.Rv(2,2)))*cf->ScaleStdDevMult*cf->ScaleStdDevMult,cf->ScaleStdDevMax);
+
+
+            if(n_frame>4)
+                K=ScaleEstimator::estKaGMEKBias(istate.As,istate.Av,1,R,istate.X,istate.P,istate.Qrot,istate.Qbias,istate.QKp,istate.Rg,istate.Rs,istate.Rv,istate.g_est,istate.b_est,W_Xgv,Xgva,cf->g_module);
+            //***** Forward Rotate the old edge-map points *****
+            old_buf.ef->rotate_keylines(R0.get_matrix());
+
+
+        }else{                  //Regular procesing
+
+            new_buf.gt->Minimizer_RV<double>(V,W,P_V,P_W,*old_buf.ef,cf->TrackerMatchThresh,cf->TrackerIterNum,cf->TrackerInitType,cf->ReweigthDistance,error_vel,error_score,s_rho_q,cf->MatchNumThresh,cf->TrackerInitIterNum);
+
+            //***** Match from the old EdgeMap to the new one using the information from the minimization *****
+            old_buf.ef->FordwardMatch(new_buf.ef);
+
+
+            //***** extract rotation matrix *****
+            SO3 <>R0(W);                    //R0 is a forward rotation
+            R.T()=R0.get_matrix()*R.T();    //R is a backward rotation
+
+
+            //***** Forward Rotate the old edge-map points *****
+            old_buf.ef->rotate_keylines(R0.get_matrix());
+
+        }
       if(util::isNaN(V) || util::isNaN(W))  //Check for minimization errors
         {
             P_V=Identity*1e50;
@@ -312,19 +462,12 @@ void  REBVO::SecondThread(REBVO *cf){
 
 
 
-            //***** extract rotation matrix *****
-            SO3 <>R0(W);                    //R0 is a forward rotation
-            R.T()=R0.get_matrix()*R.T();    //R is a backward rotation
 
 
-            //***** Forward Rotate the old edge-map points *****
-            old_buf.ef->rotate_keylines(R.T());
 
             COND_TIME_DEBUG(tlist.push_new();)
 
 
-            //***** Match from the old EdgeMap to the new one using the information from the minimization *****
-            old_buf.ef->FordwardMatch(new_buf.ef);
 
             COND_TIME_DEBUG(tlist.push_new();)
 
@@ -353,7 +496,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
                 //****** Regularize the EdgeMap Depth ******
 
-                for(int i=0;i<2;i++)
+                for(int i=0;i<1;i++)
                         new_buf.ef->Regularize_1_iter(cf->RegularizeThresh);
 
 
@@ -370,6 +513,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
                 //****** Optionally reescale the EdgeMap's Depth
                 Kp=new_buf.ef->EstimateReScaling(P_Kp,RHO_MAX,1,cf->DoReScaling>0);
+               // cout << P_Kp<<"\n";
 
 
                 COND_TIME_DEBUG(tlist.push_new();)
@@ -385,10 +529,6 @@ void  REBVO::SecondThread(REBVO *cf){
                tlist[4],tlist[5],tlist[6],tlist[7],tlist.total(),dtp,new_buf.ef->KNum(),s_rho_q,EstimationOk?"OK":"NOK");)
 
 
-        dt_frame=(new_buf.t-old_buf.t);
-
-        if(dt_frame<0.001)
-            dt_frame=1/cf->config_fps;
 
         //Estimate position and pose incrementally
         Pose=Pose*R;
@@ -405,7 +545,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
         old_buf.Rot=R;
         old_buf.RotLie=SO3<>(R).ln();
-        old_buf.Vel=-V*K/dt_frame*Kp;
+        old_buf.Vel=-V*K/dt_frame;
 
         old_buf.Pose=Pose;
         old_buf.PoseLie=SO3<>(Pose).ln();
@@ -414,6 +554,14 @@ void  REBVO::SecondThread(REBVO *cf){
         old_buf.s_rho_p=s_rho_q;
 
         old_buf.EstimationOK=EstimationOk;
+
+        old_buf.imustate=istate;
+
+      /*  if((old_buf.p_id%25)==0){
+            cf->kf_list.push_back(keyframe(*old_buf.ef,*old_buf.gt,old_buf.t,old_buf.Rot,old_buf.RotLie,old_buf.Vel,old_buf.Pose,old_buf.PoseLie,old_buf.Pos));
+
+            std::cout <<"\nadded keyframe\n";
+        }*/
 
         if(cf->system_reset){   //Do a depth reset to the New Edgemap
             for (auto &kl: (*new_buf.ef)) {
@@ -559,6 +707,8 @@ void REBVO::ThirdThread(REBVO *cf){
             return;
         }
 
+        a_log<< std::scientific<<std::setprecision(16);
+
 
         t_log.open(cf->TrayFile.data());
         if(!t_log.is_open()){
@@ -658,7 +808,7 @@ void REBVO::ThirdThread(REBVO *cf){
             }
 
 
-            net_buf_inx++;
+            ++net_buf_inx;
 
 
         }else if(cf->VideoSave && VideoSaveBuffer!=NULL && VideoSaveBuffersize>VideoSaveIndex){
@@ -692,6 +842,21 @@ void REBVO::ThirdThread(REBVO *cf){
             a_log<<"Pos_cv("<<a_log_inx<<",:)=["<<pbuf.Pos[0]<<","<<pbuf.Pos[1]<<","<<pbuf.Pos[2]<<"];\n";
             a_log<<"K_cv("<<a_log_inx<<",:)="<<pbuf.K<<";\n";
             a_log<<"KLN_cv("<<a_log_inx<<",:)="<<pbuf.ef->KNum()<<";\n";
+
+
+            a_log<<"Giro_cv("<<a_log_inx<<",:)=["<<pbuf.imu.giro[0]<<","<<pbuf.imu.giro[1]<<","<<pbuf.imu.giro[2]<<"];\n";
+            a_log<<"Acel_cv("<<a_log_inx<<",:)=["<<pbuf.imu.acel[0]<<","<<pbuf.imu.acel[1]<<","<<pbuf.imu.acel[2]<<"];\n";
+
+            a_log<<"GBias_cv("<<a_log_inx<<",:)=["<<pbuf.imustate.Bg[0]<<","<<pbuf.imustate.Bg[1]<<","<<pbuf.imustate.Bg[2]<<"];\n";
+            a_log<<"dWv_cv("<<a_log_inx<<",:)=["<<pbuf.imustate.dWv[0]<<","<<pbuf.imustate.dWv[1]<<","<<pbuf.imustate.dWv[2]<<"];\n";
+            a_log<<"dWgv_cv("<<a_log_inx<<",:)=["<<pbuf.imustate.dWgv[0]<<","<<pbuf.imustate.dWgv[1]<<","<<pbuf.imustate.dWgv[2]<<"];\n";
+
+
+            a_log<<"g_cv("<<a_log_inx<<",:)=["<<pbuf.imustate.g_est[0]<<","<<pbuf.imustate.g_est[1]<<","<<pbuf.imustate.g_est[2]<<"];\n";
+            a_log<<"VBias_cv("<<a_log_inx<<",:)=["<<pbuf.imustate.b_est[0]<<","<<pbuf.imustate.b_est[1]<<","<<pbuf.imustate.b_est[2]<<"];\n";
+            a_log<<"Av_cv("<<a_log_inx<<",:)=["<<pbuf.imustate.Av[0]<<","<<pbuf.imustate.Av[1]<<","<<pbuf.imustate.Av[2]<<"];\n";
+            a_log<<"As_cv("<<a_log_inx<<",:)=["<<pbuf.imustate.As[0]<<","<<pbuf.imustate.As[1]<<","<<pbuf.imustate.As[2]<<"];\n";
+
             a_log.flush();
 
             //******* Save trayectory ************//
@@ -793,6 +958,7 @@ REBVO::REBVO(Configurator &config)
 
     InitOK&=config.GetConfigByName("DataSetCamera","DataSetDir",DataSetDir,true);
     InitOK&=config.GetConfigByName("DataSetCamera","DataSetFile",DataSetFile,true);
+    InitOK&=config.GetConfigByName("DataSetCamera","TimeScale",CamTimeScale,true);
 
 
     InitOK&=config.GetConfigByName("REBVO","VideoNetHost",VideoNetHost,true);
@@ -862,6 +1028,32 @@ REBVO::REBVO(Configurator &config)
     InitOK&=config.GetConfigByName("REBVO","VideoSaveFile",VideoSaveFile,true);
     InitOK&=config.GetConfigByName("REBVO","VideoSaveBuffersize",VideoSaveBuffersize,true);
     InitOK&=config.GetConfigByName("REBVO","EdgeMapDelay",EdgeMapDelay,true);
+
+    InitOK&=config.GetConfigByName("IMU","ImuMode",ImuMode,true);
+    InitOK&=config.GetConfigByName("IMU","GiroMeasStdDev",GiroMeasStdDev,true);
+    InitOK&=config.GetConfigByName("IMU","GiroBiasStdDev",GiroBiasStdDev,true);
+    InitOK&=config.GetConfigByName("IMU","InitBias",InitBias,true);
+    InitOK&=config.GetConfigByName("IMU","g_module",g_module,true);
+
+
+    InitOK&=config.GetConfigByName("IMU","AcelMeasStdDev",AcelMeasStdDev,true);
+    InitOK&=config.GetConfigByName("IMU","g_module_uncer",g_module_uncer,true);
+    InitOK&=config.GetConfigByName("IMU","VBiasStdDev",VBiasStdDev,true);
+    InitOK&=config.GetConfigByName("IMU","ScaleStdDevMult",ScaleStdDevMult,true);
+    InitOK&=config.GetConfigByName("IMU","ScaleStdDevMax",ScaleStdDevMax,true);
+
+
+
+
+
+
+    if(ImuMode==2){
+        InitOK&=config.GetConfigByName("IMU","ImuFile",ImuFile,true);
+
+        InitOK&=config.GetConfigByName("IMU","TimeScale",ImuTimeScale,true);
+    }
+
+
 
 
     cam=new cam_model({pp_x,pp_y},{z_f_x,z_f_y},kc,ImageSize);

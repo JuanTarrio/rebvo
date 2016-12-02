@@ -31,15 +31,16 @@
 struct cam_model{
 
 public:
-    const Point2DF pp;
-    const Point2DF zf;
-    const double zfm;
-    const double Kc[2];
-    const Size2D sz;
+    Point2DF pp;
+    Point2DF zf;
+    double zfm;
+    double Kc[2];
+    Size2D sz;
 
     cam_model(Point2DF prin_point,Point2DF focal_dist,double DistKc[2],Size2D ImageSize)
         :pp(prin_point),zf(focal_dist),zfm((focal_dist.x+focal_dist.y)/2),Kc{DistKc[0],DistKc[1]},sz(ImageSize){ }
 
+    cam_model(){}
 
     void UndistortHom2Hom(Point2DF &p,int newton_it){
 

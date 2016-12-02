@@ -53,9 +53,57 @@
 #include "udp_port.h"
 #include "global_tracker.h"
 #include "pipeline.h"
+#include "keyframe.h"
+#include "imugrabber.h"
 
 
 #define CBUFSIZE        0x08
+
+
+//Structure to save variables of the different estimation stages
+struct IMUState{
+    TooN::Vector <3> Vg=TooN::Zeros;                //IMU Stages velocity and rotation
+
+    TooN::Vector <3> dVv=TooN::Zeros;
+    TooN::Vector <3> dWv=TooN::Zeros;
+
+    TooN::Vector <3> dVgv=TooN::Zeros;
+    TooN::Vector <3> dWgv=TooN::Zeros;
+
+    TooN::Vector <3> Vgv=TooN::Zeros;
+    TooN::Vector <3> Wgv=TooN::Zeros;
+
+
+    TooN::Matrix <3,3> P_Vg=TooN::Identity*1e50;    //IMU Stages velocity and rotation covariances
+
+
+    TooN::Matrix <3,3> RGiro=TooN::Identity;
+    TooN::Matrix <3,3> RGBias=TooN::Identity;
+
+    TooN::Vector <3>   Bg=TooN::Zeros;              //Giroscope bias
+    TooN::Matrix <3,3> W_Bg=TooN::Identity;         //Giroscope bias covariance
+
+
+    TooN::Vector <3> Av=TooN::Zeros;                //visual acceleration
+    TooN::Vector <3> As=TooN::Zeros;                //accelerometer acceleration
+
+    TooN::Vector <7> X;
+    TooN::Matrix <7,7> P;
+    TooN::Matrix <3,3> Qrot;
+    TooN::Matrix <3,3> Qbias;
+    double QKp;
+    double Rg;
+    TooN:: Matrix <3,3> Rs;
+    TooN::Matrix <3,3> Rv;
+    TooN::Vector<3> g_est;
+    TooN::Vector<3> b_est;
+    TooN::Matrix <6,6> Wvw;
+    TooN::Vector <6> Xvw;
+
+    bool init=false;
+};
+
+//Pipeline state buffer
 
 struct PipeBuffer{
 
@@ -66,7 +114,6 @@ struct PipeBuffer{
     Image<float> *img;
     double t;
     double dt;
-    double imu_n;
 
     double s_rho_p;
 
@@ -79,8 +126,8 @@ struct PipeBuffer{
     TooN::Vector <3> PoseLie;
     TooN::Vector <3> Pos;
 
+    IMUState imustate;
 
-    int imu_data_num;
     double dtp0;
 
     double K;
@@ -93,6 +140,7 @@ struct PipeBuffer{
 
     bool quit;
 
+    IntegratedImuData imu;
 
 };
 
@@ -134,6 +182,9 @@ class REBVO
     double sim_save_nframes;
     int CameraType;
 
+    ImuGrabber *imu=nullptr;
+
+
     //DSCam param
 
     std::string DataSetFile;
@@ -142,6 +193,25 @@ class REBVO
     //Camara parameters
     cam_model *cam;
     double config_fps;
+    double CamTimeScale;
+
+    //IMU parameters
+
+    int ImuMode;
+    std::string ImuFile;
+    double ImuTimeScale;
+    double GiroMeasStdDev;
+    double GiroBiasStdDev;
+    bool InitBias;
+    double g_module;
+
+
+    double AcelMeasStdDev;
+    double g_module_uncer;
+    double VBiasStdDev;
+    double ScaleStdDevMult;
+    double ScaleStdDevMax;
+
 
     //Processor parameters
 
@@ -221,6 +291,7 @@ class REBVO
     double DoReScaling;
 
 
+
 public:
     bool	Init();
 
@@ -238,6 +309,11 @@ public:
     void Reset(){system_reset=true;}
 
     bool Running(){return !quit;}
+
+
+    //Keyframe list
+
+    std::vector <keyframe> kf_list;
 };
 
 #endif // CAMARAFRONTAL_H

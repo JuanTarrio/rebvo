@@ -89,6 +89,10 @@ int main(int argn,char ** argv)
 
     }
 
+    std::cout <<"\nSaving keyframes to file\n";
+    keyframe::saveKeyframes2File("key_frame_file.data",cf.kf_list);
+    std::cout <<"\nEnd saving\n";
+
     cf.CleanUp();
     return 0;
 }

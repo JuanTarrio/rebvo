@@ -64,6 +64,7 @@ public:
     ConfigClass* FindClassByName(std::string n);
 
     static std::string ShrinkWS(std::string s);
+    static std::string ShrinkNV(std::string s);
 
     bool GetConfigByName(const char * class_name,const char *param_name,std::string & param,bool vervose=false);
 

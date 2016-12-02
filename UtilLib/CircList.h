@@ -24,7 +24,7 @@
 #ifndef CIRCLIST_H
 #define CIRCLIST_H
 
-
+#include <stdexcept>
 namespace util{
 
 
@@ -157,21 +157,22 @@ class CircListIndexer{
 
     int inx;
     int num;
-    const uint size;
+    uint size;
 
 public:
 
     CircListIndexer(uint list_size) : inx(0),num(0),size(list_size){}
+    CircListIndexer(int index,int numelem,uint list_size) : inx(index),num(numelem),size(list_size){}
 
-    int operator+(const int &r){
-        return (inx+(r%size)+size)%size;
+    CircListIndexer operator+(const int &r){
+        return CircListIndexer((inx+(r%size)+size)%size,num,size);
     }
 
-    int operator-(const int &r){
-        return (inx-(r%size)+size)%size;
+    CircListIndexer operator-(const int &r){
+        return CircListIndexer((inx-(r%size)+size)%size,num,size);
     }
 
-    CircListIndexer& operator++(int){
+    CircListIndexer& operator++(){
 
         inx=(inx+1)%size;
 
@@ -179,7 +180,7 @@ public:
     }
 
 
-    CircListIndexer& operator--(int){
+    CircListIndexer& operator--(){
 
         inx=(inx-1+size)%size;
 
@@ -202,9 +203,21 @@ public:
         return num;
     }
 
+
     uint Size(){
         return size;
     }
+
+     bool operator==(const CircListIndexer& rhs){
+         return inx==rhs.inx;
+     }
+
+ /*   CircListIndexer& operator=(CircListIndexer &&from){
+        if(from.size!=size)
+            throw std::invalid_argument("CircListIndexer: indexers mut have the same size on copy");
+        inx=from.inx;
+        num=from.inx;
+    }*/
 };
 
 

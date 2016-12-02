@@ -9,14 +9,14 @@
     Sigma0=1.7818                       //The 2 scales used for DoG calculation
     Sigma1=2.30029
 
-    ReferencePoints=15000               //Reference to the number of points when autothreshold
-    MaxPoints=25000                     //Absolute maximun number of points
+    ReferencePoints=12000               //Reference to the number of points when autothreshold
+    MaxPoints=16000                     //Absolute maximun number of points
 
     DetectorThresh=0.01                 //Manual theshold
-    DetectorAutoGain=1e-6               //Auto threshold gain, 0=manual
+    DetectorAutoGain=5e-7               //Auto threshold gain, 0=manual
 
-    DetectorMaxThresh=0.05              //Limits for autothreshold
-    DetectorMinThresh=0.03
+    DetectorMaxThresh=0.5              //Limits for autothreshold
+    DetectorMinThresh=0.005
 
     DetectorPlaneFitSize=2                  //Window size for plane fitting to the DoG = (DetectorPlaneFitSize*2+1)^2
     DetectorPosNegThresh=0.4                //Max percentual difference for DoG nonmaximal suppresion
@@ -29,15 +29,15 @@
     QCutOffNumBins=100;                         //Number of bins on the histogram for percentile calculation
     QCutOffQuantile=0.9;                        //Percentile of the KLs to use
 
-    TrackerIterNum=10;                          //Tracker number of iterations
+    TrackerIterNum=5;                          //Tracker number of iterations
     TrackerInitType=2;                          //Tracker Initialization prior (0=zero,1=last frame,2=try both)
     TrackerInitIterNum=2;                       //Double ititialization iteration number
 
-    TrackerMatchThresh=1;                       //Tracking thesh on the scalar product
+    TrackerMatchThresh=0.5;                     //Tracking thesh on the scalar product
     MatchThreshModule=1;                        //Matching thesh on the gradient module
     MatchThreshAngle=45;                        //Matching thesh on the gradient angle (degrees)
 
-    MatchNumThresh=2                            //Minimun number
+    MatchNumThresh=0                            //Minimun number
 
     ReweigthDistance=2				//Reweigh error residual
 	
@@ -45,9 +45,9 @@
 
     LocationUncertaintyMatch=2			//Modelled Pixel uncertainty on the matching step
     ReshapeQAbsolute=1e-4			//EKF Modelled absolute error on IDEpth
-    ReshapeQRelative=1e-2			//EKF Modelled relative error on IDEpth
+    ReshapeQRelative=1.6968e-04			//EKF Modelled relative error on IDEpth
     LocationUncertainty=1			//Modelled Pixel uncertainty on the correction step
-    DoReScaling=1				//Apply re-scaling after EKF
+    DoReScaling=0				//Apply re-scaling after EKF
 	
     GlobalMatchThreshold=500			//Minimun number of keyline matches required for further procesing
 
@@ -55,22 +55,22 @@
 &Camera
 
     CameraDevice=/dev/video0								//V4L Camera device
-    ZfX=525.0										//Camera XY focal length
-    ZfY=525.0
-    PPx=320 //319.5									//Camera principal point
-    PPy=240 //239.5
+    ZfX=458.654										//Camera XY focal length
+    ZfY=457.296
+    PPx=367.215         								//Camera principal point
+    PPy=248.375
     KcR2=0                  								//Distortion parameters (Not used in REBVO)
     KcR4=0                  								//Set to 0
-    ImageWidth=640									//Image size
+    ImageWidth=752									//Image size
     ImageHeight=480
-    FPS=50										//Frames per second
+    FPS=20										//Frames per second
     
 
 &REBVO
 
     CameraType=2                                                                        //0=V4L, 1=SimCam, 2=Dataset cam
 
-    VideoNetHost=10.73.32.54								//Remote host to send the data
+    VideoNetHost=127.0.0.1								//Remote host to send the data
     VideoNetPort=2708									//Remote port
     VideoNetEnabled=1
 
@@ -89,8 +89,25 @@
 
 &DataSetCamera
 
-    DataSetDir=/home/juan/Datasets/rgbd_dataset_freiburg2_desk/                  //The directory of the dataset
-    DataSetFile=rgb.txt                                                          //The file of the dataset (relative to the directory)
+    DataSetDir=/home/juan/Datasets/MH_03_medium/mav0/cam0/data/undis/                           //The directory of the dataset
+    DataSetFile=/home/juan/Datasets/MH_03_medium/mav0/cam0/data.csv                       //The file of the dataset (relative to the directory)
+    TimeScale=1e-9
+
+&IMU
+    ImuMode=2
+    ImuFile=/home/juan/Datasets/MH_03_medium/mav0/imu0/data.csv
+    TimeScale=1e-9
+
+    GiroMeasStdDev=8.4840e-06
+    GiroBiasStdDev=9.6965e-07
+    InitBias=1
+    g_module=9.8
+
+    AcelMeasStdDev=2.0000e-3
+    g_module_uncer=0.2
+    VBiasStdDev=1e-7
+    ScaleStdDevMult=1e-2
+    ScaleStdDevMax=1e-4
 
 &SimuCamera
 

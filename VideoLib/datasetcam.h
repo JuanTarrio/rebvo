@@ -26,7 +26,7 @@ class DataSetCam : public VideoCam
 
 
 public:
-    DataSetCam(const char *DataSetDir,const char *DataSetFile,Size2D frame_size,const char *log_name=NULL);
+    DataSetCam(const char *DataSetDir, const char *DataSetFile, Size2D frame_size, double time_scale, const char *log_name=NULL);
     ~DataSetCam();
     int WaitFrame(bool drop_frames=true) override;
     int LoadImage(const std::string &i_name);

@@ -49,7 +49,11 @@ SOURCES +=  main.cpp \
     ../UtilLib/ttimer.cpp\
     ../UtilLib/ne10wrapper.cpp\
     ../UtilLib/configurator.cpp \
-    ../CommLib/udp_port.cpp
+    ../CommLib/udp_port.cpp \
+    ../mtracklib/keyframe.cpp \
+    ../VideoLib/imugrabber.cpp\
+    ../UtilLib/minimizer.cpp \
+    ../mtracklib/scaleestimator.cpp
 
 HEADERS += ../Blocks/incfiles.h \
     ../Blocks/rebvo.h\
@@ -82,7 +86,11 @@ HEADERS += ../Blocks/incfiles.h \
     ../UtilLib/ttimer.h\
     ../UtilLib/pipeline.h\
     ../UtilLib/CircList.h\
-    ../CommLib/udp_port.h
+    ../CommLib/udp_port.h \
+    ../mtracklib/keyframe.h \
+    ../VideoLib/imugrabber.h\
+    ../UtilLib/minimizer.h \
+    ../mtracklib/scaleestimator.h
 
 
 OTHER_FILES += GlobalConfig

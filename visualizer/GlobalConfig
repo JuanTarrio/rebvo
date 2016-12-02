@@ -3,17 +3,21 @@
 
 &CamaraFrontal 			//Camera related params
 
-    ZfX=525.0 			//X,Y Focal length		
-    ZfY=525.0 			//
-    PPx=319.5 			//X,Y Principal point
-    PPy=239.5 			//
+ //   ZfX=525.0 			//X,Y Focal length
+ //   ZfY=525.0 			//
+  //  PPx=319.5 			//X,Y Principal point
+  //  PPy=239.5 			//
 
+    ZfX=458.654										//Camera XY focal length
+    ZfY=457.296
+    PPx=367.215         								//Camera principal point
+    PPy=248.375
 
 &DisplayFrontal			//Display parameters
 
     Host=10.73.32.135	//REBVO remote host
     Port=2708			//remote port
-    ImageWidth=640		//Image size, must be the same as in the remote host!	
+    ImageWidth=752		//Image size, must be the same as in the remote host!
     ImageHeight=480
     DepthShow=5
     TraySource=1                //0=Network, 1=Radio

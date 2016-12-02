@@ -6,13 +6,13 @@
 #include <fstream>
 #include <configurator.h>
 #include <gd.h>
-DataSetCam::DataSetCam(const char *DataSetDir,const char *DataSetFile, Size2D frame_size, const char *log_name)
+DataSetCam::DataSetCam(const char *DataSetDir,const char *DataSetFile, Size2D frame_size,double time_scale, const char *log_name)
     :VideoCam(log_name,frame_size),buffer(frame_size),strDir(DataSetDir)
 {
 
     //Loads Dataset file data
 
-    std::string dfilen=strDir+std::string(DataSetFile);
+    std::string dfilen=std::string(DataSetFile);
 
 
 
@@ -43,7 +43,7 @@ DataSetCam::DataSetCam(const char *DataSetDir,const char *DataSetFile, Size2D fr
 
         size_t pos;
 
-        img_time.push_back(std::stod(line,&pos));
+        img_time.push_back(std::stod(line,&pos)*time_scale);
 
         if(pos==0 || pos==std::string::npos || pos==line.size()){
             std::cout << "\nDataSetCamera: EDataFile sintax error line "<< linea <<"String:"<<line <<"\n";
@@ -51,8 +51,10 @@ DataSetCam::DataSetCam(const char *DataSetDir,const char *DataSetFile, Size2D fr
             return;
         }
 
+        if(line.at(pos)==',')
+            pos++;
 
-        img_list.push_back(DataSetDir+Configurator::ShrinkWS(line.substr(pos,line.size())));
+        img_list.push_back(DataSetDir+Configurator::ShrinkNV(Configurator::ShrinkWS(line.substr(pos,line.size()))));
 
 
         linea++;
@@ -62,6 +64,7 @@ DataSetCam::DataSetCam(const char *DataSetDir,const char *DataSetFile, Size2D fr
     std::cout << "\nLoaded "<<linea << " File names\n";
 
     error=false;
+    paknum=0;
 }
 
 DataSetCam::~DataSetCam(){
@@ -93,7 +96,7 @@ int DataSetCam::LoadImage(const std::string &i_name){
     FILE *i_file=fopen(i_name.data(),"r");
 
     if(i_file==nullptr){
-        std::cout << "\nDataSetCam: Image "<<i_name  <<" error on opening, file exist?\n";
+        std::cout << "\nDataSetCam: Image "<<i_name  <<" error on opening, file exist?\n"<<strerror(errno);
         return -1;
     }
 
@@ -174,6 +177,7 @@ int DataSetCam::GrabFrame(RGB24Pixel *data, double &tstamp, bool drop_frames){
     buffer.copyTo(data);
     tstamp=time;
     frm_pending=false;
+    paknum++;
     return 0;
 }
 
@@ -187,6 +191,7 @@ RGB24Pixel* DataSetCam::GrabBuffer(double &tstamp, bool drop_frames){
     frm_pending=false;
 
     tstamp=time;
+    paknum++;
     return buffer.Data();
 }
 
