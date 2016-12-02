@@ -1,0 +1,118 @@
+
+// ******  REBVO Configuration File ********
+// "&"  beginning sentences denote sections
+
+
+
+&Detector                               //The detection is based on zero crossing of the DoG
+
+    Sigma0=1.7818                       //The 2 scales used for DoG calculation
+    Sigma1=2.30029
+
+    ReferencePoints=15000               //Reference to the number of points when autothreshold
+    MaxPoints=25000                     //Absolute maximun number of points
+
+    DetectorThresh=0.01                 //Manual theshold
+    DetectorAutoGain=1e-6               //Auto threshold gain, 0=manual
+
+    DetectorMaxThresh=0.05              //Limits for autothreshold
+    DetectorMinThresh=0.03
+
+    DetectorPlaneFitSize=2                  //Window size for plane fitting to the DoG = (DetectorPlaneFitSize*2+1)^2
+    DetectorPosNegThresh=0.4                //Max percentual difference for DoG nonmaximal suppresion
+    DetectorDoGThresh=0.095259868922420     //Relation between DoG threshold and Gradient threshold ~1/Sigma0^4
+
+&TrackMaper
+
+    SearchRange=20                              //Pixel range for tracking and mapping
+
+    QCutOffNumBins=100;                         //Number of bins on the histogram for percentile calculation
+    QCutOffQuantile=0.9;                        //Percentile of the KLs to use
+
+    TrackerIterNum=15;                          //Tracker number of iterations
+    TrackerInitType=2;                          //Tracker Initialization prior (0=zero,1=last frame,2=try both)
+    TrackerInitIterNum=2;                       //Double ititialization iteration number
+
+    TrackerMatchThresh=1;                       //Tracking thesh on the scalar product
+    MatchThreshModule=1;                        //Matching thesh on the gradient module
+    MatchThreshAngle=45;                        //Matching thesh on the gradient angle (degrees)
+
+    MatchNumThresh=4                            //Minimun number
+
+    ReweigthDistance=2				//Reweigh error residual
+	
+    RegularizeThresh=0.5			//Regularization threshold on the gradient
+
+    LocationUncertaintyMatch=2			//Modelled Pixel uncertainty on the matching step
+    ReshapeQAbsolute=1e-4			//EKF Modelled absolute error on IDEpth
+    ReshapeQRelative=1e-2			//EKF Modelled relative error on IDEpth
+    LocationUncertainty=1			//Modelled Pixel uncertainty on the correction step
+    DoReScaling=1				//Apply re-scaling after EKF
+	
+    GlobalMatchThreshold=500			//Minimun number of keyline matches required for further procesing
+
+
+&Camera
+
+    CameraDevice=/dev/video0								//V4L Camera device
+    ZfX=525.0										//Camera XY focal length
+    ZfY=525.0
+    PPx=320 //319.5									//Camera principal point
+    PPy=240 //239.5
+    KcR2=0                  								//Distortion parameters (Not used in REBVO)
+    KcR4=0                  								//Set to 0
+    ImageWidth=640									//Image size
+    ImageHeight=480
+    FPS=50										//Frames per second
+    
+
+&REBVO
+
+    CameraType=2                                                                        //0=V4L, 1=SimCam, 2=Dataset cam
+
+    VideoNetHost=10.73.32.54								//Remote host to send the data
+    VideoNetPort=2708									//Remote port
+    VideoNetEnabled=1
+
+    VideoSave=0										//Optionally save video after running
+    VideoSaveFile=EncodedVideo.mjpeg							//Video file to save to
+    VideoSaveBuffersize=200000000							//Buffer size
+
+    EncoderType=1									//Video encoder type, 0=raw,1=Motion JPEG, 2=Samsung MFC
+    EncoderDevice=/dev/video9								//If using Samsung MFC encoder, encoder device
+    EdgeMapDelay=0									//Frame delay between video and edge-maps
+
+    SaveLog=1										//Save log on-off
+    LogFile=rebvo_log.m                                                                 //Log file in .m format
+    TrayFile=rebvo_tray.txt                                                             //Trayectory in TUM dataset format [t pos quat]
+
+
+&DataSetCamera
+
+    DataSetDir=/home/juan/Datasets/MH_02_easy/mav0/cam0/data/                           //The directory of the dataset
+    DataSetFile=/home/juan/Datasets/MH_02_easy/mav0/cam0/data.csv                       //The file of the dataset (relative to the directory)
+    CamTimeScale=1e-9
+
+&IMU
+    ImuMode=2
+    ImuFile=/home/juan/Datasets/MH_02_easy/mav0/imu0/data.csv
+    ImuTimeScale=1e-9
+
+&SimuCamera
+
+
+    SimVideoFile=sim_video                                      //SimCam video file
+    SimVideoNFrames=500						//Number of frames to save for simulation (uncompressed video)
+
+    SimuTimeOn=0                                                //Simulate time or use system time
+    SimuTimeSweep=3                                             //Simulated time sweep
+    SimuTimeStep=1e5                                            //Timestep in nanosecons
+    SimuTimeStart=-2                                            //Simulated time start
+
+&ProcesorConfig							//Processor thread affiniy
+
+    SetAffinity=1						//Switch to set afinity on off
+    CamaraT1=6
+    CamaraT2=7
+    CamaraT3=4
+
