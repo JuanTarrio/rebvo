@@ -6,8 +6,8 @@
 
 &Detector                               //The detection is based on zero crossing of the DoG
 
-    Sigma0=1.7818                       //The 2 scales used for DoG calculation
-    Sigma1=2.30029
+    Sigma0=2.72174                       //The 2 scales used for DoG calculation
+    Sigma1=3.56359                      //1.7818 2.30029 2.72174 3.56359
 
     ReferencePoints=12000               //Reference to the number of points when autothreshold
     MaxPoints=16000                     //Absolute maximun number of points
@@ -24,7 +24,7 @@
 
 &TrackMaper
 
-    SearchRange=20                              //Pixel range for tracking and mapping
+    SearchRange=40                              //Pixel range for tracking and mapping
 
     QCutOffNumBins=100;                         //Number of bins on the histogram for percentile calculation
     QCutOffQuantile=0.9;                        //Percentile of the KLs to use
@@ -89,24 +89,26 @@
 
 &DataSetCamera
 
-    DataSetDir=/home/juan/Datasets/MH_03_medium/mav0/cam0/data/undis/                           //The directory of the dataset
-    DataSetFile=/home/juan/Datasets/MH_03_medium/mav0/cam0/data.csv                       //The file of the dataset (relative to the directory)
+    DataSetDir=/home/juan/Datasets/V2_03_difficult/mav0/cam0/data/undis/                     //The directory of the dataset
+    DataSetFile=/home/juan/Datasets/V2_03_difficult/mav0/cam0/data.csv                       //The file of the dataset (relative to the directory)
     TimeScale=1e-9
 
 &IMU
     ImuMode=2
-    ImuFile=/home/juan/Datasets/MH_03_medium/mav0/imu0/data.csv
+    ImuFile=/home/juan/Datasets/V2_03_difficult/mav0/imu0/data.csv
+    CamImuSE3File=/home/juan/Datasets/MH_03_medium/mav0/cam0/se3.csv
     TimeScale=1e-9
 
     GiroMeasStdDev=8.4840e-06
     GiroBiasStdDev=9.6965e-07
     InitBias=1
+    InitBiasFrameNum=10;
     g_module=9.8
 
     AcelMeasStdDev=2.0000e-3
-    g_module_uncer=0.2
+    g_module_uncer=0.2e3
     VBiasStdDev=1e-7
-    ScaleStdDevMult=1e-2
+    ScaleStdDevMult=1e-3
     ScaleStdDevMax=1e-4
 
 &SimuCamera

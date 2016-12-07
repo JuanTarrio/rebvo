@@ -32,6 +32,8 @@ struct IntegratedImuData{
     TooN::Vector<3> giro=TooN::Zeros;
     TooN::Vector<3> acel=TooN::Zeros;
     TooN::Vector<3> comp=TooN::Zeros;
+    TooN::Vector<3> dgiro=TooN::Zeros;
+    TooN::Vector<3> cacel=TooN::Zeros;
 };
 
 class ImuGrabber
@@ -44,12 +46,17 @@ class ImuGrabber
 
     double tsample;
 
+    TooN::Matrix<3,3> RDataSetCam2IMU=TooN::Identity;
+    TooN::Vector<3> TDataSetCam2IMU=TooN::Zeros;
+
 public:
     ImuGrabber(int list_size,double tsamp);
     ImuGrabber(const std::vector<ImuData> &data_set_data);
     ~ImuGrabber();
 
     static std::vector <ImuData> LoadDataSet( const char *data_file, bool comp_data,double time_scale,bool &error);
+
+    bool LoadCamImuSE3(const char *se3_file);
 
     void PushData(const ImuData&data){
         if(write_inx==read_inx)

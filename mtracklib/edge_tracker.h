@@ -42,7 +42,7 @@ public:
 
     void DebugMatchHisto(uint m_num_max, uint bin_num, uint *histo);
 
-    bool ExtRotVel(const TooN::Vector<3> &vel, TooN::Matrix<6, 6> &Wx, TooN::Matrix<6, 6> &Rx, TooN::Vector <6> &X, const double &LocUncert);
+    bool ExtRotVel(const TooN::Vector<3> &vel, TooN::Matrix<6, 6> &Wx, TooN::Matrix<6, 6> &Rx, TooN::Vector <6> &X, const double &LocUncert, double HubReweigth);
     static void BiasCorrect(TooN::Vector <6> &X,TooN::Matrix<6,6> &Wx,TooN::Vector <3> &Gb,TooN::Matrix<3,3> &Wb,const TooN::Matrix<3,3> &Rg,const TooN::Matrix<3,3> &Rb);
 
 };

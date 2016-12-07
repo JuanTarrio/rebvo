@@ -59,6 +59,14 @@
 
 #define CBUFSIZE        0x08
 
+//#define TIME_DEBUG
+
+#ifdef TIME_DEBUG
+#define COND_TIME_DEBUG(arg) arg
+#else
+#define COND_TIME_DEBUG(arg)
+#endif
+
 
 //Structure to save variables of the different estimation stages
 struct IMUState{
@@ -72,6 +80,11 @@ struct IMUState{
 
     TooN::Vector <3> Vgv=TooN::Zeros;
     TooN::Vector <3> Wgv=TooN::Zeros;
+
+
+    TooN::Vector <3> dVgva=TooN::Zeros;
+    TooN::Vector <3> dWgva=TooN::Zeros;
+    TooN::Vector <3> Vgva=TooN::Zeros;
 
 
     TooN::Matrix <3,3> P_Vg=TooN::Identity*1e50;    //IMU Stages velocity and rotation covariances
@@ -96,9 +109,14 @@ struct IMUState{
     TooN:: Matrix <3,3> Rs;
     TooN::Matrix <3,3> Rv;
     TooN::Vector<3> g_est;
+    TooN::Vector<3> u_est;
     TooN::Vector<3> b_est;
     TooN::Matrix <6,6> Wvw;
     TooN::Vector <6> Xvw;
+
+
+    TooN::Vector<3> Posgv=TooN::Zeros;
+    TooN::Vector<3> Posgva=TooN::Zeros;
 
     bool init=false;
 };
@@ -199,10 +217,12 @@ class REBVO
 
     int ImuMode;
     std::string ImuFile;
+    std::string SE3File;
     double ImuTimeScale;
     double GiroMeasStdDev;
     double GiroBiasStdDev;
     bool InitBias;
+    int InitBiasFrameNum;
     double g_module;
 
 

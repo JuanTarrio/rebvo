@@ -3,9 +3,7 @@
 #include <TooN/so3.h>
 
 
-const TooN::Matrix<3,3> RDataSetCam2IMU=TooN::Data(0.0148655429818, -0.999880929698, 0.00414029679422,
-                                                   0.999557249008, 0.0149672133247, 0.025715529948,
-                                                  -0.0257744366974, 0.00375618835797, 0.999660727178);
+
 
 ImuGrabber::ImuGrabber(int list_size,double tsamp)
     :write_inx(list_size+1),read_inx(list_size+1),size(list_size+1),tsample(tsamp)
@@ -92,6 +90,32 @@ std::vector <ImuData> ImuGrabber::LoadDataSet(const char *data_file, bool comp_d
     return  vector_data;
 }
 
+bool ImuGrabber::LoadCamImuSE3(const char *se3_file)
+{
+     std::ifstream file(se3_file);
+
+     if(!file.is_open()){
+         std::cout << "LoadCamImuSE3: could not open SE3 file\n";
+         return false;
+     }
+
+    std::string num;
+    for(int i=0;i<3;i++){
+        for(int j=0;j<3;j++){
+            std::getline(file,num,',');
+            RDataSetCam2IMU(i,j)=std::stod(num);
+        }
+        std::getline(file,num,',');
+        TDataSetCam2IMU[i]=std::stod(num);
+    }
+
+    std::cout<<"Cam-Imu Rotation:\n"<<RDataSetCam2IMU<<"\nCam-IMU Translation:\n"<<TDataSetCam2IMU<<"\n";
+
+    file.close();
+    return true;
+
+}
+
 
 std::pair <util::CircListIndexer,util::CircListIndexer> ImuGrabber::SeachByTimeStamp(double tstart,double tend){
 
@@ -143,12 +167,19 @@ IntegratedImuData ImuGrabber::GrabAndIntegrate(double tstart,double tend){
         i_data.n++;
     }
 
+
+    i_data.dt=i_data.n*tsample;
     if(i_data.n>1){
         i_data.giro/=i_data.n;
         i_data.acel/=i_data.n;
         i_data.comp/=i_data.n;
+
+        i_data.dgiro=RDataSetCam2IMU.T()*(imu[search_range.second-1].giro-imu[search_range.first].giro);
+        i_data.dgiro/=i_data.dt;
     }
-    i_data.dt=i_data.n*tsample;
+
+    i_data.cacel=i_data.acel+(i_data.dgiro^(-(RDataSetCam2IMU.T()*TDataSetCam2IMU)));
+
 
     return i_data;
 }

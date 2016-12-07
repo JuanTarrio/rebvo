@@ -214,7 +214,7 @@ double ScaleEstimator::estKaGMEKBias(   const TooN::Vector<3> &s_acel,
 
     Matrix <7,7> Q=Zeros;
     Q(0,0)=QKp;
-    Q.slice<1,1,3,3>()=GProd.T()*Qrot*GProd;
+    Q.slice<1,1,3,3>()=GProd.T()*Qrot*GProd+Identity*1e-5;
     Q.slice<4,4,3,3>()=Qbias;
 
 
@@ -262,13 +262,15 @@ double ScaleEstimator::estKaGMEKBias(   const TooN::Vector<3> &s_acel,
 
     /*correct visual meassurement with bias estimation*/
 
+    Matrix <3,3> WVBias=JtJ.slice<4,4,3,3>();
+
     Matrix <6,6> Wb=Zeros;
-    Wb.slice<3,3,3,3>()=JtJ.slice<4,4,3,3>();
+    Wb.slice<3,3,3,3>()=WVBias;
 
     Vector <3> wc=Xvw.slice<3,3>() - b_est;
 
     Vector <6> WXc=Zeros;
-    WXc.slice<3,3>()=JtJ.slice<4,4,3,3>()*wc;
+    WXc.slice<3,3>()=WVBias*wc;
     Vector <6> Xc=Cholesky<6>(Wb+Wvw).get_inverse()*( Wvw*Xvw +  WXc);
 
     Xvw=Xc;

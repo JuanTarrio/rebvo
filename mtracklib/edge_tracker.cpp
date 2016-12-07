@@ -619,7 +619,9 @@ bool edge_tracker::ExtRotVel(const Vector <3> &vel,     //Prevously estimated tr
                              Matrix <6,6> &Wx,          //Output information matrix
                              Matrix <6,6> &Rx,          //Wx^-1
                              Vector <6> &X,             //Output incremental state
-                             const double &LocUncert)   //Location uncertainty
+                             const double &LocUncert,   //Location uncertainty
+                             double HubReweigth
+                             )
 {
 
 
@@ -669,8 +671,13 @@ bool edge_tracker::ExtRotVel(const Vector <3> &vel,     //Prevously estimated tr
         float dqvel=u_x*(vel[0]*zf-vel[2]*p_m_0.x)+u_y*(vel[1]*zf-vel[2]*p_m_0.y);
         float s_y=sqrt(s_rho*s_rho*dqvel*dqvel+LocUncert*LocUncert);
 
-        Phi.slice(j,0,1,6)/=s_y;
-        Y[j]/=s_y;
+        //if(ReWeight && fabs(DResidual[ikl])>k_huber)
+        double weigth=1;
+        if(fabs(Y[j])>HubReweigth)
+            weigth=fabs(Y[j])/HubReweigth;
+
+        Phi.slice(j,0,1,6)/=s_y*weigth;
+        Y[j]/=s_y*weigth;
 
         j++;
 

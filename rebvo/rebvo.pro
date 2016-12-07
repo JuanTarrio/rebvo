@@ -53,7 +53,10 @@ SOURCES +=  main.cpp \
     ../mtracklib/keyframe.cpp \
     ../VideoLib/imugrabber.cpp\
     ../UtilLib/minimizer.cpp \
-    ../mtracklib/scaleestimator.cpp
+    ../mtracklib/scaleestimator.cpp \
+    ../Blocks/rebvo_first_t.cpp \
+    ../Blocks/rebvo_second_t.cpp \
+    ../Blocks/rebvo_third_t.cpp
 
 HEADERS += ../Blocks/incfiles.h \
     ../Blocks/rebvo.h\

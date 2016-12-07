@@ -69,7 +69,10 @@ SOURCES       = ../rebvo/main.cpp \
 		../mtracklib/keyframe.cpp \
 		../VideoLib/imugrabber.cpp \
 		../UtilLib/minimizer.cpp \
-		../mtracklib/scaleestimator.cpp 
+		../mtracklib/scaleestimator.cpp \
+		../Blocks/rebvo_first_t.cpp \
+		../Blocks/rebvo_second_t.cpp \
+		../Blocks/rebvo_third_t.cpp 
 OBJECTS       = main.o \
 		rebvo.o \
 		video_io.o \
@@ -94,7 +97,10 @@ OBJECTS       = main.o \
 		keyframe.o \
 		imugrabber.o \
 		minimizer.o \
-		scaleestimator.o
+		scaleestimator.o \
+		rebvo_first_t.o \
+		rebvo_second_t.o \
+		rebvo_third_t.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -391,7 +397,8 @@ rebvo.o: ../Blocks/rebvo.cpp ../Blocks/rebvo.h \
 		../mtracklib/keyframe.h \
 		../VideoLib/imugrabber.h \
 		../UtilLib/ttimer.h \
-		../VideoLib/datasetcam.h
+		../VideoLib/datasetcam.h \
+		../mtracklib/scaleestimator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo.o ../Blocks/rebvo.cpp
 
 video_io.o: ../VideoLib/video_io.c ../VideoLib/video_io.h
@@ -589,8 +596,116 @@ minimizer.o: ../UtilLib/minimizer.cpp ../UtilLib/minimizer.h
 
 scaleestimator.o: ../mtracklib/scaleestimator.cpp ../mtracklib/scaleestimator.h \
 		../UtilLib/CircList.h \
-		../UtilLib/minimizer.h
+		../UtilLib/minimizer.h \
+		../UtilLib/util.h \
+		../UtilLib/timer.h \
+		../UtilLib/fvector.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o scaleestimator.o ../mtracklib/scaleestimator.cpp
+
+rebvo_first_t.o: ../Blocks/rebvo_first_t.cpp ../Blocks/rebvo.h \
+		../VideoLib/video_io.h \
+		../UtilLib/configurator.h \
+		../VideoLib/v4lcam.h \
+		../VideoLib/videocam.h \
+		../VideoLib/image.h \
+		../VideoLib/common_types.h \
+		../VideoLib/simcam.h \
+		../mtracklib/net_keypoint.h \
+		../mtracklib/edge_finder.h \
+		../mtracklib/sspace.h \
+		../mtracklib/iigauss.h \
+		../mtracklib/iimage.h \
+		../UtilLib/util.h \
+		../UtilLib/timer.h \
+		../UtilLib/fvector.h \
+		../UtilLib/CircList.h \
+		../UtilLib/cam_model.h \
+		../mtracklib/nav_data_defs.h \
+		../VideoLib/video_mfc.h \
+		../VideoLib/video_encoder.h \
+		../VideoLib/video_mjpeg.h \
+		../mtracklib/edge_tracker.h \
+		../UtilLib/NormalDistribution.h \
+		../UtilLib/pipeline.h \
+		../CommLib/udp_port.h \
+		../mtracklib/global_tracker.h \
+		../UtilLib/ne10wrapper.h \
+		../mtracklib/keyframe.h \
+		../VideoLib/imugrabber.h \
+		../UtilLib/ttimer.h \
+		../VideoLib/datasetcam.h \
+		../mtracklib/scaleestimator.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo_first_t.o ../Blocks/rebvo_first_t.cpp
+
+rebvo_second_t.o: ../Blocks/rebvo_second_t.cpp ../Blocks/rebvo.h \
+		../VideoLib/video_io.h \
+		../UtilLib/configurator.h \
+		../VideoLib/v4lcam.h \
+		../VideoLib/videocam.h \
+		../VideoLib/image.h \
+		../VideoLib/common_types.h \
+		../VideoLib/simcam.h \
+		../mtracklib/net_keypoint.h \
+		../mtracklib/edge_finder.h \
+		../mtracklib/sspace.h \
+		../mtracklib/iigauss.h \
+		../mtracklib/iimage.h \
+		../UtilLib/util.h \
+		../UtilLib/timer.h \
+		../UtilLib/fvector.h \
+		../UtilLib/CircList.h \
+		../UtilLib/cam_model.h \
+		../mtracklib/nav_data_defs.h \
+		../VideoLib/video_mfc.h \
+		../VideoLib/video_encoder.h \
+		../VideoLib/video_mjpeg.h \
+		../mtracklib/edge_tracker.h \
+		../UtilLib/NormalDistribution.h \
+		../UtilLib/pipeline.h \
+		../CommLib/udp_port.h \
+		../mtracklib/global_tracker.h \
+		../UtilLib/ne10wrapper.h \
+		../mtracklib/keyframe.h \
+		../VideoLib/imugrabber.h \
+		../UtilLib/ttimer.h \
+		../VideoLib/datasetcam.h \
+		../mtracklib/scaleestimator.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo_second_t.o ../Blocks/rebvo_second_t.cpp
+
+rebvo_third_t.o: ../Blocks/rebvo_third_t.cpp ../Blocks/rebvo.h \
+		../VideoLib/video_io.h \
+		../UtilLib/configurator.h \
+		../VideoLib/v4lcam.h \
+		../VideoLib/videocam.h \
+		../VideoLib/image.h \
+		../VideoLib/common_types.h \
+		../VideoLib/simcam.h \
+		../mtracklib/net_keypoint.h \
+		../mtracklib/edge_finder.h \
+		../mtracklib/sspace.h \
+		../mtracklib/iigauss.h \
+		../mtracklib/iimage.h \
+		../UtilLib/util.h \
+		../UtilLib/timer.h \
+		../UtilLib/fvector.h \
+		../UtilLib/CircList.h \
+		../UtilLib/cam_model.h \
+		../mtracklib/nav_data_defs.h \
+		../VideoLib/video_mfc.h \
+		../VideoLib/video_encoder.h \
+		../VideoLib/video_mjpeg.h \
+		../mtracklib/edge_tracker.h \
+		../UtilLib/NormalDistribution.h \
+		../UtilLib/pipeline.h \
+		../CommLib/udp_port.h \
+		../mtracklib/global_tracker.h \
+		../UtilLib/ne10wrapper.h \
+		../mtracklib/keyframe.h \
+		../VideoLib/imugrabber.h \
+		../UtilLib/ttimer.h \
+		../VideoLib/datasetcam.h \
+		../mtracklib/scaleestimator.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo_third_t.o ../Blocks/rebvo_third_t.cpp
 
 ####### Install
 
