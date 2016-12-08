@@ -180,6 +180,7 @@ double ScaleEstimator::estKaGMEKBias(   const TooN::Vector<3> &s_acel,
                                         TooN::Matrix<3,3> Rot,
                                         TooN::Vector <7> &X,
                                         TooN::Matrix <7,7> &P,
+                                        const TooN::Matrix <3,3> &Qg,
                                         const TooN::Matrix <3,3> &Qrot,
                                         const TooN::Matrix <3,3> &Qbias,
                                         const double &QKp,
@@ -214,7 +215,7 @@ double ScaleEstimator::estKaGMEKBias(   const TooN::Vector<3> &s_acel,
 
     Matrix <7,7> Q=Zeros;
     Q(0,0)=QKp;
-    Q.slice<1,1,3,3>()=GProd.T()*Qrot*GProd+Identity*1e-5;
+    Q.slice<1,1,3,3>()=GProd.T()*Qrot*GProd+Qg;
     Q.slice<4,4,3,3>()=Qbias;
 
 

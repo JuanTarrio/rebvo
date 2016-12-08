@@ -50,11 +50,13 @@ public:
 
     const double& getMaxSRadius(){return max_r;}
 
-    double TryVel(TooN::Matrix<3,3> &JtJ, TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist, double match_thresh, double s_rho_min,uint MatchNumThresh);
+
     template <class T>
-    double TryVel_vect(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel,  edge_tracker &klist, T match_thresh, double s_rho_min,uint MatchNumThresh);
+    double TryVel(TooN::Matrix<3,3> &JtJ, TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist, double match_thresh, double s_rho_min,uint MatchNumThresh,T *Residuals,double reweigth_distance);
     template <class T>
-    double Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,T match_thresh, int iter_max, T s_rho_min,uint MatchNumThresh);
+    double TryVel_vect(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel,  edge_tracker &klist, T match_thresh, double s_rho_min,uint MatchNumThresh,double reweigth_distance);
+    template <class T>
+    double Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,T match_thresh, int iter_max, T s_rho_min,uint MatchNumThresh,double reweigth_distance);
 };
 
 

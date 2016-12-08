@@ -103,6 +103,7 @@ struct IMUState{
     TooN::Vector <7> X;
     TooN::Matrix <7,7> P;
     TooN::Matrix <3,3> Qrot;
+    TooN::Matrix <3,3> Qg;
     TooN::Matrix <3,3> Qbias;
     double QKp;
     double Rg;
@@ -228,9 +229,11 @@ class REBVO
 
     double AcelMeasStdDev;
     double g_module_uncer;
+    double g_uncert;
     double VBiasStdDev;
     double ScaleStdDevMult;
     double ScaleStdDevMax;
+    double ScaleStdDevInit;
 
 
     //Processor parameters

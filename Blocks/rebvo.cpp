@@ -147,9 +147,11 @@ REBVO::REBVO(Configurator &config)
 
     InitOK&=config.GetConfigByName("IMU","AcelMeasStdDev",AcelMeasStdDev,true);
     InitOK&=config.GetConfigByName("IMU","g_module_uncer",g_module_uncer,true);
+            InitOK&=config.GetConfigByName("IMU","g_uncert",g_uncert,true);
     InitOK&=config.GetConfigByName("IMU","VBiasStdDev",VBiasStdDev,true);
     InitOK&=config.GetConfigByName("IMU","ScaleStdDevMult",ScaleStdDevMult,true);
     InitOK&=config.GetConfigByName("IMU","ScaleStdDevMax",ScaleStdDevMax,true);
+    InitOK&=config.GetConfigByName("IMU","ScaleStdDevInit",ScaleStdDevInit,true);
 
 
     if(ImuMode==2){

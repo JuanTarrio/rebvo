@@ -28,7 +28,6 @@
 
 using namespace TooN;
 
-
 edge_finder::edge_finder(cam_model &cam, float max_i_value, int kl_num_max)		//valor maximo de keypoints
     :cam_mod(cam),fsz(cam_mod.sz),max_img_value(max_i_value),
      img_mask_kl(fsz),kl_size(kl_num_max),kn(0)

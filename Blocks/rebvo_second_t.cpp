@@ -48,12 +48,13 @@ void  REBVO::SecondThread(REBVO *cf){
     istate.RGiro=Identity*cf->GiroMeasStdDev*cf->GiroMeasStdDev;
     istate.W_Bg=util::Matrix3x3Inv(istate.RGBias*100);
 
+    istate.Qg=Identity*cf->g_uncert*cf->g_uncert;
     istate.Rg=cf->g_module_uncer*cf->g_module_uncer;
     istate.Rs=Identity*cf->AcelMeasStdDev*cf->AcelMeasStdDev;
     istate.Qbias=Identity*cf->VBiasStdDev*cf->VBiasStdDev;
 
     istate.X=makeVector(M_PI/4,0,cf->g_module,0,0,0,0);
-    istate.P=makeVector(M_PI/16*M_PI/16*1e-4,\
+    istate.P=makeVector(cf->ScaleStdDevInit*cf->ScaleStdDevInit,\
                         100,100,100,\
                         cf->VBiasStdDev*cf->VBiasStdDev*1e1,cf->VBiasStdDev*cf->VBiasStdDev*1e1,cf->VBiasStdDev*cf->VBiasStdDev*1e1).as_diagonal();
 
@@ -161,7 +162,7 @@ void  REBVO::SecondThread(REBVO *cf){
             old_buf.ef->rotate_keylines(R.T()); //Apply foward prerotation to the old key lines
 
 
-            new_buf.gt->Minimizer_V<double>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->TrackerMatchThresh,cf->TrackerIterNum,s_rho_q,cf->MatchNumThresh);   //Estimate translation only
+            new_buf.gt->Minimizer_V<double>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->TrackerMatchThresh,cf->TrackerIterNum,s_rho_q,cf->MatchNumThresh,cf->ReweigthDistance);   //Estimate translation only
 
 
             //***** Match from the old EdgeMap to the new one using the information from the minimization *****
@@ -222,7 +223,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
 
             if(n_frame>4+cf->InitBiasFrameNum){
-                K=ScaleEstimator::estKaGMEKBias(istate.As,istate.Av,1,R,istate.X,istate.P,
+                K=ScaleEstimator::estKaGMEKBias(istate.As,istate.Av,1,R,istate.X,istate.P,istate.Qg,
                                                 istate.Qrot,istate.Qbias,istate.QKp,istate.Rg,istate.Rs,istate.Rv,
                                                 istate.g_est,istate.b_est,W_Xgv,Xgva,cf->g_module);
 
@@ -352,7 +353,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
             if(n_frame>4+cf->InitBiasFrameNum){
 
-                /*
+
                 istate.u_est=Rgva.T()*istate.u_est;
 
                 istate.u_est=istate.u_est-(istate.u_est*istate.g_est)/(istate.g_est*istate.g_est)*istate.g_est;
@@ -362,9 +363,9 @@ void  REBVO::SecondThread(REBVO *cf){
                 Matrix<3> PoseP1=TooN::SO3<>(istate.g_est,makeVector(0,1,0)).get_matrix();
                 Matrix<3> PoseP2=TooN::SO3<>(PoseP1*istate.u_est,makeVector(1,0,0)).get_matrix();
 
-                Pose=PoseP2*PoseP1;*/
+                Pose=PoseP2*PoseP1;
 
-                Pose=Pose*Rgva;
+                //Pose=Pose*Rgva;
                 Pos+=-Pose*istate.Vgva*K;
 
                 istate.Posgva=Pos;

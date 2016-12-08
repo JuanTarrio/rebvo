@@ -735,7 +735,8 @@ template double global_tracker::Minimizer_RV<double,false>(TooN::Vector<3> &Vel,
 
 
 
-double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist,double match_thresh, double s_rho_min,uint MatchNumThresh)
+template <class T>
+double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist,double match_thresh, double s_rho_min,uint MatchNumThresh,T *Residuals,double reweigth_distance)
 {
 
     double score=0,f;
@@ -744,6 +745,8 @@ double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const
     JtF=Zeros;
 
     int mnum=0;
+    double fi=0;
+
 
 
     for(int ikl=0;ikl<klist.KNum();ikl++){
@@ -762,9 +765,18 @@ double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const
 
         Point2D<double> p_pj;
 
+        double weight=1;
+        if(Residuals[ikl]>reweigth_distance)
+            weight=reweigth_distance/Residuals[ikl];
+
+
+
         double z_p=1.0/kl.rho+Vel[2];
- //       if(z_p<=0)
- //           continue;
+        if(z_p<=0){
+            f=(1/(kl.s_rho))*max_r*weight;
+            score+=f*f;
+            continue;
+        }
         double rho_p=1.0/z_p;
 
         p_pj.x=rho_p*(Vel[0]*cam_mod.zfm-Vel[2]*kl.p_m.x)+kl.p_m.x;
@@ -777,7 +789,7 @@ double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const
         int y=util::round2int_positive(p_pji.y);
 
         if(x<1|| y<1|| x>=(int)cam_mod.sz.w-1 || y>=(int)cam_mod.sz.h-1){
-            f=(1/(kl.s_rho))*max_r;
+            f=(1/(kl.s_rho))*max_r*weight;
             score+=f*f;
             continue;
         }
@@ -786,15 +798,14 @@ double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const
         double df_dx;
         double df_dy;
 
-        double fi;
-
         f=Calc_f_J<double>(y*cam_mod.sz.w+x,df_dx,df_dy,kl,p_pji,max_r,match_thresh,mnum,fi);
 
+        f*=weight;
         score+=f*f;
 
-        double jx=rho_p*cam_mod.zfm*df_dx;
-        double jy=rho_p*cam_mod.zfm*df_dy;
-        double jz=-rho_p*(p_pj.x*df_dx+p_pj.y*df_dy);
+        double jx=rho_p*cam_mod.zfm*df_dx*weight;
+        double jy=rho_p*cam_mod.zfm*df_dy*weight;
+        double jz=-rho_p*(p_pj.x*df_dx+p_pj.y*df_dy)*weight;
 
 
         JtJ(0,0)+=jx*jx;
@@ -807,6 +818,8 @@ double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const
         JtF[0]+=jx*f;
         JtF[1]+=jy*f;
         JtF[2]+=jz*f;
+
+        Residuals[ikl]=fabs(fi);
 
         //step=1+(rand()&0x03);
 
@@ -827,13 +840,14 @@ double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const
 
 
 template <class T>
-double global_tracker::TryVel_vect(TooN::Matrix<3,3> &JtJ, TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist, T match_thresh, double s_rho_min,uint MatchNumThresh){
+double global_tracker::TryVel_vect(TooN::Matrix<3,3> &JtJ, TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist, T match_thresh, double s_rho_min,uint MatchNumThresh,double reweigth_distance){
 
     int pnum=(klist.KNum()+0x3)&(~0x3);
     T Jx[pnum];
     T Jy[pnum];
     T Jz[pnum];
     T f[pnum];
+
 
     int mnum=0;
 
@@ -925,17 +939,23 @@ double global_tracker::TryVel_vect(TooN::Matrix<3,3> &JtJ, TooN::Vector<3> &JtF,
 }
 
 template <class T>
-double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  T match_thresh, int iter_max, T s_rho_min,uint MatchNumThresh){
+double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  T match_thresh, int iter_max, T s_rho_min,uint MatchNumThresh,double reweigth_distance){
 
     TooN::Matrix<3,3> JtJ,ApI,JtJnew;
     TooN::Vector<3> JtF,JtFnew;
     TooN::Vector<3> h,Vnew;
 
-    double F=TryVel(JtJ,JtF,Vel,klist,match_thresh,s_rho_min,MatchNumThresh),Fnew;
+    T residuals[klist.KNum()];
+    for(int i=0;i<klist.KNum();i++)
+        residuals[i]=0;
+
+    double F=TryVel(JtJ,JtF,Vel,klist,match_thresh,s_rho_min,MatchNumThresh,residuals,reweigth_distance),Fnew;
 
     double v=2,tau=1e-3;
     double u=tau*TooN::max_element(JtJ).first;
     double gain;
+
+
 
     for(int lm_iter=0;lm_iter<iter_max;lm_iter++){
 
@@ -949,7 +969,7 @@ double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel
 
          Vnew=Vel+h;
         //Fnew=TryVel_vect<float>(JtJnew,JtFnew,Vnew,klist, knum,use_a);
-        Fnew=TryVel(JtJnew,JtFnew,Vnew,klist,match_thresh,s_rho_min,MatchNumThresh);
+        Fnew=TryVel(JtJnew,JtFnew,Vnew,klist,match_thresh,s_rho_min,MatchNumThresh,residuals,reweigth_distance);
 
         gain=(F-Fnew)/(0.5*h*(u*h-JtF));
 
@@ -976,5 +996,5 @@ double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel
 
 }
 
-template  double global_tracker::Minimizer_V<double>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  double match_thresh, int iter_max, double s_rho_min,uint MatchNumThresh);
-template  double global_tracker::Minimizer_V<float>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  float match_thresh, int iter_max, float s_rho_min,uint MatchNumThresh);
+template  double global_tracker::Minimizer_V<double>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  double match_thresh, int iter_max, double s_rho_min,uint MatchNumThresh,double reweigth_distance);
+template  double global_tracker::Minimizer_V<float>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  float match_thresh, int iter_max, float s_rho_min,uint MatchNumThresh,double reweigth_distance);

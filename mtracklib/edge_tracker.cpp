@@ -392,7 +392,7 @@ void edge_tracker::UpdateInverseDepthKalman(Vector <3> vel,             //Estima
 #endif
 
         if(kl[i].m_id>=0){      //For each keyline if a match is avaiable
-            UpdateInverseDepthKalman(kl[i],vel,RVel,RW0,ReshapeQAbsolute,ReshapeQRelative,LocationUncertainty);
+            UpdateInverseDepthKalmanSimple(kl[i],vel,RVel,RW0,ReshapeQAbsolute,ReshapeQRelative,LocationUncertainty);
         }
 
 
@@ -493,6 +493,118 @@ double edge_tracker::UpdateInverseDepthKalman(KeyLine &kli,
         kli.rho=RHO_MIN;
     }else if(kli.rho>RHO_MAX){
         kli.rho=RHO_MAX;
+        //kli.s_rho+=RHO_MAX;
+    }else if(isnan(kli.rho) || isnan(kli.s_rho) || isinf(kli.rho) || isinf(kli.s_rho)){     //This checks should never happen
+        std::cout<<"\nKL EKF Nan Rho!"<<rho_p<< " " << p_p<< " "<<vel[2]<<"\n";
+        kli.rho=RhoInit;
+        kli.s_rho=RHO_MAX;
+    }else if(kli.s_rho<0){                                                                  //only for debug
+        std::cout<<"\nKL EKF Panic! Neg VRho!"<<vel<<RVel <<kli.rho << kli.s_rho <<"\n";
+        kli.rho=RhoInit;
+        kli.s_rho=RHO_MAX;
+
+    }
+
+    return kli.rho;
+
+
+}
+
+
+
+
+//************************************************************************
+// UpdateInverseDepthKalmanSimple() use EKF to update for depth estimates of kli
+// parameters are the same
+//************************************************************************
+
+
+double edge_tracker::UpdateInverseDepthKalmanSimple(KeyLine &kli,
+                                              Vector <3> vel,
+                                              Matrix <3,3> RVel,
+                                              Matrix <3,3> RW0,
+                                              double ReshapeQAbsolute,
+                                              double ReshapeQRelative,
+                                              double LocationUncertainty){
+
+
+
+    const double &zf=cam_mod.zfm;       //camera focal length
+
+    if(kli.s_rho<0 || kli.rho<0){       //Debug check
+        std::cout << "\nUIDK panic! "<<kli.s_rho<<" "<<kli.rho<<"\n";
+    }
+
+    kli.s_rho0=kli.s_rho;
+
+    double qx,qy,q0x,q0y;
+    qx=kli.p_m.x;       //KeyLine new homogeneus coordinates
+    qy=kli.p_m.y;
+
+
+    q0x=kli.p_m_0.x;    //Keyline old homogeneus coordinates
+    q0y=kli.p_m_0.y;
+
+
+    double v_rho=kli.s_rho*kli.s_rho;   //IDepth variance
+
+    double u_x=kli.m_m0.x/kli.n_m0;     //Shortcut for edge perpendicular direction
+    double u_y=kli.m_m0.y/kli.n_m0;
+
+
+
+    double Y = u_x*(qx-q0x)+u_y*(qy-q0y); //Pixel displacement proyected on u
+    double H= u_x*(vel[0]*zf-vel[2]*q0x)+u_y*(vel[1]*zf-vel[2]*q0y);
+
+
+
+    double rho_p=1/(1.0/kli.rho+vel[2]);    //Predicted Inverse Depth
+
+    kli.rho0=rho_p;                         //BackUp for the predicted ID
+
+    double F=1/(1+kli.rho*vel[2]);          //Jacobian of the
+    F=F*F;                                  //prediction ecuation
+
+    double p_p=F*v_rho*F+                               //Uncertainty propagation
+            util::square(ReshapeQAbsolute);             //Absolute uncertainty model
+
+
+
+    double e=Y-H*rho_p;                     //error correction
+/*
+    Matrix <1,6> Mk;
+
+    Mk[0]=makeVector(-1,u_x*rho_p*zf,u_y*rho_p*zf,-rho_p*(u_x*q0x+u_y*q0y),u_x*(rho_p*vel[2]),u_y*(rho_p*vel[2]));  //parcial derivative of
+                                                                                                                    //the correction ecuation
+                                                                                                                    //with respecto to uncertainty sources
+    Matrix <6,6> R = Zeros;
+
+    R(0,0)=util::square(LocationUncertainty);
+    R.slice <1,1,3,3> ()=RVel;
+    R(4,4)=util::square(LocationUncertainty);
+    R(5,5)=util::square(LocationUncertainty);
+*/
+
+    //*** Kalman update ecuations ****
+    double S=H*p_p*H+LocationUncertainty*LocationUncertainty;
+
+    double K=p_p*H*(1/S);
+
+    kli.rho=rho_p+(K*e);
+
+    v_rho=(1-K*H)*p_p;
+
+    kli.s_rho=sqrt(v_rho);
+
+
+    //*** if inverse depth goes beyond limits apply correction ****
+
+    if(kli.rho<RHO_MIN){
+        kli.s_rho+=RHO_MIN-kli.rho;
+        kli.rho=RHO_MIN;
+    }else if(kli.rho>RHO_MAX){
+        kli.rho=RHO_MAX;
+        //kli.s_rho+=RHO_MAX;
     }else if(isnan(kli.rho) || isnan(kli.s_rho) || isinf(kli.rho) || isinf(kli.s_rho)){     //This checks should never happen
         std::cout<<"\nKL EKF Nan Rho!"<<rho_p<< " " << p_p<< " "<<vel[2]<<"\n";
         kli.rho=RhoInit;
@@ -671,7 +783,6 @@ bool edge_tracker::ExtRotVel(const Vector <3> &vel,     //Prevously estimated tr
         float dqvel=u_x*(vel[0]*zf-vel[2]*p_m_0.x)+u_y*(vel[1]*zf-vel[2]*p_m_0.y);
         float s_y=sqrt(s_rho*s_rho*dqvel*dqvel+LocUncert*LocUncert);
 
-        //if(ReWeight && fabs(DResidual[ikl])>k_huber)
         double weigth=1;
         if(fabs(Y[j])>HubReweigth)
             weigth=fabs(Y[j])/HubReweigth;

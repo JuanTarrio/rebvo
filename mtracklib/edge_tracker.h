@@ -28,6 +28,7 @@ public:
 
     void UpdateInverseDepthKalman(TooN::Vector <3> vel, TooN::Matrix <3,3> RVel, TooN::Matrix <3,3> RW0, double ReshapeQAbsolute, double ReshapeQRelative, double LocationUncertainty);
     double UpdateInverseDepthKalman(KeyLine &kli, TooN::Vector <3> vel, TooN::Matrix <3,3> RVel, TooN::Matrix<3, 3> RW0, double ReshapeQAbsolute, double ReshapeQRelative, double LocationUncertainty);
+    double UpdateInverseDepthKalmanSimple(KeyLine &kli, TooN::Vector <3> vel, TooN::Matrix <3,3> RVel, TooN::Matrix<3, 3> RW0, double ReshapeQAbsolute, double ReshapeQRelative, double LocationUncertainty);
 
     double EstimateQuantile(double s_rho_min, double s_rho_max, double percentile, int n);
 
