@@ -10,7 +10,6 @@ v4lCam::v4lCam(const char *dev_name,Size2D frame_size,int f_per_sec,const char *
         return;
     }
     error=false;
-    init=false;
 }
 
 v4lCam::~v4lCam()
@@ -35,13 +34,8 @@ int v4lCam::GrabFrame(RGB24Pixel *data, double &tstamp,bool drop_frames)
         return -1;
     int r=CamaraGrabFrame(this,data,&tv);
 
-    if(init){
-        tstamp=util::dift(tv,T0);
-    }else{
-        T0=tv;
-        tstamp=0;
-        init=true;
-    }
+    tstamp=(double)tv.tv_sec+(double)tv.tv_usec*1.0e-6;
+
 
     return r;
 }
@@ -55,13 +49,8 @@ RGB24Pixel* v4lCam::GrabBuffer(double &tstamp, bool drop_frames)
 
     RGB24Pixel* data=CamaraGrabBuffer(this,&tv);
 
-    if(init){
-        tstamp=util::dift(tv,T0);
-    }else{
-        T0=tv;
-        tstamp=0;
-        init=true;
-    }
+
+    tstamp=(double)tv.tv_sec+(double)tv.tv_usec*1.0e-6;
     return data;
 }
 

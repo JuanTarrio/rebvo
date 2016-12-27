@@ -72,6 +72,7 @@ REBVO::REBVO(Configurator &config)
     InitOK&=config.GetConfigByName("REBVO","VideoNetHost",VideoNetHost,true);
     InitOK&=config.GetConfigByName("REBVO","VideoNetPort",VideoNetPort,true);
     InitOK&=config.GetConfigByName("REBVO","VideoNetEnabled",VideoNetEnabled,true);
+    InitOK&=config.GetConfigByName("REBVO","BlockingUDP",BlockingUDP,true);
 
     InitOK&=config.GetConfigByName("Camera","ImageWidth",ImageSize.w,true);
     InitOK&=config.GetConfigByName("Camera","ImageHeight",ImageSize.h,true);
@@ -138,28 +139,36 @@ REBVO::REBVO(Configurator &config)
     InitOK&=config.GetConfigByName("REBVO","EdgeMapDelay",EdgeMapDelay,true);
 
     InitOK&=config.GetConfigByName("IMU","ImuMode",ImuMode,true);
-    InitOK&=config.GetConfigByName("IMU","GiroMeasStdDev",GiroMeasStdDev,true);
-    InitOK&=config.GetConfigByName("IMU","GiroBiasStdDev",GiroBiasStdDev,true);
-    InitOK&=config.GetConfigByName("IMU","InitBias",InitBias,true);
-    InitOK&=config.GetConfigByName("IMU","InitBiasFrameNum",InitBiasFrameNum,true);
-    InitOK&=config.GetConfigByName("IMU","g_module",g_module,true);
+    if(ImuMode>0){
+
+        InitOK&=config.GetConfigByName("IMU","GiroMeasStdDev",GiroMeasStdDev,true);
+        InitOK&=config.GetConfigByName("IMU","GiroBiasStdDev",GiroBiasStdDev,true);
+        InitOK&=config.GetConfigByName("IMU","InitBias",InitBias,true);
+        InitOK&=config.GetConfigByName("IMU","InitBiasFrameNum",InitBiasFrameNum,true);
+        InitOK&=config.GetConfigByName("IMU","g_module",g_module,true);
 
 
-    InitOK&=config.GetConfigByName("IMU","AcelMeasStdDev",AcelMeasStdDev,true);
-    InitOK&=config.GetConfigByName("IMU","g_module_uncer",g_module_uncer,true);
-            InitOK&=config.GetConfigByName("IMU","g_uncert",g_uncert,true);
-    InitOK&=config.GetConfigByName("IMU","VBiasStdDev",VBiasStdDev,true);
-    InitOK&=config.GetConfigByName("IMU","ScaleStdDevMult",ScaleStdDevMult,true);
-    InitOK&=config.GetConfigByName("IMU","ScaleStdDevMax",ScaleStdDevMax,true);
-    InitOK&=config.GetConfigByName("IMU","ScaleStdDevInit",ScaleStdDevInit,true);
+        InitOK&=config.GetConfigByName("IMU","AcelMeasStdDev",AcelMeasStdDev,true);
+        InitOK&=config.GetConfigByName("IMU","g_module_uncer",g_module_uncer,true);
+        InitOK&=config.GetConfigByName("IMU","g_uncert",g_uncert,true);
+        InitOK&=config.GetConfigByName("IMU","VBiasStdDev",VBiasStdDev,true);
+        InitOK&=config.GetConfigByName("IMU","ScaleStdDevMult",ScaleStdDevMult,true);
+        InitOK&=config.GetConfigByName("IMU","ScaleStdDevMax",ScaleStdDevMax,true);
+        InitOK&=config.GetConfigByName("IMU","ScaleStdDevInit",ScaleStdDevInit,true);
+        InitOK&=config.GetConfigByName("IMU","CamImuSE3File",SE3File,true);
+        InitOK&=config.GetConfigByName("IMU","TimeDesinc",TimeDesinc,true);
 
+    }
 
     if(ImuMode==2){
         InitOK&=config.GetConfigByName("IMU","ImuFile",ImuFile,true);
-        InitOK&=config.GetConfigByName("IMU","CamImuSE3File",SE3File,true);
-
-
         InitOK&=config.GetConfigByName("IMU","TimeScale",ImuTimeScale,true);
+    }else if(ImuMode==1){
+
+        InitOK&=config.GetConfigByName("IMU","SampleTime",SampleTime,true);
+        InitOK&=config.GetConfigByName("IMU","CircBufferSize",CircBufferSize,true);
+        InitOK&=config.GetConfigByName("IMU","DeviceName",ImuDevName,true);
+        ImuTimeScale=1;
     }
 
 

@@ -41,8 +41,6 @@ udp_port::udp_port(const char *remote_host, int port, bool bind_port, \
     }
 
 
-    char on=1;
-    ioctl(sock, FIONBIO, &on);
 
     memset((char *) &si_remote, 0, sizeof(si_remote));
     si_remote.sin_family = AF_INET;
@@ -78,9 +76,10 @@ udp_port::udp_port(const char *remote_host, int port, bool bind_port, \
     max_p_size=max_pak_size;
 
     r_pack_inx=0;
-
     max_f_size=max_fragment_size;
     frag_buffer=new unsigned char [max_f_size];
+
+    block=false;
 
 }
 
@@ -205,8 +204,9 @@ bool udp_port::SendFragmented(unsigned char * data, int data_size,int fragment_s
 
         hdr->tag=packet_tag;
 
-        if(!SendPacket(frag_buffer,b_to_send+sizeof(UDPFragmentHeader)))
+        if(!SendPacket(frag_buffer,b_to_send+sizeof(UDPFragmentHeader))){
             return false;
+        }
 
         b_remain-=b_to_send;
         pos+=b_to_send;
@@ -227,7 +227,7 @@ bool udp_port::SendFragmented(unsigned char * data, int data_size,int fragment_s
 bool udp_port::SendPacket(unsigned char * data, int data_size){
 
     int r;
-    if((r=sendto(sock, data,data_size, MSG_DONTWAIT, (struct sockaddr*)&si_remote,sizeof(si_remote)))!=data_size){
+    if((r=sendto(sock, data,data_size, !block?MSG_DONTWAIT:0, (struct sockaddr*)&si_remote,sizeof(si_remote)))!=data_size){
         return false;
     }
 

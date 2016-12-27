@@ -27,131 +27,7 @@
 #include <stdexcept>
 namespace util{
 
-
-template <class T,int size> class FixedCircList{
-
-private:
-    int inx;
-    int back_inx;
-
-    int num;
-    int data_size;
-
-    T data[size];
-
-public:
-
-    FixedCircList(){
-        inx=size-1;
-        num=0;
-        data_size=size;
-        back_inx=inx;
-    }
-
-    void Init(const T&v0){
-        data[0]=v0;
-        inx=0;
-        back_inx=0;
-        num=1;
-    }
-
-    void Put(const T&v){
-        if((++inx)>=size)
-            inx=0;
-        if(num<size)
-            num++;
-        data[inx]=v;
-    }
-
-    void PutBack(const T&v){
-        if((--back_inx)<0){
-            back_inx+=size;
-        }
-        if(num<size)
-            num++;
-
-        data[back_inx]=v;
-    }
-
-    T& GetRelative(int i){
-        i=inx-(i%size);
-        if(i<0)
-            i+=size;
-
-        return data[i];
-
-    }
-
-
-    T& Get(int i){
-
-        if(i>num)
-            return 0;
-
-        return data[i];
-
-    }
-
-    T& GetNewest(){
-        return data[inx];
-    }
-
-    T& GetOldest(){
-        if(num<size)
-            return data[0];
-        else
-            return data[(inx+1)%size];
-    }
-
-    T& operator [](int i)
-    {
-        return data[i%size];
-    }
-
-    void CopyTo(FixedCircList<T,size> * to){
-
-        to->num=num;
-        to->inx=inx;
-
-        for(int i=0;i<num;i++)
-            to->data[i]=data[i];
-
-    }
-
-    void CopyToOrdered(FixedCircList<T,size> * to){
-
-        if(num<size){
-            CopyTo(to);
-            return;
-        }
-
-        int i_from=inx+2;
-
-
-        for(int i=0;i<num;i++,i_from++){
-            if(i_from>=size)
-                i_from-=size;
-            to->data[i]=data[i_from];
-        }
-
-        to->num=num;
-        to->inx=size-2;
-
-
-    }
-
-    const int&Size(){
-        return num;
-    }
-
-    const int&ListSize(){
-        return data_size;
-    }
-
-
-};
-
-
+//CircListIndexer: simple class to index circular buffers
 
 class CircListIndexer{
 
@@ -187,6 +63,21 @@ public:
         return *this;
     }
 
+    CircListIndexer& operator+=(const int &r){
+
+        inx=(inx+(r%size)+size)%size;
+
+        return *this;
+    }
+
+
+    CircListIndexer& operator-=(const int &r){
+
+        inx=(inx-(r%size)+size)%size;
+
+        return *this;
+    }
+
     operator int()
     {
         return inx;
@@ -212,12 +103,7 @@ public:
          return inx==rhs.inx;
      }
 
- /*   CircListIndexer& operator=(CircListIndexer &&from){
-        if(from.size!=size)
-            throw std::invalid_argument("CircListIndexer: indexers mut have the same size on copy");
-        inx=from.inx;
-        num=from.inx;
-    }*/
+
 };
 
 

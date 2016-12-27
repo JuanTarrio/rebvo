@@ -9,8 +9,8 @@
     Sigma0=1.7818                       //The 2 scales used for DoG calculation
     Sigma1=2.30029                      //1.7818 2.30029 2.72174 3.56359
 
-    ReferencePoints=12000               //Reference to the number of points when autothreshold
-    MaxPoints=16000                     //Absolute maximun number of points
+    ReferencePoints=6000               //Reference to the number of points when autothreshold
+    MaxPoints=7000                     //Absolute maximun number of points
 
     DetectorThresh=0.01                 //Manual theshold
     DetectorAutoGain=5e-7               //Auto threshold gain, 0=manual
@@ -24,7 +24,7 @@
 
 &TrackMaper
 
-    SearchRange=20                              //Pixel range for tracking and mapping
+    SearchRange=10                              //Pixel range for tracking and mapping
 
     QCutOffNumBins=100;                         //Number of bins on the histogram for percentile calculation
     QCutOffQuantile=0.9;                        //Percentile of the KLs to use
@@ -55,23 +55,25 @@
 &Camera
 
     CameraDevice=/dev/video0								//V4L Camera device
-    ZfX=458.654										//Camera XY focal length
-    ZfY=457.296
-    PPx=367.215         								//Camera principal point
-    PPy=248.375
+
+    ZfX=272.72805									//Camera XY focal length
+    ZfY=272.68508
+    PPx=161.49285         								//Camera principal point
+    PPy=118.71345
     KcR2=0                  								//Distortion parameters (Not used in REBVO)
     KcR4=0                  								//Set to 0
-    ImageWidth=752									//Image size
-    ImageHeight=480
-    FPS=20										//Frames per second
+    ImageWidth=320									//Image size
+    ImageHeight=240
+    FPS=50										//Frames per second
     
 
 &REBVO
 
-    CameraType=2                                                                        //0=V4L, 1=SimCam, 2=Dataset cam
+    CameraType=0                                                                        //0=V4L, 1=SimCam, 2=Dataset cam
 
-    VideoNetHost=127.0.0.1								//Remote host to send the data
+    VideoNetHost=10.73.32.54								//Remote host to send the data
     VideoNetPort=2708									//Remote port
+    BlockingUDP=0                                                                       //Use blocking sokets? turn on if lossing packests on transmition, may slow down the system
     VideoNetEnabled=1
 
     VideoSave=0										//Optionally save video after running
@@ -89,20 +91,22 @@
 
 &DataSetCamera
 
-    DataSetDir=/home/juan/Datasets/V1_02_medium/mav0/cam0/data/undis/                     //The directory of the dataset
-    DataSetFile=/home/juan/Datasets/V1_02_medium/mav0/cam0/data.csv                       //The file of the dataset (relative to the directory)
+    DataSetDir=/home/odroid/Datasets/MH_03_medium/mav0/cam0/data/undis/                     //The directory of the dataset
+    DataSetFile=/home/odroid/Datasets/MH_03_medium/mav0/cam0/data.csv                       //The file of the dataset (relative to the directory)
     TimeScale=1e-9
 
 &IMU
-    ImuMode=2
-    ImuFile=/home/juan/Datasets/V1_02_medium/mav0/imu0/data.csv
-    CamImuSE3File=/home/juan/Datasets/MH_03_medium/mav0/cam0/se3.csv
+    ImuMode=1
+    ImuFile=/home/odroid/Datasets/MH_03_medium/mav0/imu0/data.csv
+    CamImuSE3File=se3.csv                                                           ///home/odroid/Datasets/MH_03_medium/mav0/cam0/se3.csv
     TimeScale=1e-9
+
+    TimeDesinc=0.007
 
     GiroMeasStdDev=8.4840e-06
     GiroBiasStdDev=9.6965e-07
     InitBias=1
-    InitBiasFrameNum=10;
+    InitBiasFrameNum=10
     g_module=9.8
 
     AcelMeasStdDev=2.0000e-3
@@ -112,6 +116,10 @@
     ScaleStdDevMult=1e-2
     ScaleStdDevMax=1e-4
     ScaleStdDevInit=1.2e-3
+
+    CircBufferSize=1000
+    SampleTime=0.001250
+    DeviceName=/dev/ttySAC2
 
 &SimuCamera
 

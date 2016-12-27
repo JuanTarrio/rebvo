@@ -1,3 +1,26 @@
+/******************************************************************************
+
+   REBVO: RealTime Edge Based Visual Odometry For a Monocular Camera.
+   Copyright (C) 2016  Juan José Tarrio
+
+   Jose Tarrio, J., & Pedre, S. (2015). Realtime Edge-Based Visual Odometry
+   for a Monocular Camera. In Proceedings of the IEEE International Conference
+   on Computer Vision (pp. 702-710).
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3 of the License, or
+   (at your option) any later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software Foundation,
+   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
+ *******************************************************************************/
+
 
 #include "rebvo.h"
 
@@ -71,6 +94,8 @@ void REBVO::ThirdThread(REBVO *cf){
             return;
         }
         printf("\nCamaraFrontal: Socket iniciado en %s:%d\n",cf->VideoNetHost.data(),cf->VideoNetPort);
+
+        com_port->setBlock(cf->BlockingUDP>0);
 
     }
 
@@ -222,7 +247,7 @@ void REBVO::ThirdThread(REBVO *cf){
                 net_hdr->data_size=hdr_payload+n;
                 net_hdr->jpeg_size=n;
 
-                if (!com_port->SendFragmented(net_pak[net_buf_inx],net_hdr->data_size,65e3)){
+                if (!com_port->SendFragmented(net_pak[net_buf_inx],net_hdr->data_size,32e3)){
                     printf("\nMTrack: Error enviando paquete de %d bytes a %s:%d! %d: %s\n",net_hdr->data_size,cf->VideoNetHost.data(),cf->VideoNetPort\
                            ,errno, strerror(errno));
                 }

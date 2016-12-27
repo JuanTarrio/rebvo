@@ -63,6 +63,8 @@ class udp_port
     unsigned char *frag_buffer;
     int max_p_size;
 
+    bool block;
+
 public:
     udp_port(const char *remote_host, int port, bool bind_port=false\
             , int max_pak_size=65535, int pak_pipe_size=10, int max_fragment_size =65535);
@@ -74,6 +76,10 @@ public:
     int  RecvFragmented(unsigned char *buffer, int buf_size, double time_out=2);
 
     bool SendPacket(unsigned char * data, int data_size);
+
+    void setBlock(bool b){
+        block=b;
+    }
 };
 
 #endif // UDP_PORT_H

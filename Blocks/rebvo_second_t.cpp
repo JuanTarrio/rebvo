@@ -1,3 +1,26 @@
+/******************************************************************************
+
+   REBVO: RealTime Edge Based Visual Odometry For a Monocular Camera.
+   Copyright (C) 2016  Juan José Tarrio
+
+   Jose Tarrio, J., & Pedre, S. (2015). Realtime Edge-Based Visual Odometry
+   for a Monocular Camera. In Proceedings of the IEEE International Conference
+   on Computer Vision (pp. 702-710).
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3 of the License, or
+   (at your option) any later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software Foundation,
+   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
+ *******************************************************************************/
+
 
 
 
@@ -131,7 +154,6 @@ void  REBVO::SecondThread(REBVO *cf){
 
         //new_buf.gt->build_field(*new_buf.ef,cf->SearchRange);
 
-        COND_TIME_DEBUG(tlist.push_new();)
 
         P_V=Identity*1e50;
         P_W=Identity*1e50;
@@ -162,17 +184,26 @@ void  REBVO::SecondThread(REBVO *cf){
             old_buf.ef->rotate_keylines(R.T()); //Apply foward prerotation to the old key lines
 
 
+            COND_TIME_DEBUG(tlist.push_new();)
+
             new_buf.gt->Minimizer_V<double>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->TrackerMatchThresh,cf->TrackerIterNum,s_rho_q,cf->MatchNumThresh,cf->ReweigthDistance);   //Estimate translation only
 
 
+            COND_TIME_DEBUG(tlist.push_new();)
+
             //***** Match from the old EdgeMap to the new one using the information from the minimization *****
             old_buf.ef->FordwardMatch(new_buf.ef);
+
+
+            COND_TIME_DEBUG(tlist.push_new();)
 
             //***** Visual RotoTranslation estimation using forward matches
             Matrix <6,6> R_Xv,R_Xgv,W_Xv,W_Xgv;
             Vector <6> Xv,Xgv,Xgva;
             EstimationOk&=new_buf.ef->ExtRotVel(istate.Vg,W_Xv,R_Xv,Xv,cf->LocationUncertainty,cf->ReweigthDistance);
 
+
+            COND_TIME_DEBUG(tlist.push_new();)
 
             istate.dVv=Xv.slice<0,3>();
             istate.dWv=Xv.slice<3,3>();
@@ -208,6 +239,8 @@ void  REBVO::SecondThread(REBVO *cf){
             P_W=R_Xgv.slice<3,3,3,3>();
 
 
+            COND_TIME_DEBUG(tlist.push_new();)
+
             //Mix with accelerometer using bayesian filter
 
 
@@ -242,22 +275,36 @@ void  REBVO::SecondThread(REBVO *cf){
             }
 
 
+            COND_TIME_DEBUG(tlist.push_new();)
+
             //***** Forward Rotate the old edge-map points *****
             old_buf.ef->rotate_keylines(R0.get_matrix());
 
 
+
+
         }else{                  //Regular procesing
+            COND_TIME_DEBUG(tlist.push_new();)
 
             new_buf.gt->Minimizer_RV<double>(V,W,P_V,P_W,*old_buf.ef,cf->TrackerMatchThresh,cf->TrackerIterNum,cf->TrackerInitType,cf->ReweigthDistance,error_vel,error_score,s_rho_q,cf->MatchNumThresh,cf->TrackerInitIterNum);
+
+
+            COND_TIME_DEBUG(tlist.push_new();)
 
             //***** Match from the old EdgeMap to the new one using the information from the minimization *****
             old_buf.ef->FordwardMatch(new_buf.ef);
 
 
+            COND_TIME_DEBUG(tlist.push_new();)
+
             //***** extract rotation matrix *****
             SO3 <>R0(W);                    //R0 is a forward rotation
             R.T()=R0.get_matrix()*R.T();    //R is a backward rotation
 
+
+            COND_TIME_DEBUG(tlist.push_new();)
+            COND_TIME_DEBUG(tlist.push_new();)
+            COND_TIME_DEBUG(tlist.push_new();)
 
             //***** Forward Rotate the old edge-map points *****
             old_buf.ef->rotate_keylines(R0.get_matrix());
@@ -279,15 +326,9 @@ void  REBVO::SecondThread(REBVO *cf){
 
 
 
-
-
             COND_TIME_DEBUG(tlist.push_new();)
 
 
-
-            COND_TIME_DEBUG(tlist.push_new();)
-
-            COND_TIME_DEBUG(tlist.push_new();)
 
             //***** Match from the new EdgeMap to the old one searching on the stereo line *****
 
@@ -341,8 +382,8 @@ void  REBVO::SecondThread(REBVO *cf){
 
 
 
-        COND_TIME_DEBUG(printf("\nr%f b%f v%f f%f w%f m%f r%f k%f t%f %f %d %f %s\n",tlist[0],tlist[1],tlist[2],tlist[3],\
-               tlist[4],tlist[5],tlist[6],tlist[7],tlist.total(),dtp,new_buf.ef->KNum(),s_rho_q,EstimationOk?"OK":"NOK");)
+        COND_TIME_DEBUG(printf("\nQ %f R0 %f M0 %f FM %f M2 %f BC %f BF %f R1 %f DM %f KR %f KM %f SR %f TT %f DTP %f \n",tlist[0],tlist[1],tlist[2],tlist[3],\
+               tlist[4],tlist[5],tlist[6],tlist[7],tlist[8],tlist[9],tlist[10],tlist[11],tlist.total(),dtp);)
 
 
 

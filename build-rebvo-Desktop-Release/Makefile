@@ -72,7 +72,9 @@ SOURCES       = ../rebvo/main.cpp \
 		../mtracklib/scaleestimator.cpp \
 		../Blocks/rebvo_first_t.cpp \
 		../Blocks/rebvo_second_t.cpp \
-		../Blocks/rebvo_third_t.cpp 
+		../Blocks/rebvo_third_t.cpp \
+		../Blocks/archimu.cpp \
+		../UtilLib/libcrc.cpp 
 OBJECTS       = main.o \
 		rebvo.o \
 		video_io.o \
@@ -100,7 +102,9 @@ OBJECTS       = main.o \
 		scaleestimator.o \
 		rebvo_first_t.o \
 		rebvo_second_t.o \
-		rebvo_third_t.o
+		rebvo_third_t.o \
+		archimu.o \
+		libcrc.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -706,6 +710,17 @@ rebvo_third_t.o: ../Blocks/rebvo_third_t.cpp ../Blocks/rebvo.h \
 		../VideoLib/datasetcam.h \
 		../mtracklib/scaleestimator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo_third_t.o ../Blocks/rebvo_third_t.cpp
+
+archimu.o: ../Blocks/archimu.cpp ../Blocks/archimu.h \
+		../UtilLib/configurator.h \
+		../VideoLib/imugrabber.h \
+		../UtilLib/CircList.h \
+		../UtilLib/ttimer.h \
+		../UtilLib/libcrc.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o archimu.o ../Blocks/archimu.cpp
+
+libcrc.o: ../UtilLib/libcrc.cpp ../UtilLib/libcrc.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o libcrc.o ../UtilLib/libcrc.cpp
 
 ####### Install
 

@@ -56,7 +56,9 @@ SOURCES +=  main.cpp \
     ../mtracklib/scaleestimator.cpp \
     ../Blocks/rebvo_first_t.cpp \
     ../Blocks/rebvo_second_t.cpp \
-    ../Blocks/rebvo_third_t.cpp
+    ../Blocks/rebvo_third_t.cpp \
+    ../Blocks/archimu.cpp \
+    ../UtilLib/libcrc.cpp
 
 HEADERS += ../Blocks/incfiles.h \
     ../Blocks/rebvo.h\
@@ -93,7 +95,9 @@ HEADERS += ../Blocks/incfiles.h \
     ../mtracklib/keyframe.h \
     ../VideoLib/imugrabber.h\
     ../UtilLib/minimizer.h \
-    ../mtracklib/scaleestimator.h
+    ../mtracklib/scaleestimator.h \
+    ../Blocks/archimu.h \
+    ../UtilLib/libcrc.h
 
 
 OTHER_FILES += GlobalConfig

@@ -1,3 +1,26 @@
+/******************************************************************************
+
+   REBVO: RealTime Edge Based Visual Odometry For a Monocular Camera.
+   Copyright (C) 2016  Juan José Tarrio
+
+   Jose Tarrio, J., & Pedre, S. (2015). Realtime Edge-Based Visual Odometry
+   for a Monocular Camera. In Proceedings of the IEEE International Conference
+   on Computer Vision (pp. 702-710).
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3 of the License, or
+   (at your option) any later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software Foundation,
+   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+
+ *******************************************************************************/
+
 
 #include "rebvo.h"
 
@@ -71,7 +94,7 @@ void REBVO::FirstThr(REBVO *cf){
     }
 
     if(camara->Error()){
-        cout << "Failed to initialize the camera " << cf->CameraDevice.data() <<endl;
+        cout << "Failed to initialize the camera " <<endl;
         cf->quit=true;
         return;
     }
@@ -79,7 +102,27 @@ void REBVO::FirstThr(REBVO *cf){
     //***** Imu init *****//
 
     switch(cf->ImuMode){
-    case 2:
+    case 1:                         //Load imu using specific architecture
+
+
+
+        cf->imu=new ImuGrabber(cf->CircBufferSize,cf->SampleTime);
+        cf->imu_dev=new archIMU(cf->ImuDevName.data(),*cf->imu);
+
+        if(cf->imu_dev->error()){
+            cout << "Failed to initialize the imu device" <<endl;
+            cf->quit=true;
+            return;
+        }
+
+        if(!cf->imu->LoadCamImuSE3(cf->SE3File.data())){
+            cout << "Failed to load cam-imu transformation \n" <<endl;
+            cf->quit=true;
+            return;
+        }
+        break;
+
+    case 2:                         //Load imu from dataset file
     {
         bool error=false;
         cf->imu=new ImuGrabber(ImuGrabber::LoadDataSet(cf->ImuFile.data(),false,cf->ImuTimeScale,error));
@@ -141,8 +184,10 @@ void REBVO::FirstThr(REBVO *cf){
 
 
         if(cf->imu){
-            pbuf.imu=cf->imu->GrabAndIntegrate(t0,t);
+            pbuf.imu=cf->imu->GrabAndIntegrate(t0+cf->TimeDesinc,t+cf->TimeDesinc);
         }
+
+
 
         COND_TIME_DEBUG(dt=t-t0;)
 
@@ -156,7 +201,10 @@ void REBVO::FirstThr(REBVO *cf){
 
         tproc.start();
 
-        (*pbuf.imgc)=data;              //copy buffer for fast release
+        //(*pbuf.imgc)=data;              //copy buffer for fast release
+
+        for(int i=0,j=pbuf.imgc->bSize()-1;i<pbuf.imgc->bSize();i++,j--)
+            (*pbuf.imgc)[i]=data[j];
 
         camara->ReleaseBuffer();
 
@@ -192,6 +240,9 @@ void REBVO::FirstThr(REBVO *cf){
         cf->pipe.ReleaseBuffer(0);
     }
 
+    if(cf->imu_dev){
+        cf->imu_dev->killIMU();
+    }
 
     Thr1.join();
 

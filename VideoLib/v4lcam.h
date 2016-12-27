@@ -32,8 +32,6 @@
 class v4lCam:public camera_context,public VideoCam
 {
     bool error;
-    bool init;
-    timeval T0;
 
 public:
     v4lCam(const char *dev_name, Size2D frame_size, int f_per_sec, const char *log_name=NULL);

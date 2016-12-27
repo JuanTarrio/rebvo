@@ -55,11 +55,12 @@
 #include "pipeline.h"
 #include "keyframe.h"
 #include "imugrabber.h"
+#include "archimu.h"
 
 
 #define CBUFSIZE        0x08
 
-//#define TIME_DEBUG
+#define TIME_DEBUG
 
 #ifdef TIME_DEBUG
 #define COND_TIME_DEBUG(arg) arg
@@ -197,11 +198,13 @@ class REBVO
     std::string	VideoNetHost;
     int	VideoNetPort;
     int VideoNetEnabled;
+    int BlockingUDP;
 
     double sim_save_nframes;
     int CameraType;
 
     ImuGrabber *imu=nullptr;
+    archIMU *imu_dev=nullptr;
 
 
     //DSCam param
@@ -234,6 +237,11 @@ class REBVO
     double ScaleStdDevMult;
     double ScaleStdDevMax;
     double ScaleStdDevInit;
+    double SampleTime;
+    int CircBufferSize;
+    std::string	ImuDevName;
+
+    double TimeDesinc;
 
 
     //Processor parameters
