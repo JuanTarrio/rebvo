@@ -165,7 +165,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
             if(!istate.init  && n_frame>0){
 
-                if(cf->InitBias){
+                if(cf->InitBias>0){
                     giro_init+=new_buf.imu.giro*new_buf.imu.dt;
                     //giro_init+=istate.dWv;
                     if(++n_giro_init>cf->InitBiasFrameNum){
@@ -218,14 +218,13 @@ void  REBVO::SecondThread(REBVO *cf){
             W_Xgv=W_Xv;
 
 
-            istate.RGBias=Identity*cf->GiroBiasStdDev*cf->GiroBiasStdDev*new_buf.imu.dt*new_buf.imu.dt;
-            istate.RGiro=Identity*cf->GiroMeasStdDev*cf->GiroMeasStdDev*new_buf.imu.dt*new_buf.imu.dt;
+            istate.RGBias=Identity*cf->GiroBiasStdDev*cf->GiroBiasStdDev*dt_frame*dt_frame;
+            istate.RGiro=Identity*cf->GiroMeasStdDev*cf->GiroMeasStdDev*dt_frame*dt_frame;
 
             Vector <3> dgbias=Zeros;
             edge_tracker::BiasCorrect(Xgv,W_Xgv,dgbias,istate.W_Bg,istate.RGiro,istate.RGBias);
             istate.Bg+=dgbias;
 
-           // std::cout<<W_Xv<<W_Xgv<<istate.W_Bg;
 
             istate.dVgv=Xgv.slice<0,3>();
             istate.dWgv=Xgv.slice<3,3>();
@@ -239,7 +238,6 @@ void  REBVO::SecondThread(REBVO *cf){
             V=istate.Vgv;
 
             istate.Wgv=SO3<>(R).ln();
-
             R_Xgv=Cholesky<6>(W_Xgv).get_inverse();
 
 

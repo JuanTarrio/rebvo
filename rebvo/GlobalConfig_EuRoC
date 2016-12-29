@@ -128,7 +128,7 @@
     ScaleStdDevMax=1e-4                                                 //Max Scale process uncertinty, should leave fixed
     ScaleStdDevInit=1.2e-3                                              //Initial uncertainty for the scale
 
-    CircBufferSize=1000;                                                //Imu grabber circular buffer size
+    CircBufferSize=1000                                                 //Imu grabber circular buffer size
     SampleTime=0.001250                                                 //Sample time for archIMU
     DeviceName=/dev/ttySAC2                                             //device name for archIMU
 
