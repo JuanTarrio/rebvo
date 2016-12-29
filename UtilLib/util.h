@@ -142,11 +142,7 @@ namespace util{
         return B/TooN::determinant(A);
     }
 
-    inline TooN::Vector <3> Mix2Vels(const TooN::Vector <3> &vel1,const TooN::Vector <3> &vel2,const TooN::Matrix <3,3> &RVel1,const TooN::Matrix <3,3> &RVel2,TooN::Matrix <3,3> &RVel){
 
-        RVel=util::Matrix3x3Inv(util::Matrix3x3Inv(RVel1)+util::Matrix3x3Inv(RVel2));
-        return RVel*(util::Matrix3x3Inv(RVel1)*vel1+util::Matrix3x3Inv(RVel2)*vel2);
-    }
 
     template <int Ti,int Tj>
     inline bool isNaN(const TooN::Matrix<Ti,Tj> M){

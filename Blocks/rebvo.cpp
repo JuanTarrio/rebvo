@@ -45,7 +45,7 @@ REBVO::REBVO(Configurator &config)
     float z_f_y;
     float pp_y;
     float pp_x;
-    double kc[2];
+    cam_model::rad_tan_distortion kc;
 
     int simu_time_on,simu_time_step;
     double simu_time_sweep,simu_time_start;
@@ -83,8 +83,13 @@ REBVO::REBVO(Configurator &config)
     InitOK&=config.GetConfigByName("Camera","PPx",pp_x,true);
     InitOK&=config.GetConfigByName("Camera","PPy",pp_y,true);
 
-    InitOK&=config.GetConfigByName("Camera","KcR2",kc[0],true);
-    InitOK&=config.GetConfigByName("Camera","KcR4",kc[1],true);
+    InitOK&=config.GetConfigByName("Camera","KcR2",kc.Kc2,true);
+    InitOK&=config.GetConfigByName("Camera","KcR4",kc.Kc4,true);
+    InitOK&=config.GetConfigByName("Camera","KcR6",kc.Kc6,true);
+    InitOK&=config.GetConfigByName("Camera","KcP1",kc.P1,true);
+    InitOK&=config.GetConfigByName("Camera","KcP2",kc.P2,true);
+    InitOK&=config.GetConfigByName("Camera","UseUndistort",useUndistort,true);
+    InitOK&=config.GetConfigByName("Camera","Rotate180",rotatedCam,true);
 
     InitOK&=config.GetConfigByName("Camera","FPS",config_fps,true);
     InitOK&=config.GetConfigByName("ProcesorConfig","SetAffinity",cpuSetAffinity,true);
@@ -145,6 +150,9 @@ REBVO::REBVO(Configurator &config)
         InitOK&=config.GetConfigByName("IMU","GiroBiasStdDev",GiroBiasStdDev,true);
         InitOK&=config.GetConfigByName("IMU","InitBias",InitBias,true);
         InitOK&=config.GetConfigByName("IMU","InitBiasFrameNum",InitBiasFrameNum,true);
+        InitOK&=config.GetConfigByName("IMU","BiasHintX",BiasInitGuess[0],true);
+        InitOK&=config.GetConfigByName("IMU","BiasHintY",BiasInitGuess[1],true);
+        InitOK&=config.GetConfigByName("IMU","BiasHintZ",BiasInitGuess[2],true);
         InitOK&=config.GetConfigByName("IMU","g_module",g_module,true);
 
 

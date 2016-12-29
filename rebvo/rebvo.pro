@@ -58,7 +58,8 @@ SOURCES +=  main.cpp \
     ../Blocks/rebvo_second_t.cpp \
     ../Blocks/rebvo_third_t.cpp \
     ../Blocks/archimu.cpp \
-    ../UtilLib/libcrc.cpp
+    ../UtilLib/libcrc.cpp \
+    ../mtracklib/image_undistort.cpp
 
 HEADERS += ../Blocks/incfiles.h \
     ../Blocks/rebvo.h\
@@ -97,7 +98,8 @@ HEADERS += ../Blocks/incfiles.h \
     ../UtilLib/minimizer.h \
     ../mtracklib/scaleestimator.h \
     ../Blocks/archimu.h \
-    ../UtilLib/libcrc.h
+    ../UtilLib/libcrc.h \
+    ../mtracklib/image_undistort.h
 
 
 OTHER_FILES += GlobalConfig

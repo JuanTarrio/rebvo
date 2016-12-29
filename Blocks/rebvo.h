@@ -60,7 +60,7 @@
 
 #define CBUFSIZE        0x08
 
-#define TIME_DEBUG
+//#define TIME_DEBUG
 
 #ifdef TIME_DEBUG
 #define COND_TIME_DEBUG(arg) arg
@@ -123,6 +123,21 @@ struct IMUState{
     bool init=false;
 };
 
+struct NavData{
+    double t;
+    double dt;
+
+    TooN::Matrix <3,3> Rot=TooN::Identity;
+    TooN::Vector <3> RotLie=TooN::Zeros;
+    TooN::Vector <3> RotGiro=TooN::Zeros;
+    TooN::Vector <3> Vel=TooN::Zeros;
+
+
+    TooN::Matrix <3,3> Pose=TooN::Identity;
+    TooN::Vector <3> PoseLie=TooN::Zeros;
+    TooN::Vector <3> Pos=TooN::Zeros;
+};
+
 //Pipeline state buffer
 
 struct PipeBuffer{
@@ -137,15 +152,7 @@ struct PipeBuffer{
 
     double s_rho_p;
 
-    TooN::Matrix <3,3> Rot;
-    TooN::Vector <3> RotLie;
-    TooN::Vector <3> Vel;
-
-
-    TooN::Matrix <3,3> Pose;
-    TooN::Vector <3> PoseLie;
-    TooN::Vector <3> Pos;
-
+    NavData nav;
     IMUState imustate;
 
     double dtp0;
@@ -173,6 +180,9 @@ class REBVO
     std::thread Thr0;
 
     bool InitOK=true;
+
+    std::mutex nav_mutex;
+    NavData nav;
 
 
     //Pipeline and multithead
@@ -217,6 +227,8 @@ class REBVO
     double config_fps;
     double CamTimeScale;
 
+    int useUndistort;
+    bool rotatedCam;
     //IMU parameters
 
     int ImuMode;
@@ -227,6 +239,7 @@ class REBVO
     double GiroBiasStdDev;
     bool InitBias;
     int InitBiasFrameNum;
+    TooN::Vector <3> BiasInitGuess;
     double g_module;
 
 
@@ -321,6 +334,10 @@ class REBVO
     double LocationUncertainty;
     double DoReScaling;
 
+    void pushNav(const NavData &navdat){
+         std::lock_guard<std::mutex> locker(nav_mutex);
+         nav=navdat;
+    }
 
 
 public:
@@ -345,6 +362,13 @@ public:
     //Keyframe list
 
     std::vector <keyframe> kf_list;
+
+    //
+    NavData getNav(){
+         std::lock_guard<std::mutex> locker(nav_mutex);
+         NavData navdat=nav;
+         return navdat;
+    }
 };
 
 #endif // CAMARAFRONTAL_H

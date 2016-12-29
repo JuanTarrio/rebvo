@@ -32,7 +32,7 @@
 #include "datasetcam.h"
 #include <TooN/Cholesky.h>
 #include <scaleestimator.h>
-
+#include <image_undistort.h>
 
 
 
@@ -58,7 +58,8 @@ void REBVO::FirstThr(REBVO *cf){
 
     RGB24Pixel *data;
 
-
+    image_undistort undistorter(cam);
+    Image<RGB24Pixel> img_dist(cam.sz);
 
     //***** PipeLine init ******
 
@@ -201,16 +202,36 @@ void REBVO::FirstThr(REBVO *cf){
 
         tproc.start();
 
-        //(*pbuf.imgc)=data;              //copy buffer for fast release
+        if(cf->useUndistort){
 
-        for(int i=0,j=pbuf.imgc->bSize()-1;i<pbuf.imgc->bSize();i++,j--)
-            (*pbuf.imgc)[i]=data[j];
+            if(cf->rotatedCam)
+                img_dist.copyFromRotate180(data);   //copy buffer for fast release and rotate 180 deg
+            else
+                img_dist=data;              //copy buffer for fast release
 
-        camara->ReleaseBuffer();
+
+            camara->ReleaseBuffer();
+
+            undistorter.undistort<true>((*pbuf.imgc),img_dist); //Use radial-tangencial with bilin interp for undistortion
+
+        }else{
+
+            if(cf->rotatedCam)
+                (*pbuf.imgc).copyFromRotate180(data);   //copy buffer for fast release and rotate 180 deg
+            else
+                (*pbuf.imgc)=data;              //copy buffer for fast release
+
+            camara->ReleaseBuffer();
+        }
+
+
+
+
 
 
         //Simple color conversion
-        Image<float>::ConvertRGB2BW(*pbuf.img,*pbuf.imgc);
+        Image<float>::ConvertRGB2BW((*pbuf.img),*pbuf.imgc);
+
 
         //Build the scales and the DoG for edge detection
         pbuf.ss->build(*pbuf.img);
@@ -221,6 +242,8 @@ void REBVO::FirstThr(REBVO *cf){
 
         //Build auxiliary image on the GT
         pbuf.gt->build_field(*pbuf.ef,cf->SearchRange);
+
+
         dtp=tproc.stop();
 
 

@@ -1,0 +1,25 @@
+//Off Line Viewer Configuration File
+//& beginning sentences denote sections
+
+&CamaraFrontal 			//Camera related params
+
+    ZfX=458.654										//Camera XY focal length
+    ZfY=457.296
+    PPx=367.215         								//Camera principal point
+    PPy=248.375
+
+&DisplayFrontal			//Display parameters
+
+    Host=10.73.32.135	//REBVO remote host
+    Port=2708			//remote port
+    ImageWidth=752		//Image size, must be the same as in the remote host!
+    ImageHeight=480
+    DepthShow=5
+    TraySource=1                //0=Network, 1=Radio
+    NumberOfViews=1		//Number of OpenGL 3D views
+    XLibView=1			//Use XLib display?S
+    EdgeMapSaveNumber=5
+
+
+
+

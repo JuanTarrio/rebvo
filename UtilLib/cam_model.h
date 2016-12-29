@@ -26,35 +26,43 @@
 
 #include "video_io.h"
 #include "common_types.h"
+#include "util.h"
 #include <math.h>
+
 
 struct cam_model{
 
 public:
+
+    typedef struct{
+        double Kc2;
+        double Kc4;
+        double Kc6;
+        double P1;
+        double P2;
+    }rad_tan_distortion;
+
     Point2DF pp;
     Point2DF zf;
     double zfm;
-    double Kc[2];
+    rad_tan_distortion Kc;
     Size2D sz;
 
-    cam_model(Point2DF prin_point,Point2DF focal_dist,double DistKc[2],Size2D ImageSize)
-        :pp(prin_point),zf(focal_dist),zfm((focal_dist.x+focal_dist.y)/2),Kc{DistKc[0],DistKc[1]},sz(ImageSize){ }
+    cam_model(Point2DF prin_point,Point2DF focal_dist,rad_tan_distortion DistKc,Size2D ImageSize)
+        :pp(prin_point),zf(focal_dist),zfm((focal_dist.x+focal_dist.y)/2),Kc(DistKc),sz(ImageSize){ }
 
     cam_model(){}
 
-    void UndistortHom2Hom(Point2DF &p,int newton_it){
+    template <typename PointType>
+    void undistortHom2Hom(PointType &p,int newton_it){
 
         double rn,rd;
 
-        p.x+=sz.w/2-pp.x;
-        p.y+=sz.h/2-pp.y;
+        rn=rd=util::norm((p.x/zf.x),(p.y/zf.y));
 
-        rd=sqrt((p.x/zf.x)*(p.x/zf.x)+(p.y/zf.y)*(p.y/zf.y));
-
-        rn=rd;
         for(int i=0;i<newton_it;i++){
 
-            rn = rn - (rn*(1+rn*rn*(Kc[0]+Kc[1]*rn*rn))-rd)/(1+rn*rn*(3*Kc[0]+5*Kc[1]*rn*rn));
+            rn = rn - (rn*(1+rn*rn*(Kc.Kc2+Kc.Kc4*rn*rn))-rd)/(1+rn*rn*(3*Kc.Kc2+5*Kc.Kc4*rn*rn));
 
         }
 
@@ -66,10 +74,26 @@ public:
     }
 
     template <typename PointType>
+    void distortHom2Hom(PointType &p){
+
+        double xp=p.x/zfm,yp=p.y/zfm;
+        double r2=util::norm2(xp,yp);
+
+        double xpp=xp*(1+r2*(Kc.Kc2+r2*(Kc.Kc4+r2*Kc.Kc6)))+2*Kc.P1*xp*yp       +  Kc.P2*(r2+2*xp*xp);
+        double ypp=yp*(1+r2*(Kc.Kc2+r2*(Kc.Kc4+r2*Kc.Kc6)))+  Kc.P1*(r2+2*yp*yp)+2*Kc.P2*xp*yp;
+
+        p.x=xpp*zf.x;
+        p.y=ypp*zf.y;
+
+    }
+
+    template <typename PointType>
     inline PointType Hom2Img(const PointType &ph){
         return {ph.x+pp.x,ph.y+pp.y};
     }
-    inline Point2DF Img2Hom(const Point2DF &pi){
+
+    template <typename PointType>
+    inline PointType Img2Hom(const PointType &pi){
         return {pi.x-pp.x,pi.y-pp.y};
     }
 

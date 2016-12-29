@@ -1,6 +1,6 @@
 
-# REBVO
-## Realtime Edge Based Visual Odometry for a Monocular Camera
+# REBIVO
+## Realtime Edge Based Inertial Visual Odometry for a Monocular Camera
 
 Tarrio, J. J., & Pedre, S. (2015). Realtime Edge-Based Visual Odometry
 for a Monocular Camera. In Proceedings of the IEEE International Conference
@@ -23,7 +23,7 @@ In ubuntu and most linux dist this libraries can be downloaded directly from the
 
 -- OpenGL development libraries (GL,GLU,glut)
 
--- TooN mathematical library (http://www.edwardrosten.com/cvd/toon.html)
+-- TooN 2.2 mathematical library (http://www.edwardrosten.com/cvd/toon.html - ZIP provided in the repo)
 
 -- Lapack (for advanced TooN functions)
 
@@ -45,23 +45,42 @@ x86.
 The system can use the NE10 for neon simd support. In order to use it, the
 correspondent line has to be uncommented in the arm makefile. 
 
+### Imu Integration
+
+IMU measurements are integrated trough the ImuGrabber class, that implements a circular buffer, timestamp search utilities and inter-frame integration.
+
+For IMU data in a csv dataset style the ImuGraber supports a file loadding function (Config IMUMode=2).
+For a custom interface IMU a class similar to archimu should be written (Config IMUMode=1), that reads the IMU in a separate thread and pushes timestamped data using IMUGrabber::pushData().
+
+#### Imu Fussion
+
+IMU fussion is done using a two stage bayesian filter. Sensor noise covariances should be set for optimal performance. Scale estimation reponse dinamics should be tunned ussing
+
+Scale estimation response dynamics should be tuned for a trade-off between precision and robustness.
+
+An initial guess for Giro Bias should be provided for highly biased sensors, an initial automatic guess could be used if the system is started still.
+
 ### Configuring the system
 
 A GlobalConfig text file can be found in each of the folders. This should be tuned to
 your camera and network configuration. All the configuration options has to be present on the files
 in order for the system to start. The structure of the file is self explanatory.
 
+Two files are provided as an example, GlobalConfig (and standart config to run onboard Quad) and GlobalConfig_EuRoC (for testing the EuRoC dataset).
+
 #### Basic configs in rebvo GlobalConfig
 
 The things you have to configure in order for the system to work.
 
--- CameraDevice: the v4l2 camera device
+-- CameraDevice: the v4l2 camera device or dataset camera file and directory
 
 -- ZfX,Y: Camera focal length
 
 -- PPx,y: Camera principal point
 
 -- ImageWidth,Height: size to use
+
+-- Distortion parameters (if enabled)
 
 -- FPS: Frames per Seconds
 
@@ -191,19 +210,9 @@ Currently rebvo canot load compressed video directly (a feature that is gonna be
 a simple utility is provided in the Video2SimCam folder that uses OpenCV VideoCapture to uncompress
 the video in the SimCam format (can take a lot of disk space!).
 
+
+
 ### FAQ
-
--- Depth is not correct, objects that are close appear far and viceversa
-
-At to this point, rebvo relies only on filtering for initialization, this
-can lead to initialization errors since convergence is not warrantied. If
-the system didn't bootup right, just reset.
-
--- How is rebvo someway useful if initialization can fail
-
-If gyroscope measurements are added to estimation the initialization
-problem disappears. That is the version used to fly quadrotors.
-If you want that version contact the authors.
 
 -- Why rebvo doesn't use OpenCV?
 

@@ -11,6 +11,8 @@ struct Point2D{
     T y;
     Point2D():x(0),y(0) {}
     template <typename T1> Point2D(T1 xi,T1 yi):x(xi),y(yi) {}
+
+
 };
 
 template <typename T>

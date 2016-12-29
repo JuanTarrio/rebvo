@@ -39,6 +39,7 @@ public:
     void SetOwn(bool isOwn){data_owned=isOwn;}
 
 
+
     //Image indexing functions
     DataType & operator [](const uint inx){
 #ifdef SAFE_IMAGE_ACCESS
@@ -47,12 +48,13 @@ public:
         return data[inx];
     }
 
-    DataType & operator [](const uint inx) const {
+    const DataType & operator [](const uint inx) const {
 #ifdef SAFE_IMAGE_ACCESS
         if(inx>=bsize) throw std::out_of_range("Image index error");
 #endif
         return data[inx];
     }
+
 
     //Just get linear index
     uint GetIndex(const uint x,const uint y){
@@ -72,6 +74,11 @@ public:
 
     DataType & operator ()(const uint x,const uint y){
         return data[GetIndex(x,y)];
+    }
+
+
+    bool isInxValid (const uint &x,const uint &y){
+        return (x>=0&&y>=0&&x<size.w&&y<size.h);
     }
 
     //Data retreival
@@ -102,6 +109,12 @@ public:
     void copyTo (DataType *img){
         memcpy(img,data,bsize*sizeof(DataType));
         return;
+    }
+
+    template <typename indexableType>
+    inline void copyFromRotate180(indexableType from){
+        for(int i=0,j=bsize-1;i<bsize;i++,j--)
+           data[i]=from[j];
     }
 
     //Batch data set

@@ -224,10 +224,10 @@ void REBVO::ThirdThread(REBVO *cf){
 
 
             net_hdr->nav.dt=pbuf.dt;
-            net_hdr->nav.Pos=pbuf.Pos;
-            net_hdr->nav.Pose=pbuf.PoseLie;
-            net_hdr->nav.Vel=pbuf.Vel;
-            net_hdr->nav.Rot=pbuf.RotLie;
+            net_hdr->nav.Pos=pbuf.nav.Pos;
+            net_hdr->nav.Pose=pbuf.nav.PoseLie;
+            net_hdr->nav.Vel=pbuf.nav.Vel;
+            net_hdr->nav.Rot=pbuf.nav.RotLie;
 
 
             hdr_payload=sizeof(net_packet_hdr)+sizeof(net_keyline)*net_hdr->kline_num;
@@ -279,17 +279,18 @@ void REBVO::ThirdThread(REBVO *cf){
 
             a_log<<"Kp_cv("<<a_log_inx<<",:)="<<pbuf.Kp<<";\n";
             a_log<<"RKp_cv("<<a_log_inx<<",:)="<<pbuf.RKp<<";\n";
-            a_log<<"Rot_cv("<<a_log_inx<<",:,:)=["<<pbuf.Rot(0,0)<<","<<pbuf.Rot(0,1)<<","<<pbuf.Rot(0,2)<<";"\
-                <<pbuf.Rot(1,0)<<","<<pbuf.Rot(1,1)<<","<<pbuf.Rot(1,2)<<";"\
-               <<pbuf.Rot(2,0)<<","<<pbuf.Rot(2,1)<<","<<pbuf.Rot(2,2)<<"];\n";
-            a_log<<"Vel_cv("<<a_log_inx<<",:)=["<<pbuf.Vel[0]<<","<<pbuf.Vel[1]<<","<<pbuf.Vel[2]<<"];\n";
+            a_log<<"Rot_cv("<<a_log_inx<<",:,:)=["<<pbuf.nav.Rot(0,0)<<","<<pbuf.nav.Rot(0,1)<<","<<pbuf.nav.Rot(0,2)<<";"\
+                <<pbuf.nav.Rot(1,0)<<","<<pbuf.nav.Rot(1,1)<<","<<pbuf.nav.Rot(1,2)<<";"\
+               <<pbuf.nav.Rot(2,0)<<","<<pbuf.nav.Rot(2,1)<<","<<pbuf.nav.Rot(2,2)<<"];\n";
+            a_log<<"Vel_cv("<<a_log_inx<<",:)=["<<pbuf.nav.Vel[0]<<","<<pbuf.nav.Vel[1]<<","<<pbuf.nav.Vel[2]<<"];\n";
+            a_log<<"RotGiro_cv("<<a_log_inx<<",:)=["<<pbuf.nav.RotGiro[0]<<","<<pbuf.nav.RotGiro[1]<<","<<pbuf.nav.RotGiro[2]<<"];\n";
             a_log<<"t_cv("<<a_log_inx<<",:)="<<pbuf.t<<";\n";
             a_log<<"dt_cv("<<a_log_inx<<",:)="<<pbuf.dt<<";\n";
             a_log<<"i_cv("<<a_log_inx<<",:)="<<pbuf.p_id<<";\n";
-            a_log<<"Pose_cv("<<a_log_inx<<",:,:)=["<<pbuf.Pose(0,0)<<","<<pbuf.Pose(0,1)<<","<<pbuf.Pose(0,2)<<";"\
-                <<pbuf.Pose(1,0)<<","<<pbuf.Pose(1,1)<<","<<pbuf.Pose(1,2)<<";"\
-               <<pbuf.Pose(2,0)<<","<<pbuf.Pose(2,1)<<","<<pbuf.Pose(2,2)<<"];\n";
-            a_log<<"Pos_cv("<<a_log_inx<<",:)=["<<pbuf.Pos[0]<<","<<pbuf.Pos[1]<<","<<pbuf.Pos[2]<<"];\n";
+            a_log<<"Pose_cv("<<a_log_inx<<",:,:)=["<<pbuf.nav.Pose(0,0)<<","<<pbuf.nav.Pose(0,1)<<","<<pbuf.nav.Pose(0,2)<<";"\
+                <<pbuf.nav.Pose(1,0)<<","<<pbuf.nav.Pose(1,1)<<","<<pbuf.nav.Pose(1,2)<<";"\
+               <<pbuf.nav.Pose(2,0)<<","<<pbuf.nav.Pose(2,1)<<","<<pbuf.nav.Pose(2,2)<<"];\n";
+            a_log<<"Pos_cv("<<a_log_inx<<",:)=["<<pbuf.nav.Pos[0]<<","<<pbuf.nav.Pos[1]<<","<<pbuf.nav.Pos[2]<<"];\n";
             a_log<<"K_cv("<<a_log_inx<<",:)="<<pbuf.K<<";\n";
             a_log<<"KLN_cv("<<a_log_inx<<",:)="<<pbuf.ef->KNum()<<";\n";
 
@@ -315,7 +316,7 @@ void REBVO::ThirdThread(REBVO *cf){
 
             //******* Save trayectory ************//
 
-            t_log << std::scientific<<std::setprecision(18)<< pbuf.t/cf->ImuTimeScale << " " <<pbuf.Pos << " "<<util::LieRot2Quaternion(pbuf.PoseLie)<<"\n";
+            t_log << std::scientific<<std::setprecision(18)<< pbuf.t/cf->ImuTimeScale << " " <<pbuf.nav.Pos << " "<<util::LieRot2Quaternion(pbuf.nav.PoseLie)<<"\n";
             t_log.flush();
 
         }

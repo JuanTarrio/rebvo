@@ -67,8 +67,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
     IMUState istate;
 
-    istate.RGBias=Identity*cf->GiroBiasStdDev*cf->GiroBiasStdDev;
-    istate.RGiro=Identity*cf->GiroMeasStdDev*cf->GiroMeasStdDev;
+
     istate.W_Bg=util::Matrix3x3Inv(istate.RGBias*100);
 
     istate.Qg=Identity*cf->g_uncert*cf->g_uncert;
@@ -164,16 +163,23 @@ void  REBVO::SecondThread(REBVO *cf){
 
         if(cf->ImuMode>0){      //Imu data avaiable?? Use it!
 
-            if(!istate.init && cf->InitBias && n_frame>0){
+            if(!istate.init  && n_frame>0){
 
-                giro_init+=new_buf.imu.giro*new_buf.imu.dt;
-                //giro_init+=istate.dWv;
-                if(++n_giro_init>cf->InitBiasFrameNum){
-                    istate.Bg=giro_init/n_giro_init;
+                if(cf->InitBias){
+                    giro_init+=new_buf.imu.giro*new_buf.imu.dt;
+                    //giro_init+=istate.dWv;
+                    if(++n_giro_init>cf->InitBiasFrameNum){
+                        istate.Bg=giro_init/n_giro_init;
+                        istate.init=true;
+                        istate.W_Bg=util::Matrix3x3Inv(istate.RGBias*1e2);
+                    }
+                }else{
                     istate.init=true;
-                    istate.W_Bg=util::Matrix3x3Inv(istate.RGBias*1e2);
+                    istate.Bg=cf->BiasInitGuess*new_buf.imu.dt;
                 }
             }
+
+
 
 
             R=new_buf.imu.Rot;  //Use imu rotation
@@ -211,7 +217,9 @@ void  REBVO::SecondThread(REBVO *cf){
             Xgv=Xv;
             W_Xgv=W_Xv;
 
-           // std::cout<<W_Xv<<"\n";
+
+            istate.RGBias=Identity*cf->GiroBiasStdDev*cf->GiroBiasStdDev*new_buf.imu.dt*new_buf.imu.dt;
+            istate.RGiro=Identity*cf->GiroMeasStdDev*cf->GiroMeasStdDev*new_buf.imu.dt*new_buf.imu.dt;
 
             Vector <3> dgbias=Zeros;
             edge_tracker::BiasCorrect(Xgv,W_Xgv,dgbias,istate.W_Bg,istate.RGiro,istate.RGBias);
@@ -428,19 +436,27 @@ void  REBVO::SecondThread(REBVO *cf){
         old_buf.Kp=Kp;
         old_buf.RKp=P_Kp;
 
-        old_buf.Rot=R;
-        old_buf.RotLie=SO3<>(R).ln();
-        old_buf.Vel=-V*K/dt_frame;
+        old_buf.nav.dt=dt_frame;
+        old_buf.nav.t=old_buf.t;
 
-        old_buf.Pose=Pose;
-        old_buf.PoseLie=SO3<>(Pose).ln();
-        old_buf.Pos=Pos;
+        old_buf.nav.Rot=R;
+        old_buf.nav.RotLie=SO3<>(R).ln();
+        old_buf.nav.RotGiro=SO3<>(Rgva).ln()/dt_frame;
+        old_buf.nav.Vel=-V*K/dt_frame;
+
+        old_buf.nav.Pose=Pose;
+        old_buf.nav.PoseLie=SO3<>(Pose).ln();
+        old_buf.nav.Pos=Pos;
 
         old_buf.s_rho_p=s_rho_q;
 
         old_buf.EstimationOK=EstimationOk;
 
         old_buf.imustate=istate;
+
+        //Pus the nav data in the REBVO class (thread safe)
+
+        cf->pushNav(old_buf.nav);
 
       /*  if((old_buf.p_id%25)==0){
             cf->kf_list.push_back(keyframe(*old_buf.ef,*old_buf.gt,old_buf.t,old_buf.Rot,old_buf.RotLie,old_buf.Vel,old_buf.Pose,old_buf.PoseLie,old_buf.Pos));
