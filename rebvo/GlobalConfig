@@ -103,7 +103,7 @@
     ImuMode=1                                                                            //1= use the archquitecture specific class, 2=load full data from ImuFile
     ImuFile=/home/odroid/Datasets/MH_03_medium/mav0/imu0/data.csv                        //
     CamImuSE3File=se3.csv                                                                //File containing the SE3 transformation from IMU to Camera
-    TimeScale=1e-9                                                  //TimeScale of the IMU file
+    TimeScale=1                                                     //TimeScale of the IMU file
 
     TimeDesinc=0.007                                                //Time desincrozitation IMU2Cam (sec)
 
@@ -128,7 +128,7 @@
 
     CircBufferSize=1000                                             //Imu grabber circular buffer size
     SampleTime=0.001250                                             //Sample time for archIMU
-    DeviceName=/dev/ttySAC2                                         //device name for archIMU
+
 
 &SimuCamera
 

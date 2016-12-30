@@ -35,6 +35,9 @@
 #include <image_undistort.h>
 
 
+#include "v4lcam.h"
+#include "simcam.h"
+
 
 
 using namespace std;
@@ -50,11 +53,11 @@ void REBVO::FirstThr(REBVO *cf){
 
     int l_kl_num=0;
 
-    double tresh=cf->DetectorThresh;
+    double tresh=cf->params.DetectorThresh;
 
     //Simple camera model
 
-    cam_model cam(*cf->cam);    //Start a fresh copy for tread safe use
+    cam_model cam(cf->cam);    //Start a fresh copy for tread safe use
 
     RGB24Pixel *data;
 
@@ -68,7 +71,7 @@ void REBVO::FirstThr(REBVO *cf){
 
     for(PipeBuffer &pbuf : cf->pipe){
 
-        pbuf.ss=new sspace(cf->Sigma0,cf->Sigma1,cam.sz,3);
+        pbuf.ss=new sspace(cf->params.Sigma0,cf->params.Sigma1,cam.sz,3);
         pbuf.ef=new edge_tracker(cam,255*3);
         pbuf.gt=new global_tracker (pbuf.ef->GetCam());
         pbuf.img=new Image<float>(cam.sz);
@@ -81,16 +84,16 @@ void REBVO::FirstThr(REBVO *cf){
 
     VideoCam *camara;
 
-    switch(cf->CameraType){
+    switch(cf->params.CameraType){
     case 2:
-        camara=new DataSetCam(cf->DataSetDir.data(),cf->DataSetFile.data(),cam.sz,cf->CamTimeScale,cf->SimFile.data());
+        camara=new DataSetCam(cf->params.DataSetDir.data(),cf->params.DataSetFile.data(),cam.sz,cf->params.CamTimeScale,cf->params.SimFile.data());
         break;
     case 1:
-        camara=new simcam(cf->SimFile.data(),cam.sz);
+        camara=new simcam(cf->params.SimFile.data(),cam.sz);
         break;
     case 0:
     default:
-        camara=new v4lCam(cf->CameraDevice.data(),cam.sz,cf->config_fps,cf->SimFile.data());
+        camara=new v4lCam(cf->params.CameraDevice.data(),cam.sz,cf->params.config_fps,cf->params.SimFile.data());
         break;
     }
 
@@ -100,59 +103,18 @@ void REBVO::FirstThr(REBVO *cf){
         return;
     }
 
-    //***** Imu init *****//
 
-    switch(cf->ImuMode){
-    case 1:                         //Load imu using specific architecture
-
-
-
-        cf->imu=new ImuGrabber(cf->CircBufferSize,cf->SampleTime);
-        cf->imu_dev=new archIMU(cf->ImuDevName.data(),*cf->imu);
-
-        if(cf->imu_dev->error()){
-            cout << "Failed to initialize the imu device" <<endl;
-            cf->quit=true;
-            return;
-        }
-
-        if(!cf->imu->LoadCamImuSE3(cf->SE3File.data())){
-            cout << "Failed to load cam-imu transformation \n" <<endl;
-            cf->quit=true;
-            return;
-        }
-        break;
-
-    case 2:                         //Load imu from dataset file
-    {
-        bool error=false;
-        cf->imu=new ImuGrabber(ImuGrabber::LoadDataSet(cf->ImuFile.data(),false,cf->ImuTimeScale,error));
-        if(error){
-            cout << "Failed to initialize the imu " <<endl;
-            cf->quit=true;
-            return;
-        }
-
-        if(!cf->imu->LoadCamImuSE3(cf->SE3File.data())){
-            cout << "Failed to load cam-imu transformation \n" <<endl;
-            cf->quit=true;
-            return;
-        }
-    }
-        break;
-
-    }
 
 
     //***** Call thread 1 & set cpu afiinity ******
 
     std::thread Thr1(SecondThread,cf);
 
-    if(cf->cpuSetAffinity){
+    if(cf->params.cpuSetAffinity){
         cpu_set_t cpusetp;
 
         CPU_ZERO(&cpusetp);
-        CPU_SET(cf->cpu0,&cpusetp);
+        CPU_SET(cf->params.cpu0,&cpusetp);
         if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
             printf("\nThread: Can't' set CPU affinity!\n");
             cf->quit=true;
@@ -185,7 +147,7 @@ void REBVO::FirstThr(REBVO *cf){
 
 
         if(cf->imu){
-            pbuf.imu=cf->imu->GrabAndIntegrate(t0+cf->TimeDesinc,t+cf->TimeDesinc);
+            pbuf.imu=cf->imu->GrabAndIntegrate(t0+cf->params.TimeDesinc,t+cf->params.TimeDesinc);
         }
 
 
@@ -202,9 +164,9 @@ void REBVO::FirstThr(REBVO *cf){
 
         tproc.start();
 
-        if(cf->useUndistort){
+        if(cf->params.useUndistort){
 
-            if(cf->rotatedCam)
+            if(cf->params.rotatedCam)
                 img_dist.copyFromRotate180(data);   //copy buffer for fast release and rotate 180 deg
             else
                 img_dist=data;              //copy buffer for fast release
@@ -216,7 +178,7 @@ void REBVO::FirstThr(REBVO *cf){
 
         }else{
 
-            if(cf->rotatedCam)
+            if(cf->params.rotatedCam)
                 (*pbuf.imgc).copyFromRotate180(data);   //copy buffer for fast release and rotate 180 deg
             else
                 (*pbuf.imgc)=data;              //copy buffer for fast release
@@ -237,11 +199,11 @@ void REBVO::FirstThr(REBVO *cf){
         pbuf.ss->build(*pbuf.img);
 
         //Detect Edges
-        pbuf.ef->detect(pbuf.ss,cf->DetectorPlaneFitSize,cf->DetectorPosNegThresh,cf->DetectorDoGThresh
-                        ,cf->MaxPoints,tresh,l_kl_num,cf->ReferencePoints,cf->DetectorAutoGain,cf->DetectorMaxThresh,cf->DetectorMinThresh);
+        pbuf.ef->detect(pbuf.ss,cf->params.DetectorPlaneFitSize,cf->params.DetectorPosNegThresh,cf->params.DetectorDoGThresh
+                        ,cf->params.MaxPoints,tresh,l_kl_num,cf->params.ReferencePoints,cf->params.DetectorAutoGain,cf->params.DetectorMaxThresh,cf->params.DetectorMinThresh);
 
         //Build auxiliary image on the GT
-        pbuf.gt->build_field(*pbuf.ef,cf->SearchRange);
+        pbuf.gt->build_field(*pbuf.ef,cf->params.SearchRange);
 
 
         dtp=tproc.stop();
@@ -258,14 +220,12 @@ void REBVO::FirstThr(REBVO *cf){
 
         if(cf->start_record){           //Start the recording of uncompressed video
             cf->start_record=false;
-            camara->RecordNFrames(cf->sim_save_nframes);
+            camara->RecordNFrames(cf->params.sim_save_nframes);
         }
         cf->pipe.ReleaseBuffer(0);
     }
 
-    if(cf->imu_dev){
-        cf->imu_dev->killIMU();
-    }
+
 
     Thr1.join();
 

@@ -46,6 +46,7 @@ OBJECTS_DIR   = ./
 ####### Files
 
 SOURCES       = ../rebvo/main.cpp \
+		../rebvo/archimu.cpp \
 		../Blocks/rebvo.cpp \
 		../VideoLib/video_io.c \
 		../VideoLib/video_mfc.cpp \
@@ -73,10 +74,10 @@ SOURCES       = ../rebvo/main.cpp \
 		../Blocks/rebvo_first_t.cpp \
 		../Blocks/rebvo_second_t.cpp \
 		../Blocks/rebvo_third_t.cpp \
-		../Blocks/archimu.cpp \
 		../UtilLib/libcrc.cpp \
 		../mtracklib/image_undistort.cpp 
 OBJECTS       = main.o \
+		archimu.o \
 		rebvo.o \
 		video_io.o \
 		video_mfc.o \
@@ -104,7 +105,6 @@ OBJECTS       = main.o \
 		rebvo_first_t.o \
 		rebvo_second_t.o \
 		rebvo_third_t.o \
-		archimu.o \
 		libcrc.o \
 		image_undistort.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
@@ -341,14 +341,8 @@ compiler_clean:
 ####### Compile
 
 main.o: ../rebvo/main.cpp ../Blocks/rebvo.h \
-		../VideoLib/video_io.h \
-		../UtilLib/configurator.h \
-		../VideoLib/v4lcam.h \
-		../VideoLib/videocam.h \
-		../VideoLib/image.h \
-		../VideoLib/common_types.h \
-		../VideoLib/simcam.h \
-		../mtracklib/net_keypoint.h \
+		../UtilLib/pipeline.h \
+		../mtracklib/edge_tracker.h \
 		../mtracklib/edge_finder.h \
 		../mtracklib/sspace.h \
 		../mtracklib/iigauss.h \
@@ -356,32 +350,27 @@ main.o: ../rebvo/main.cpp ../Blocks/rebvo.h \
 		../UtilLib/util.h \
 		../UtilLib/timer.h \
 		../UtilLib/fvector.h \
+		../VideoLib/image.h \
+		../VideoLib/video_io.h \
+		../VideoLib/common_types.h \
 		../UtilLib/CircList.h \
 		../UtilLib/cam_model.h \
-		../mtracklib/nav_data_defs.h \
-		../VideoLib/video_mfc.h \
-		../VideoLib/video_encoder.h \
-		../VideoLib/video_mjpeg.h \
-		../mtracklib/edge_tracker.h \
 		../UtilLib/NormalDistribution.h \
-		../UtilLib/pipeline.h \
-		../CommLib/udp_port.h \
 		../mtracklib/global_tracker.h \
 		../UtilLib/ne10wrapper.h \
 		../mtracklib/keyframe.h \
 		../VideoLib/imugrabber.h \
-		../Blocks/archimu.h
+		../rebvo/archimu.h \
+		../UtilLib/configurator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../rebvo/main.cpp
 
-rebvo.o: ../Blocks/rebvo.cpp ../Blocks/rebvo.h \
-		../VideoLib/video_io.h \
+archimu.o: ../rebvo/archimu.cpp ../rebvo/archimu.h \
 		../UtilLib/configurator.h \
-		../VideoLib/v4lcam.h \
-		../VideoLib/videocam.h \
-		../VideoLib/image.h \
-		../VideoLib/common_types.h \
-		../VideoLib/simcam.h \
-		../mtracklib/net_keypoint.h \
+		../VideoLib/imugrabber.h \
+		../UtilLib/CircList.h \
+		../Blocks/rebvo.h \
+		../UtilLib/pipeline.h \
+		../mtracklib/edge_tracker.h \
 		../mtracklib/edge_finder.h \
 		../mtracklib/sspace.h \
 		../mtracklib/iigauss.h \
@@ -389,24 +378,43 @@ rebvo.o: ../Blocks/rebvo.cpp ../Blocks/rebvo.h \
 		../UtilLib/util.h \
 		../UtilLib/timer.h \
 		../UtilLib/fvector.h \
+		../VideoLib/image.h \
+		../VideoLib/video_io.h \
+		../VideoLib/common_types.h \
+		../UtilLib/cam_model.h \
+		../UtilLib/NormalDistribution.h \
+		../mtracklib/global_tracker.h \
+		../UtilLib/ne10wrapper.h \
+		../mtracklib/keyframe.h \
+		../UtilLib/ttimer.h \
+		../UtilLib/libcrc.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o archimu.o ../rebvo/archimu.cpp
+
+rebvo.o: ../Blocks/rebvo.cpp ../Blocks/rebvo.h \
+		../UtilLib/pipeline.h \
+		../mtracklib/edge_tracker.h \
+		../mtracklib/edge_finder.h \
+		../mtracklib/sspace.h \
+		../mtracklib/iigauss.h \
+		../mtracklib/iimage.h \
+		../UtilLib/util.h \
+		../UtilLib/timer.h \
+		../UtilLib/fvector.h \
+		../VideoLib/image.h \
+		../VideoLib/video_io.h \
+		../VideoLib/common_types.h \
 		../UtilLib/CircList.h \
 		../UtilLib/cam_model.h \
-		../mtracklib/nav_data_defs.h \
-		../VideoLib/video_mfc.h \
-		../VideoLib/video_encoder.h \
-		../VideoLib/video_mjpeg.h \
-		../mtracklib/edge_tracker.h \
 		../UtilLib/NormalDistribution.h \
-		../UtilLib/pipeline.h \
-		../CommLib/udp_port.h \
 		../mtracklib/global_tracker.h \
 		../UtilLib/ne10wrapper.h \
 		../mtracklib/keyframe.h \
 		../VideoLib/imugrabber.h \
-		../Blocks/archimu.h \
 		../UtilLib/ttimer.h \
 		../VideoLib/datasetcam.h \
-		../mtracklib/scaleestimator.h
+		../VideoLib/videocam.h \
+		../mtracklib/scaleestimator.h \
+		../UtilLib/configurator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo.o ../Blocks/rebvo.cpp
 
 video_io.o: ../VideoLib/video_io.c ../VideoLib/video_io.h
@@ -611,14 +619,8 @@ scaleestimator.o: ../mtracklib/scaleestimator.cpp ../mtracklib/scaleestimator.h 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o scaleestimator.o ../mtracklib/scaleestimator.cpp
 
 rebvo_first_t.o: ../Blocks/rebvo_first_t.cpp ../Blocks/rebvo.h \
-		../VideoLib/video_io.h \
-		../UtilLib/configurator.h \
-		../VideoLib/v4lcam.h \
-		../VideoLib/videocam.h \
-		../VideoLib/image.h \
-		../VideoLib/common_types.h \
-		../VideoLib/simcam.h \
-		../mtracklib/net_keypoint.h \
+		../UtilLib/pipeline.h \
+		../mtracklib/edge_tracker.h \
 		../mtracklib/edge_finder.h \
 		../mtracklib/sspace.h \
 		../mtracklib/iigauss.h \
@@ -626,36 +628,28 @@ rebvo_first_t.o: ../Blocks/rebvo_first_t.cpp ../Blocks/rebvo.h \
 		../UtilLib/util.h \
 		../UtilLib/timer.h \
 		../UtilLib/fvector.h \
+		../VideoLib/image.h \
+		../VideoLib/video_io.h \
+		../VideoLib/common_types.h \
 		../UtilLib/CircList.h \
 		../UtilLib/cam_model.h \
-		../mtracklib/nav_data_defs.h \
-		../VideoLib/video_mfc.h \
-		../VideoLib/video_encoder.h \
-		../VideoLib/video_mjpeg.h \
-		../mtracklib/edge_tracker.h \
 		../UtilLib/NormalDistribution.h \
-		../UtilLib/pipeline.h \
-		../CommLib/udp_port.h \
 		../mtracklib/global_tracker.h \
 		../UtilLib/ne10wrapper.h \
 		../mtracklib/keyframe.h \
 		../VideoLib/imugrabber.h \
-		../Blocks/archimu.h \
 		../UtilLib/ttimer.h \
 		../VideoLib/datasetcam.h \
+		../VideoLib/videocam.h \
 		../mtracklib/scaleestimator.h \
-		../mtracklib/image_undistort.h
+		../mtracklib/image_undistort.h \
+		../VideoLib/v4lcam.h \
+		../VideoLib/simcam.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo_first_t.o ../Blocks/rebvo_first_t.cpp
 
 rebvo_second_t.o: ../Blocks/rebvo_second_t.cpp ../Blocks/rebvo.h \
-		../VideoLib/video_io.h \
-		../UtilLib/configurator.h \
-		../VideoLib/v4lcam.h \
-		../VideoLib/videocam.h \
-		../VideoLib/image.h \
-		../VideoLib/common_types.h \
-		../VideoLib/simcam.h \
-		../mtracklib/net_keypoint.h \
+		../UtilLib/pipeline.h \
+		../mtracklib/edge_tracker.h \
 		../mtracklib/edge_finder.h \
 		../mtracklib/sspace.h \
 		../mtracklib/iigauss.h \
@@ -663,35 +657,25 @@ rebvo_second_t.o: ../Blocks/rebvo_second_t.cpp ../Blocks/rebvo.h \
 		../UtilLib/util.h \
 		../UtilLib/timer.h \
 		../UtilLib/fvector.h \
+		../VideoLib/image.h \
+		../VideoLib/video_io.h \
+		../VideoLib/common_types.h \
 		../UtilLib/CircList.h \
 		../UtilLib/cam_model.h \
-		../mtracklib/nav_data_defs.h \
-		../VideoLib/video_mfc.h \
-		../VideoLib/video_encoder.h \
-		../VideoLib/video_mjpeg.h \
-		../mtracklib/edge_tracker.h \
 		../UtilLib/NormalDistribution.h \
-		../UtilLib/pipeline.h \
-		../CommLib/udp_port.h \
 		../mtracklib/global_tracker.h \
 		../UtilLib/ne10wrapper.h \
 		../mtracklib/keyframe.h \
 		../VideoLib/imugrabber.h \
-		../Blocks/archimu.h \
 		../UtilLib/ttimer.h \
 		../VideoLib/datasetcam.h \
+		../VideoLib/videocam.h \
 		../mtracklib/scaleestimator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo_second_t.o ../Blocks/rebvo_second_t.cpp
 
 rebvo_third_t.o: ../Blocks/rebvo_third_t.cpp ../Blocks/rebvo.h \
-		../VideoLib/video_io.h \
-		../UtilLib/configurator.h \
-		../VideoLib/v4lcam.h \
-		../VideoLib/videocam.h \
-		../VideoLib/image.h \
-		../VideoLib/common_types.h \
-		../VideoLib/simcam.h \
-		../mtracklib/net_keypoint.h \
+		../UtilLib/pipeline.h \
+		../mtracklib/edge_tracker.h \
 		../mtracklib/edge_finder.h \
 		../mtracklib/sspace.h \
 		../mtracklib/iigauss.h \
@@ -699,36 +683,27 @@ rebvo_third_t.o: ../Blocks/rebvo_third_t.cpp ../Blocks/rebvo.h \
 		../UtilLib/util.h \
 		../UtilLib/timer.h \
 		../UtilLib/fvector.h \
+		../VideoLib/image.h \
+		../VideoLib/video_io.h \
+		../VideoLib/common_types.h \
 		../UtilLib/CircList.h \
 		../UtilLib/cam_model.h \
-		../mtracklib/nav_data_defs.h \
-		../VideoLib/video_mfc.h \
-		../VideoLib/video_encoder.h \
-		../VideoLib/video_mjpeg.h \
-		../mtracklib/edge_tracker.h \
 		../UtilLib/NormalDistribution.h \
-		../UtilLib/pipeline.h \
-		../CommLib/udp_port.h \
 		../mtracklib/global_tracker.h \
 		../UtilLib/ne10wrapper.h \
 		../mtracklib/keyframe.h \
 		../VideoLib/imugrabber.h \
-		../Blocks/archimu.h \
 		../UtilLib/ttimer.h \
 		../VideoLib/datasetcam.h \
-		../mtracklib/scaleestimator.h
+		../VideoLib/videocam.h \
+		../mtracklib/scaleestimator.h \
+		../VideoLib/video_mfc.h \
+		../VideoLib/video_encoder.h \
+		../VideoLib/video_mjpeg.h \
+		../mtracklib/net_keypoint.h \
+		../mtracklib/nav_data_defs.h \
+		../CommLib/udp_port.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo_third_t.o ../Blocks/rebvo_third_t.cpp
-
-archimu.o: ../Blocks/archimu.cpp ../Blocks/archimu.h \
-		../UtilLib/configurator.h \
-		../VideoLib/imugrabber.h \
-		../UtilLib/CircList.h \
-		../UtilLib/ttimer.h \
-		../UtilLib/libcrc.h \
-		../UtilLib/util.h \
-		../UtilLib/timer.h \
-		../UtilLib/fvector.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o archimu.o ../Blocks/archimu.cpp
 
 libcrc.o: ../UtilLib/libcrc.cpp ../UtilLib/libcrc.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o libcrc.o ../UtilLib/libcrc.cpp

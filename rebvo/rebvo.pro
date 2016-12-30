@@ -30,6 +30,7 @@ INSTALLS += target
 
 
 SOURCES +=  main.cpp \
+            archimu.cpp \
     ../Blocks/rebvo.cpp\
     ../VideoLib/video_io.c \
     ../VideoLib/video_mfc.cpp\
@@ -57,11 +58,11 @@ SOURCES +=  main.cpp \
     ../Blocks/rebvo_first_t.cpp \
     ../Blocks/rebvo_second_t.cpp \
     ../Blocks/rebvo_third_t.cpp \
-    ../Blocks/archimu.cpp \
     ../UtilLib/libcrc.cpp \
     ../mtracklib/image_undistort.cpp
 
-HEADERS += ../Blocks/incfiles.h \
+HEADERS += archimu.h \
+    ../Blocks/incfiles.h \
     ../Blocks/rebvo.h\
     ../VideoLib/video_io.h \
     ../VideoLib/image.h \
@@ -97,7 +98,6 @@ HEADERS += ../Blocks/incfiles.h \
     ../VideoLib/imugrabber.h\
     ../UtilLib/minimizer.h \
     ../mtracklib/scaleestimator.h \
-    ../Blocks/archimu.h \
     ../UtilLib/libcrc.h \
     ../mtracklib/image_undistort.h
 

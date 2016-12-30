@@ -24,11 +24,12 @@
 #ifndef ARCHIMU_H
 #define ARCHIMU_H
 
-#include "configurator.h"
-#include "imugrabber.h"
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include "configurator.h"
+#include "imugrabber.h"
+#include "rebvo.h"
 
 #pragma pack(push,1)
 
@@ -55,7 +56,7 @@ class archIMU
     std::atomic_bool    quit;
     bool InitOk;
 
-    ImuGrabber &grabber;
+    REBVO &grabber;
     std::thread readerThr;
 
     static void ioThread(archIMU *imu);
@@ -63,7 +64,7 @@ class archIMU
 
 
 public:
-    archIMU(const char *device_name, ImuGrabber &imu_grab);
+    archIMU(const char *device_name, REBVO &rebvo_grab);
 
     void killIMU(){
         quit=false;

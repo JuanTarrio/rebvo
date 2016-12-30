@@ -33,6 +33,10 @@
 #include <TooN/Cholesky.h>
 #include <scaleestimator.h>
 
+#include "video_mfc.h"
+#include "video_mjpeg.h"
+#include "net_keypoint.h"
+#include "udp_port.h"
 
 
 
@@ -47,11 +51,11 @@ void REBVO::ThirdThread(REBVO *cf){
 
     /*****   Set cpu Afinity of the thread   ******/
 
-    if(cf->cpuSetAffinity){
+    if(cf->params.cpuSetAffinity){
         cpu_set_t cpusetp;
 
         CPU_ZERO(&cpusetp);
-        CPU_SET(cf->cpu2,&cpusetp);
+        CPU_SET(cf->params.cpu2,&cpusetp);
         if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
             printf("\nThird Thread: No puedo setear CPU affinity!\n");
             cf->quit=true;
@@ -72,7 +76,7 @@ void REBVO::ThirdThread(REBVO *cf){
     int hdr_payload=0;
 
 
-    util::CircListIndexer net_buf_inx(cf->EdgeMapDelay+1);
+    util::CircListIndexer net_buf_inx(cf->params.EdgeMapDelay+1);
     unsigned char **net_pak= new unsigned char*[net_buf_inx.Size()];
 
     for(int i=0;i<net_buf_inx.Size();i++){
@@ -86,16 +90,16 @@ void REBVO::ThirdThread(REBVO *cf){
     /***** Start UDP comm port if needed******/
 
     udp_port *com_port=NULL;
-    if(cf->VideoNetEnabled>0){
-        com_port=new udp_port(cf->VideoNetHost.data(),cf->VideoNetPort);
+    if(cf->params.VideoNetEnabled>0){
+        com_port=new udp_port(cf->params.VideoNetHost.data(),cf->params.VideoNetPort);
 
         if(com_port->Error()){
             cf->quit=true;
             return;
         }
-        printf("\nCamaraFrontal: Socket iniciado en %s:%d\n",cf->VideoNetHost.data(),cf->VideoNetPort);
+        printf("\nCamaraFrontal: Socket iniciado en %s:%d\n",cf->params.VideoNetHost.data(),cf->params.VideoNetPort);
 
-        com_port->setBlock(cf->BlockingUDP>0);
+        com_port->setBlock(cf->params.BlockingUDP>0);
 
     }
 
@@ -104,26 +108,26 @@ void REBVO::ThirdThread(REBVO *cf){
     int VideoSaveIndex=0,VideoSaveBuffersize=0;
     char * VideoSaveBuffer=NULL;
 
-    if(cf->VideoSave>0){
-        VideoSaveBuffer=new char[cf->VideoSaveBuffersize];
-        VideoSaveBuffersize=cf->VideoSaveBuffersize;
+    if(cf->params.VideoSave>0){
+        VideoSaveBuffer=new char[cf->params.VideoSaveBuffersize];
+        VideoSaveBuffersize=cf->params.VideoSaveBuffersize;
     }
 
 
     /****** Init Encoder if needed ******/
 
-    const Size2D ImageSize(cf->cam->sz);
+    const Size2D ImageSize(cf->cam.sz);
 
     VideoEncoder *encoder=NULL;
 
-    if(cf->VideoNetEnabled>0 || cf->VideoSave>0){
-        switch(cf->encoder_type){
+    if(cf->params.VideoNetEnabled>0 || cf->params.VideoSave>0){
+        switch(cf->params.encoder_type){
         case VIDEO_ENCODER_TYPE_MJPEG:
             encoder=new MJPEGEncoder(ImageSize,90);
             break;
         case VIDEO_ENCODER_TYPE_MFC:
         {
-            EncoderMFC *encoder_mfc=new EncoderMFC(cf->encoder_dev.data());
+            EncoderMFC *encoder_mfc=new EncoderMFC(cf->params.encoder_dev.data());
             int stb_sz=MFC_MAX_STREAM_SIZE;
             if(encoder_mfc->Initialize(ImageSize.w,ImageSize.h,V4L2_PIX_FMT_MPEG4,15,128000,2,2,stb_sz)<0){
                 cf->quit=true;
@@ -148,9 +152,9 @@ void REBVO::ThirdThread(REBVO *cf){
     ofstream a_log,t_log;
     int a_log_inx=0;
 
-    if(cf->SaveLog){
+    if(cf->params.SaveLog){
 
-        a_log.open(cf->LogFile.data());
+        a_log.open(cf->params.LogFile.data());
         if(!a_log.is_open()){
             cout <<"\nREBVO: Cannot open log file\n";
             cf->quit=true;
@@ -160,7 +164,7 @@ void REBVO::ThirdThread(REBVO *cf){
         a_log<< std::scientific<<std::setprecision(16);
 
 
-        t_log.open(cf->TrayFile.data());
+        t_log.open(cf->params.TrayFile.data());
         if(!t_log.is_open()){
             cout <<"\nREBVO: Cannot open trayectory file\n";
             cf->quit=true;
@@ -195,7 +199,7 @@ void REBVO::ThirdThread(REBVO *cf){
         COND_TIME_DEBUG(t_proc.start();)
 
 
-        if(cf->VideoNetEnabled>0){
+        if(cf->params.VideoNetEnabled>0){
 
             //****** Prepare network buffer header *****/
 
@@ -248,11 +252,11 @@ void REBVO::ThirdThread(REBVO *cf){
                 net_hdr->jpeg_size=n;
 
                 if (!com_port->SendFragmented(net_pak[net_buf_inx],net_hdr->data_size,32e3)){
-                    printf("\nMTrack: Error enviando paquete de %d bytes a %s:%d! %d: %s\n",net_hdr->data_size,cf->VideoNetHost.data(),cf->VideoNetPort\
+                    printf("\nMTrack: Error enviando paquete de %d bytes a %s:%d! %d: %s\n",net_hdr->data_size,cf->params.VideoNetHost.data(),cf->params.VideoNetPort\
                            ,errno, strerror(errno));
                 }
 
-                if(cf->VideoSave){                      //Optionaly save on file buffer
+                if(cf->params.VideoSave){                      //Optionaly save on file buffer
                     memcpy(&VideoSaveBuffer[VideoSaveIndex],&net_pak[net_buf_inx][hdr_payload],std::min(n,VideoSaveBuffersize-VideoSaveIndex));
                 }
             }
@@ -261,7 +265,7 @@ void REBVO::ThirdThread(REBVO *cf){
             ++net_buf_inx;
 
 
-        }else if(cf->VideoSave && VideoSaveBuffer!=NULL && VideoSaveBuffersize>VideoSaveIndex){
+        }else if(cf->params.VideoSave && VideoSaveBuffer!=NULL && VideoSaveBuffersize>VideoSaveIndex){
 
             //****** If only video file buffer enabled encode and decode *****//
 
@@ -271,7 +275,7 @@ void REBVO::ThirdThread(REBVO *cf){
 
         }
 
-        if(cf->SaveLog){
+        if(cf->params.SaveLog){
 
             //******* Save log data directly on file ******//
 
@@ -316,7 +320,7 @@ void REBVO::ThirdThread(REBVO *cf){
 
             //******* Save trayectory ************//
 
-            t_log << std::scientific<<std::setprecision(18)<< pbuf.t/cf->ImuTimeScale << " " <<pbuf.nav.Pos << " "<<util::LieRot2Quaternion(pbuf.nav.PoseLie)<<"\n";
+            t_log << std::scientific<<std::setprecision(18)<< pbuf.t/cf->params.ImuTimeScale << " " <<pbuf.nav.Pos << " "<<util::LieRot2Quaternion(pbuf.nav.PoseLie)<<"\n";
             t_log.flush();
 
         }
@@ -346,12 +350,12 @@ void REBVO::ThirdThread(REBVO *cf){
 
     // ****** All the video is saved in RAM and saved at the end, for avoiding delays ******//
 
-    if(cf->VideoSave){
+    if(cf->params.VideoSave){
 
         printf("\nCamara Frontal: Saving video file...\n");
 
         ofstream video_of;
-        video_of.open(cf->VideoSaveFile.data(),ios_base::trunc);
+        video_of.open(cf->params.VideoSaveFile.data(),ios_base::trunc);
 
         if(video_of.is_open()){
 

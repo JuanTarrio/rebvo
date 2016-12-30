@@ -196,14 +196,14 @@ bool    archIMU::PushMeas(SensorFrame &sf){
         data.acel[i]=sf.Acel[i]*AcelSens;
     }
 
-    return grabber.PushData(data);
+    return grabber.PushIMU(data);
 
 
 }
 
 
-archIMU::archIMU(const char *device_name,ImuGrabber &imu_grab)
-    :grabber(imu_grab)
+archIMU::archIMU(const char *device_name, REBVO &rebvo_grab)
+    :grabber(rebvo_grab)
 {
 
     InitOk=false;

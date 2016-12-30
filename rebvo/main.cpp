@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include "rebvo.h"
+#include "archimu.h"
 
 #include "util.h"
 
@@ -47,22 +48,32 @@ int main(int argn,char ** argv)
     std::string ConfigName(argn>1?argv[1]:"GlobalConfig");
 
 
-    Configurator GlobalConfig;
 
-    //Leo el archivo de configuracion
-    if(!GlobalConfig.ParseConfigFile(ConfigName.data(),false))
-        return -1;
-
-
-    REBVO cf(GlobalConfig);
+    REBVO cf(ConfigName.data());
 	
     if(!cf.Init())
 		return -1;
+
+    archIMU *imu_dev=nullptr;
+
+    if(cf.getParams().ImuMode==1){
+
+
+        imu_dev=new archIMU("/dev/ttySAC2",cf);
+
+        if(imu_dev->error()){
+            std::cout << "main.cpp: Failed to initialize the imu device\n";
+
+            cf.CleanUp();
+            return -1;
+        }
+    }
 
     PrintHelp();
 
     bool run=true;
     while(run && cf.Running()){
+
 
         char c;
         std::cin >> c;

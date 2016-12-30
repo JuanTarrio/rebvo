@@ -25,37 +25,21 @@
 #ifndef CAMARAFRONTAL_H
 #define CAMARAFRONTAL_H
 
-#include "video_io.h"
-#include "configurator.h"
 
 #include <string>
-
 #include <TooN/TooN.h>
-
 #include <thread>
 #include <atomic>
 
 
-#include "v4lcam.h"
-#include "simcam.h"
 
 
-#include "net_keypoint.h"
-
-#include "edge_finder.h"
-
-#include "video_mfc.h"
-#include "video_mjpeg.h"
-
-#include "edge_tracker.h"
 #include "pipeline.h"
-
-#include "udp_port.h"
+#include "edge_tracker.h"
 #include "global_tracker.h"
 #include "pipeline.h"
 #include "keyframe.h"
 #include "imugrabber.h"
-#include "archimu.h"
 
 
 #define CBUFSIZE        0x08
@@ -67,6 +51,145 @@
 #else
 #define COND_TIME_DEBUG(arg)
 #endif
+
+struct REBVOParameters{
+
+    //REBVO params
+
+    int encoder_type;
+    std::string	encoder_dev;
+
+
+    std::string SimFile;
+    std::string CameraDevice;
+    std::string	VideoNetHost;
+    int	VideoNetPort;
+    int VideoNetEnabled;
+    int BlockingUDP;
+
+    double sim_save_nframes;
+    int CameraType;
+
+
+    //DSCam param
+
+    std::string DataSetFile;
+    std::string DataSetDir;
+
+    //Camara parameters
+    double config_fps;
+    double CamTimeScale;
+
+    int useUndistort;
+    bool rotatedCam;
+
+
+    Size2D ImageSize;
+    float z_f_x;
+    float z_f_y;
+    float pp_y;
+    float pp_x;
+    cam_model::rad_tan_distortion kc;
+
+    int simu_time_on;
+    int simu_time_step;
+    double simu_time_sweep;
+    double simu_time_start;
+
+
+    //IMU parameters
+
+    int ImuMode;
+    std::string ImuFile;
+    std::string SE3File;
+    double ImuTimeScale;
+    double GiroMeasStdDev;
+    double GiroBiasStdDev;
+    bool InitBias;
+    int InitBiasFrameNum;
+    TooN::Vector <3> BiasInitGuess;
+    double g_module;
+
+
+    double AcelMeasStdDev;
+    double g_module_uncer;
+    double g_uncert;
+    double VBiasStdDev;
+    double ScaleStdDevMult;
+    double ScaleStdDevMax;
+    double ScaleStdDevInit;
+    double SampleTime;
+    int CircBufferSize;
+
+    double TimeDesinc;
+
+
+    //Processor parameters
+
+    int cpu0;
+    int cpu1;
+    int cpu2;
+    int cpuSetAffinity;
+
+
+    int VideoSave;
+    std::string VideoSaveFile;
+    int VideoSaveBuffersize;
+
+
+    std::string LogFile;
+    std::string TrayFile;
+    bool SaveLog;
+    uint EdgeMapDelay;
+
+    //Detector parameters
+
+    double Sigma0;
+    double Sigma1;
+
+    int DetectorPlaneFitSize;
+    double DetectorPosNegThresh;
+    double DetectorDoGThresh;
+
+    int ReferencePoints;
+    int MaxPoints;
+
+    double DetectorThresh;
+    double DetectorAutoGain;
+    double DetectorMaxThresh;
+    double DetectorMinThresh;
+
+    //Tracker-Mapper Parameters
+
+    int MatchThreshold;
+
+    double SearchRange;
+
+    double QCutOffNumBins;
+    double QCutOffQuantile;
+
+    int TrackerIterNum;
+    int TrackerInitIterNum;
+    int TrackerInitType;
+
+    double TrackerMatchThresh;
+
+    double LocationUncertaintyMatch;
+    double MatchThreshModule;
+    double MatchThreshAngle;
+
+    double ReweigthDistance;
+
+    uint MatchNumThresh;
+
+    double RegularizeThresh;
+    double ReshapeQAbsolute;
+    double ReshapeQRelative;
+    double LocationUncertainty;
+    double DoReScaling;
+
+
+};
 
 
 //Structure to save variables of the different estimation stages
@@ -177,8 +300,9 @@ struct PipeBuffer{
 class REBVO
 {
 
-    std::thread Thr0;
+    REBVOParameters params;
 
+    std::thread Thr0;
     bool InitOK=true;
 
     std::mutex nav_mutex;
@@ -194,150 +318,22 @@ class REBVO
 
     std::atomic_bool saveImg;
     int snap_n=0;
-
-
     std::atomic_bool system_reset;
 
-    double time;
-    int encoder_type;
-    std::string	encoder_dev;
 
 
-    std::string SimFile;
-    std::string CameraDevice;
-    std::string	VideoNetHost;
-    int	VideoNetPort;
-    int VideoNetEnabled;
-    int BlockingUDP;
-
-    double sim_save_nframes;
-    int CameraType;
+    cam_model cam;
+    //Imu grabber
 
     ImuGrabber *imu=nullptr;
-    archIMU *imu_dev=nullptr;
 
-
-    //DSCam param
-
-    std::string DataSetFile;
-    std::string DataSetDir;
-
-    //Camara parameters
-    cam_model *cam;
-    double config_fps;
-    double CamTimeScale;
-
-    int useUndistort;
-    bool rotatedCam;
-    //IMU parameters
-
-    int ImuMode;
-    std::string ImuFile;
-    std::string SE3File;
-    double ImuTimeScale;
-    double GiroMeasStdDev;
-    double GiroBiasStdDev;
-    bool InitBias;
-    int InitBiasFrameNum;
-    TooN::Vector <3> BiasInitGuess;
-    double g_module;
-
-
-    double AcelMeasStdDev;
-    double g_module_uncer;
-    double g_uncert;
-    double VBiasStdDev;
-    double ScaleStdDevMult;
-    double ScaleStdDevMax;
-    double ScaleStdDevInit;
-    double SampleTime;
-    int CircBufferSize;
-    std::string	ImuDevName;
-
-    double TimeDesinc;
-
-
-    //Processor parameters
-
-    int cpu0;
-    int cpu1;
-    int cpu2;
-    int cpuSetAffinity;
-
-    //Trayectory parameters
-
-    TooN::Vector<3> pos_scaled;
-    TooN::Vector<3> pose_lie;
-    TooN::Vector<3> WCam;
-
-
-    bool new_frame_proc;
-
-    double t_frame=0;
-    double dt_frame=0.020;
-
-    timeval T0;
-
-    int VideoSave;
-    std::string VideoSaveFile;
-    int VideoSaveBuffersize;
-
-
-    std::string LogFile;
-    std::string TrayFile;
-    bool SaveLog;
-    uint EdgeMapDelay;
-
-    //Detector parameters
-
-    double Sigma0;
-    double Sigma1;
-
-    int DetectorPlaneFitSize;
-    double DetectorPosNegThresh;
-    double DetectorDoGThresh;
-
-    int ReferencePoints;
-    int MaxPoints;
-
-    double DetectorThresh;
-    double DetectorAutoGain;
-    double DetectorMaxThresh;
-    double DetectorMinThresh;
-
-    //Tracker-Mapper Parameters
-
-    int MatchThreshold;
-
-    double SearchRange;
-
-    double QCutOffNumBins;
-    double QCutOffQuantile;
-
-    int TrackerIterNum;
-    int TrackerInitIterNum;
-    int TrackerInitType;
-
-    double TrackerMatchThresh;
-
-    double LocationUncertaintyMatch;
-    double MatchThreshModule;
-    double MatchThreshAngle;
-
-    double ReweigthDistance;
-
-    uint MatchNumThresh;
-
-    double RegularizeThresh;
-    double ReshapeQAbsolute;
-    double ReshapeQRelative;
-    double LocationUncertainty;
-    double DoReScaling;
 
     void pushNav(const NavData &navdat){
          std::lock_guard<std::mutex> locker(nav_mutex);
          nav=navdat;
     }
+
+    void construct();
 
 
 public:
@@ -348,7 +344,8 @@ public:
     static void	FirstThr(REBVO *cf);
 
     bool CleanUp();
-    REBVO(Configurator &config);
+    REBVO(const char *configFile);
+    REBVO(const REBVOParameters &parameters);
     ~REBVO();
 
 
@@ -369,6 +366,20 @@ public:
          NavData navdat=nav;
          return navdat;
     }
+
+    const REBVOParameters& getParams(){
+        return params;
+    }
+
+
+    bool PushIMU(const ImuData&data){
+
+        if(imu)
+            return imu->PushData(data);
+        return false;
+    }
+
+
 };
 
 #endif // CAMARAFRONTAL_H

@@ -70,15 +70,15 @@ void  REBVO::SecondThread(REBVO *cf){
 
     istate.W_Bg=util::Matrix3x3Inv(istate.RGBias*100);
 
-    istate.Qg=Identity*cf->g_uncert*cf->g_uncert;
-    istate.Rg=cf->g_module_uncer*cf->g_module_uncer;
-    istate.Rs=Identity*cf->AcelMeasStdDev*cf->AcelMeasStdDev;
-    istate.Qbias=Identity*cf->VBiasStdDev*cf->VBiasStdDev;
+    istate.Qg=Identity*cf->params.g_uncert*cf->params.g_uncert;
+    istate.Rg=cf->params.g_module_uncer*cf->params.g_module_uncer;
+    istate.Rs=Identity*cf->params.AcelMeasStdDev*cf->params.AcelMeasStdDev;
+    istate.Qbias=Identity*cf->params.VBiasStdDev*cf->params.VBiasStdDev;
 
-    istate.X=makeVector(M_PI/4,0,cf->g_module,0,0,0,0);
-    istate.P=makeVector(cf->ScaleStdDevInit*cf->ScaleStdDevInit,\
+    istate.X=makeVector(M_PI/4,0,cf->params.g_module,0,0,0,0);
+    istate.P=makeVector(cf->params.ScaleStdDevInit*cf->params.ScaleStdDevInit,\
                         100,100,100,\
-                        cf->VBiasStdDev*cf->VBiasStdDev*1e1,cf->VBiasStdDev*cf->VBiasStdDev*1e1,cf->VBiasStdDev*cf->VBiasStdDev*1e1).as_diagonal();
+                        cf->params.VBiasStdDev*cf->params.VBiasStdDev*1e1,cf->params.VBiasStdDev*cf->params.VBiasStdDev*1e1,cf->params.VBiasStdDev*cf->params.VBiasStdDev*1e1).as_diagonal();
 
     istate.u_est=makeVector(1,0,0);
 
@@ -87,11 +87,11 @@ void  REBVO::SecondThread(REBVO *cf){
 
     //**** Set cpu Afinity for this thread *****
 
-    if(cf->cpuSetAffinity){
+    if(cf->params.cpuSetAffinity){
         cpu_set_t cpusetp;
 
         CPU_ZERO(&cpusetp);
-        CPU_SET(cf->cpu1,&cpusetp);
+        CPU_SET(cf->params.cpu1,&cpusetp);
         if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
             printf("\nSecond Thread: No puedo setear CPU affinity!\n");
             cf->quit=true;
@@ -137,7 +137,7 @@ void  REBVO::SecondThread(REBVO *cf){
         dt_frame=(new_buf.t-old_buf.t);
 
         if(dt_frame<0.001)
-            dt_frame=1/cf->config_fps;
+            dt_frame=1/cf->params.config_fps;
 
         COND_TIME_DEBUG(t_loop.start();)
         COND_TIME_DEBUG(tlist.clear();)
@@ -146,12 +146,12 @@ void  REBVO::SecondThread(REBVO *cf){
 
         COND_TIME_DEBUG(tlist.push_new();)
         //Estimate uncertainity cut-off for some quantile (90 percent typicaly)
-        double s_rho_q=old_buf.ef->EstimateQuantile(RHO_MIN,RHO_MAX,cf->QCutOffQuantile,cf->QCutOffNumBins);
+        double s_rho_q=old_buf.ef->EstimateQuantile(RHO_MIN,RHO_MAX,cf->params.QCutOffQuantile,cf->params.QCutOffNumBins);
 
 
         COND_TIME_DEBUG(tlist.push_new();)
 
-        //new_buf.gt->build_field(*new_buf.ef,cf->SearchRange);
+        //new_buf.gt->build_field(*new_buf.ef,cf->params.SearchRange);
 
 
         P_V=Identity*1e50;
@@ -161,21 +161,21 @@ void  REBVO::SecondThread(REBVO *cf){
 
         //***** Use the Tracker to obtain Velocity and Rotation  ****
 
-        if(cf->ImuMode>0){      //Imu data avaiable?? Use it!
+        if(cf->params.ImuMode>0){      //Imu data avaiable?? Use it!
 
             if(!istate.init  && n_frame>0){
 
-                if(cf->InitBias>0){
+                if(cf->params.InitBias>0){
                     giro_init+=new_buf.imu.giro*new_buf.imu.dt;
                     //giro_init+=istate.dWv;
-                    if(++n_giro_init>cf->InitBiasFrameNum){
+                    if(++n_giro_init>cf->params.InitBiasFrameNum){
                         istate.Bg=giro_init/n_giro_init;
                         istate.init=true;
                         istate.W_Bg=util::Matrix3x3Inv(istate.RGBias*1e2);
                     }
                 }else{
                     istate.init=true;
-                    istate.Bg=cf->BiasInitGuess*new_buf.imu.dt;
+                    istate.Bg=cf->params.BiasInitGuess*new_buf.imu.dt;
                 }
             }
 
@@ -192,7 +192,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
             COND_TIME_DEBUG(tlist.push_new();)
 
-            new_buf.gt->Minimizer_V<double>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->TrackerMatchThresh,cf->TrackerIterNum,s_rho_q,cf->MatchNumThresh,cf->ReweigthDistance);   //Estimate translation only
+            new_buf.gt->Minimizer_V<double>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,s_rho_q,cf->params.MatchNumThresh,cf->params.ReweigthDistance);   //Estimate translation only
 
 
             COND_TIME_DEBUG(tlist.push_new();)
@@ -206,7 +206,7 @@ void  REBVO::SecondThread(REBVO *cf){
             //***** Visual RotoTranslation estimation using forward matches
             Matrix <6,6> R_Xv,R_Xgv,W_Xv,W_Xgv;
             Vector <6> Xv,Xgv,Xgva;
-            EstimationOk&=new_buf.ef->ExtRotVel(istate.Vg,W_Xv,R_Xv,Xv,cf->LocationUncertainty,cf->ReweigthDistance);
+            EstimationOk&=new_buf.ef->ExtRotVel(istate.Vg,W_Xv,R_Xv,Xv,cf->params.LocationUncertainty,cf->params.ReweigthDistance);
 
 
             COND_TIME_DEBUG(tlist.push_new();)
@@ -218,8 +218,8 @@ void  REBVO::SecondThread(REBVO *cf){
             W_Xgv=W_Xv;
 
 
-            istate.RGBias=Identity*cf->GiroBiasStdDev*cf->GiroBiasStdDev*dt_frame*dt_frame;
-            istate.RGiro=Identity*cf->GiroMeasStdDev*cf->GiroMeasStdDev*dt_frame*dt_frame;
+            istate.RGBias=Identity*cf->params.GiroBiasStdDev*cf->params.GiroBiasStdDev/400;//*dt_frame*dt_frame;
+            istate.RGiro=Identity*cf->params.GiroMeasStdDev*cf->params.GiroMeasStdDev/400;//*dt_frame*dt_frame;
 
             Vector <3> dgbias=Zeros;
             edge_tracker::BiasCorrect(Xgv,W_Xgv,dgbias,istate.W_Bg,istate.RGiro,istate.RGBias);
@@ -258,13 +258,13 @@ void  REBVO::SecondThread(REBVO *cf){
 
             istate.Rv=(P_V/(dt_frame*dt_frame*dt_frame*dt_frame));
             istate.Qrot=P_W;
-            istate.QKp=std::min((1/(1/istate.Rv(0,0)+1/istate.Rv(1,1)+1/istate.Rv(2,2)))*cf->ScaleStdDevMult*cf->ScaleStdDevMult,cf->ScaleStdDevMax);
+            istate.QKp=std::min((1/(1/istate.Rv(0,0)+1/istate.Rv(1,1)+1/istate.Rv(2,2)))*cf->params.ScaleStdDevMult*cf->params.ScaleStdDevMult,cf->params.ScaleStdDevMax);
 
 
-            if(n_frame>4+cf->InitBiasFrameNum){
+            if(n_frame>4+cf->params.InitBiasFrameNum){
                 K=ScaleEstimator::estKaGMEKBias(istate.As,istate.Av,1,R,istate.X,istate.P,istate.Qg,
                                                 istate.Qrot,istate.Qbias,istate.QKp,istate.Rg,istate.Rs,istate.Rv,
-                                                istate.g_est,istate.b_est,W_Xgv,Xgva,cf->g_module);
+                                                istate.g_est,istate.b_est,W_Xgv,Xgva,cf->params.g_module);
 
                 istate.dVgva=Xgva.slice<0,3>();
                 istate.dWgva=Xgva.slice<3,3>();
@@ -292,7 +292,7 @@ void  REBVO::SecondThread(REBVO *cf){
         }else{                  //Regular procesing
             COND_TIME_DEBUG(tlist.push_new();)
 
-            new_buf.gt->Minimizer_RV<double>(V,W,P_V,P_W,*old_buf.ef,cf->TrackerMatchThresh,cf->TrackerIterNum,cf->TrackerInitType,cf->ReweigthDistance,error_vel,error_score,s_rho_q,cf->MatchNumThresh,cf->TrackerInitIterNum);
+            new_buf.gt->Minimizer_RV<double>(V,W,P_V,P_W,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,cf->params.TrackerInitType,cf->params.ReweigthDistance,error_vel,error_score,s_rho_q,cf->params.MatchNumThresh,cf->params.TrackerInitIterNum);
 
 
             COND_TIME_DEBUG(tlist.push_new();)
@@ -339,9 +339,9 @@ void  REBVO::SecondThread(REBVO *cf){
             //***** Match from the new EdgeMap to the old one searching on the stereo line *****
 
             //Because the old edge map mask is used, New keylines and Translation are back rotated
-            klm_num=new_buf.ef->directed_matching(V,P_V,R,old_buf.ef,cf->MatchThreshModule,cf->MatchThreshAngle,cf->SearchRange,cf->LocationUncertaintyMatch);
+            klm_num=new_buf.ef->directed_matching(V,P_V,R,old_buf.ef,cf->params.MatchThreshModule,cf->params.MatchThreshAngle,cf->params.SearchRange,cf->params.LocationUncertaintyMatch);
 
-            if(klm_num<cf->MatchThreshold){     //If matching keylines are below a certain threshold, reestart the estimation
+            if(klm_num<cf->params.MatchThreshold){     //If matching keylines are below a certain threshold, reestart the estimation
 
                 P_V=Identity*1e50;
                 V=Zeros;
@@ -360,14 +360,14 @@ void  REBVO::SecondThread(REBVO *cf){
                 //****** Regularize the EdgeMap Depth ******
 
                 for(int i=0;i<1;i++)
-                        new_buf.ef->Regularize_1_iter(cf->RegularizeThresh);
+                        new_buf.ef->Regularize_1_iter(cf->params.RegularizeThresh);
 
 
                 COND_TIME_DEBUG(tlist.push_new();)
 
                 //****** Improve Depth using kalman filter ****
 
-                new_buf.ef->UpdateInverseDepthKalman(V,P_V,P_W,cf->ReshapeQAbsolute,cf->ReshapeQRelative,cf->LocationUncertainty); //1e-5
+                new_buf.ef->UpdateInverseDepthKalman(V,P_V,P_W,cf->params.ReshapeQAbsolute,cf->params.ReshapeQRelative,cf->params.LocationUncertainty); //1e-5
 
 
 
@@ -375,7 +375,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
 
                 //****** Optionally reescale the EdgeMap's Depth
-                Kp=new_buf.ef->EstimateReScaling(P_Kp,RHO_MAX,1,cf->DoReScaling>0);
+                Kp=new_buf.ef->EstimateReScaling(P_Kp,RHO_MAX,1,cf->params.DoReScaling>0);
                // cout << P_Kp<<"\n";
 
 
@@ -395,10 +395,10 @@ void  REBVO::SecondThread(REBVO *cf){
 
         //Estimate position and pose incrementally
 
-        if(cf->ImuMode>0){  //If imu present use the filtered version...
+        if(cf->params.ImuMode>0){  //If imu present use the filtered version...
 
 
-            if(n_frame>4+cf->InitBiasFrameNum){
+            if(n_frame>4+cf->params.InitBiasFrameNum){
 
 
                 istate.u_est=Rgva.T()*istate.u_est;
