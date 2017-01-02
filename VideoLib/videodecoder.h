@@ -37,7 +37,7 @@ class VideoDecoder
     int width;
     int height;
 public:
-    VideoDecoder(CodecID codec_id, int w, int h);
+    VideoDecoder(AVCodecID codec_id, int w, int h);
     ~VideoDecoder();
     bool DecodeFrame(u_char *coded_data,int cd_size,RGB24Pixel *data);
 };

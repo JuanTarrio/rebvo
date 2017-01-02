@@ -75,7 +75,8 @@ SOURCES       = ../rebvo/main.cpp \
 		../Blocks/rebvo_second_t.cpp \
 		../Blocks/rebvo_third_t.cpp \
 		../UtilLib/libcrc.cpp \
-		../mtracklib/image_undistort.cpp
+		../mtracklib/image_undistort.cpp \
+		../VideoLib/customcam.cpp
 OBJECTS       = main.o \
 		archimu.o \
 		rebvo.o \
@@ -106,7 +107,8 @@ OBJECTS       = main.o \
 		rebvo_second_t.o \
 		rebvo_third_t.o \
 		libcrc.o \
-		image_undistort.o
+		image_undistort.o \
+		customcam.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -250,6 +252,8 @@ main.o: ../rebvo/main.cpp ../Blocks/rebvo.h \
 		../UtilLib/ne10wrapper.h \
 		../mtracklib/keyframe.h \
 		../VideoLib/imugrabber.h \
+		../VideoLib/customcam.h \
+		../VideoLib/videocam.h \
 		../rebvo/archimu.h \
 		../UtilLib/configurator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../rebvo/main.cpp
@@ -276,6 +280,8 @@ archimu.o: ../rebvo/archimu.cpp ../rebvo/archimu.h \
 		../mtracklib/global_tracker.h \
 		../UtilLib/ne10wrapper.h \
 		../mtracklib/keyframe.h \
+		../VideoLib/customcam.h \
+		../VideoLib/videocam.h \
 		../UtilLib/ttimer.h \
 		../UtilLib/libcrc.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o archimu.o ../rebvo/archimu.cpp
@@ -300,9 +306,10 @@ rebvo.o: ../Blocks/rebvo.cpp ../Blocks/rebvo.h \
 		../UtilLib/ne10wrapper.h \
 		../mtracklib/keyframe.h \
 		../VideoLib/imugrabber.h \
+		../VideoLib/customcam.h \
+		../VideoLib/videocam.h \
 		../UtilLib/ttimer.h \
 		../VideoLib/datasetcam.h \
-		../VideoLib/videocam.h \
 		../mtracklib/scaleestimator.h \
 		../UtilLib/configurator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo.o ../Blocks/rebvo.cpp
@@ -528,9 +535,10 @@ rebvo_first_t.o: ../Blocks/rebvo_first_t.cpp ../Blocks/rebvo.h \
 		../UtilLib/ne10wrapper.h \
 		../mtracklib/keyframe.h \
 		../VideoLib/imugrabber.h \
+		../VideoLib/customcam.h \
+		../VideoLib/videocam.h \
 		../UtilLib/ttimer.h \
 		../VideoLib/datasetcam.h \
-		../VideoLib/videocam.h \
 		../mtracklib/scaleestimator.h \
 		../mtracklib/image_undistort.h \
 		../VideoLib/v4lcam.h \
@@ -557,9 +565,10 @@ rebvo_second_t.o: ../Blocks/rebvo_second_t.cpp ../Blocks/rebvo.h \
 		../UtilLib/ne10wrapper.h \
 		../mtracklib/keyframe.h \
 		../VideoLib/imugrabber.h \
+		../VideoLib/customcam.h \
+		../VideoLib/videocam.h \
 		../UtilLib/ttimer.h \
 		../VideoLib/datasetcam.h \
-		../VideoLib/videocam.h \
 		../mtracklib/scaleestimator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o rebvo_second_t.o ../Blocks/rebvo_second_t.cpp
 
@@ -583,9 +592,10 @@ rebvo_third_t.o: ../Blocks/rebvo_third_t.cpp ../Blocks/rebvo.h \
 		../UtilLib/ne10wrapper.h \
 		../mtracklib/keyframe.h \
 		../VideoLib/imugrabber.h \
+		../VideoLib/customcam.h \
+		../VideoLib/videocam.h \
 		../UtilLib/ttimer.h \
 		../VideoLib/datasetcam.h \
-		../VideoLib/videocam.h \
 		../mtracklib/scaleestimator.h \
 		../VideoLib/video_mfc.h \
 		../VideoLib/video_encoder.h \
@@ -607,6 +617,14 @@ image_undistort.o: ../mtracklib/image_undistort.cpp ../mtracklib/image_undistort
 		../UtilLib/timer.h \
 		../UtilLib/fvector.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o image_undistort.o ../mtracklib/image_undistort.cpp
+
+customcam.o: ../VideoLib/customcam.cpp ../VideoLib/customcam.h \
+		../UtilLib/pipeline.h \
+		../VideoLib/videocam.h \
+		../VideoLib/video_io.h \
+		../VideoLib/image.h \
+		../VideoLib/common_types.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o customcam.o ../VideoLib/customcam.cpp
 
 ####### Install
 

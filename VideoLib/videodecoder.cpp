@@ -24,11 +24,14 @@
  
  #include "videodecoder.h"
 
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55,28,1)
+#define av_frame_alloc  avcodec_alloc_frame
+#endif
 
 
 int LibAvInitStatus=0;
 
-VideoDecoder::VideoDecoder(CodecID codec_id,int w,int h)
+VideoDecoder::VideoDecoder(AVCodecID codec_id,int w,int h)
 {
     status = 0;
 
@@ -57,7 +60,7 @@ VideoDecoder::VideoDecoder(CodecID codec_id,int w,int h)
     }
 
     c = avcodec_alloc_context3(codec);
-    picture= avcodec_alloc_frame();
+    picture= av_frame_alloc();
 
 
 /*

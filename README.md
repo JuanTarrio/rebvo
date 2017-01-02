@@ -40,6 +40,14 @@ components folder, (rebvo and visualizer). Also two makefiles are provided on ea
 of the folders, for amd64 and arm architectures. The first can easily be edited for 
 x86.
 
+Use:
+
+make -f MakefileAMD64
+
+On ARM:
+
+make -f MakefileARM
+
 #### Compile using NE10
 
 The system can use the NE10 for neon simd support. In order to use it, the
