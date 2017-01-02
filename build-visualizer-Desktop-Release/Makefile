@@ -18,7 +18,7 @@ CXXFLAGS      = -m64 -pipe -std=c++11 -Wno-unused-parameter -Wno-sign-compare -O
 INCPATH       = -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I../visualizer -I/usr/local/include/lapackpp/ -I../Blocks -I../mtracklib -I../CommLib -I../VideoLib -I../UtilLib -I../NeonLib/ -I.
 LINK          = g++
 LFLAGS        = -m64 -Wl,-O1
-LIBS          = $(SUBLIBS) -L/usr/local/lib -lX11 -lv4l2 -lm -llapack -lavcodec -lGL -lGLU -lglut -lgd -lpthread 
+LIBS          = $(SUBLIBS) -L/usr/local/lib -lX11 -lv4l2 -lm -llapack -lavcodec -lavutil -lGL -lGLU -lglut -lgd -lpthread 
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /usr/lib/x86_64-linux-gnu/qt5/bin/qmake
@@ -330,19 +330,16 @@ main.o: ../visualizer/main.cpp ../Blocks/visualizer.h \
 		../UtilLib/cam_model.h \
 		../mtracklib/nav_data_defs.h \
 		../Blocks/rebvo.h \
-		../UtilLib/configurator.h \
-		../VideoLib/v4lcam.h \
-		../VideoLib/videocam.h \
-		../VideoLib/simcam.h \
-		../VideoLib/video_mfc.h \
-		../VideoLib/video_encoder.h \
-		../VideoLib/video_mjpeg.h \
+		../UtilLib/pipeline.h \
 		../mtracklib/edge_tracker.h \
 		../UtilLib/NormalDistribution.h \
-		../UtilLib/pipeline.h \
-		../CommLib/udp_port.h \
 		../mtracklib/global_tracker.h \
-		../UtilLib/ne10wrapper.h
+		../UtilLib/ne10wrapper.h \
+		../mtracklib/keyframe.h \
+		../VideoLib/imugrabber.h \
+		../VideoLib/customcam.h \
+		../VideoLib/videocam.h \
+		../UtilLib/configurator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../visualizer/main.cpp
 
 visualizer.o: ../Blocks/visualizer.cpp ../Blocks/visualizer.h \
@@ -361,22 +358,21 @@ visualizer.o: ../Blocks/visualizer.cpp ../Blocks/visualizer.h \
 		../UtilLib/cam_model.h \
 		../mtracklib/nav_data_defs.h \
 		../Blocks/rebvo.h \
-		../UtilLib/configurator.h \
-		../VideoLib/v4lcam.h \
-		../VideoLib/videocam.h \
-		../VideoLib/simcam.h \
-		../VideoLib/video_mfc.h \
-		../VideoLib/video_encoder.h \
-		../VideoLib/video_mjpeg.h \
+		../UtilLib/pipeline.h \
 		../mtracklib/edge_tracker.h \
 		../UtilLib/NormalDistribution.h \
-		../UtilLib/pipeline.h \
-		../CommLib/udp_port.h \
 		../mtracklib/global_tracker.h \
 		../UtilLib/ne10wrapper.h \
+		../mtracklib/keyframe.h \
+		../VideoLib/imugrabber.h \
+		../VideoLib/customcam.h \
+		../VideoLib/videocam.h \
+		../UtilLib/configurator.h \
+		../VideoLib/video_encoder.h \
 		../VideoLib/videodecoder.h \
 		../mtracklib/gl_viewer.h \
-		../mtracklib/depth_filler.h
+		../mtracklib/depth_filler.h \
+		../CommLib/udp_port.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o visualizer.o ../Blocks/visualizer.cpp
 
 video_io.o: ../VideoLib/video_io.c ../VideoLib/video_io.h

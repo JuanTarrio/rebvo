@@ -286,8 +286,8 @@ int visualizer::Run(){
     cam_model cam({(float)(ImageSize.w/2.0),(float)(ImageSize.h/2.0)},{(float)ZfX,(float)ZfX},Kc,frameSize);
 
 
-    VideoDecoder decoderMPEG4(CODEC_ID_MPEG4,frameSize.w,frameSize.h);
-    VideoDecoder decoderMJPEG(CODEC_ID_MJPEG,frameSize.w,frameSize.h);
+    VideoDecoder decoderMPEG4(AV_CODEC_ID_MPEG4,frameSize.w,frameSize.h);
+    VideoDecoder decoderMJPEG(AV_CODEC_ID_MJPEG,frameSize.w,frameSize.h);
 
     RGB24Pixel *data_depth=new RGB24Pixel[640*520];
     memset(data_depth,0,640*520*sizeof(RGB24Pixel));
@@ -306,15 +306,8 @@ int visualizer::Run(){
         return 0;
     }
 
+    com_port.setBlock(false);
 
-    cpu_set_t cpusetp;
-
-    CPU_ZERO(&cpusetp);
-    CPU_SET(1,&cpusetp);
-    if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
-        printf("\nSecond Thread: No puedo setear CPU affinity!\n");
-        return -1;
-    }
 
     printf("\nDisplayfrontal: Socket iniciado en %s:%d\n",Host.data(),Port);
 
@@ -390,7 +383,7 @@ int visualizer::Run(){
                 goto recv_frame_err;
             }
             if(net_hdr->w!=frameSize.w || net_hdr->h!=frameSize.h){
-                printf("\nDisplayfrontal: Tamaño eqivocado\n");
+                printf("\nDisplayfrontal:  Wrong Frame Wrong Recv Size Size\n");
                 goto recv_frame_err;
             }
 

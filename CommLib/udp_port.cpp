@@ -97,6 +97,13 @@ udp_port::~udp_port(){
     delete [] r_pack_buf;
 }
 
+void udp_port::setBlock(bool b){
+
+    char on=!b;
+    ioctl(sock, FIONBIO, &on);
+    block=b;
+}
+
 int udp_port::RecvFragmented(unsigned char *buffer,int buf_size,double time_out)
 {
     int br;

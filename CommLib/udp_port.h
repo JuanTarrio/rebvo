@@ -77,9 +77,7 @@ public:
 
     bool SendPacket(unsigned char * data, int data_size);
 
-    void setBlock(bool b){
-        block=b;
-    }
+    void setBlock(bool b);
 };
 
 #endif // UDP_PORT_H

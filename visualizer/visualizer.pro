@@ -19,6 +19,7 @@ LIBS += -L/usr/local/lib \
     -lm \
     -llapack \
     -lavcodec \
+    -lavutil\
     -lGL\
     -lGLU\
     -lglut\
