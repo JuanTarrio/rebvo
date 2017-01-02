@@ -276,7 +276,7 @@ double ScaleEstimator::estKaGMEKBias(   const TooN::Vector<3> &s_acel,
 
     double k=tan(X[0]);
 
-    if(k<0 || isnan(k) || isinf(k))
+    if(k<0 || std::isnan(k) || std::isinf(k))
         k=0;
 
     g_est=X.slice<1,3>();

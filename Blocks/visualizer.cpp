@@ -281,7 +281,8 @@ int visualizer::Run(){
 
     bool new_frame;
 
-    double Kc[2]={0,0};
+
+    cam_model::rad_tan_distortion Kc={0,0,0,0,0};
     cam_model cam({(float)(ImageSize.w/2.0),(float)(ImageSize.h/2.0)},{(float)ZfX,(float)ZfX},Kc,frameSize);
 
 

@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <math.h>
 #include <common_types.h>
+#include <string.h>
 //****** Simple class to manage generic 2D images, without the mayor libraries *******//
 
 //#define SAFE_IMAGE_ACCESS         //Flag to check for index errors
@@ -108,6 +109,11 @@ public:
 
     void copyTo (DataType *img){
         memcpy(img,data,bsize*sizeof(DataType));
+        return;
+    }
+
+    void copyFrom (DataType *img){
+        memcpy(data,img,bsize*sizeof(DataType));
         return;
     }
 

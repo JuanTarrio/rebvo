@@ -73,7 +73,7 @@
 
 &REBVO
 
-    CameraType=0                                                                        //0=V4L, 1=SimCam, 2=Dataset cam
+    CameraType=0                                                                        //0=V4L, 1=SimCam, 2=Dataset cam, 3=custom cam
 
     VideoNetHost=10.73.32.54								//Remote host to send the data
     VideoNetPort=2708									//Remote port

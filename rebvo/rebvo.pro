@@ -59,7 +59,8 @@ SOURCES +=  main.cpp \
     ../Blocks/rebvo_second_t.cpp \
     ../Blocks/rebvo_third_t.cpp \
     ../UtilLib/libcrc.cpp \
-    ../mtracklib/image_undistort.cpp
+    ../mtracklib/image_undistort.cpp \
+    ../VideoLib/customcam.cpp
 
 HEADERS += archimu.h \
     ../Blocks/incfiles.h \
@@ -99,7 +100,8 @@ HEADERS += archimu.h \
     ../UtilLib/minimizer.h \
     ../mtracklib/scaleestimator.h \
     ../UtilLib/libcrc.h \
-    ../mtracklib/image_undistort.h
+    ../mtracklib/image_undistort.h \
+    ../VideoLib/customcam.h
 
 
 OTHER_FILES += GlobalConfig

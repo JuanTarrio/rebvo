@@ -40,9 +40,11 @@
 #include "pipeline.h"
 #include "keyframe.h"
 #include "imugrabber.h"
+#include "customcam.h"
 
 
-#define CBUFSIZE        0x08
+#define CBUFSIZE            0x08
+#define CCAMBUFSIZE         0x04
 
 //#define TIME_DEBUG
 
@@ -297,6 +299,7 @@ struct PipeBuffer{
 
 
 
+
 class REBVO
 {
 
@@ -320,8 +323,10 @@ class REBVO
     int snap_n=0;
     std::atomic_bool system_reset;
 
+    //Custom cam pipeline
+    Pipeline <customCam::CustomCamPipeBuffer> cam_pipe;
 
-
+    //camera model
     cam_model cam;
     //Imu grabber
 
@@ -372,11 +377,23 @@ public:
     }
 
 
-    bool PushIMU(const ImuData&data){
+    bool pushIMU(const ImuData&data){
 
         if(imu)
             return imu->PushData(data);
         return false;
+    }
+
+    bool requestCustomCamBuffer(std::shared_ptr<Image <RGB24Pixel> > &ptr,double time_stamp){
+
+        customCam::CustomCamPipeBuffer &ccpb=cam_pipe.RequestBuffer(0);
+        ptr=ccpb.img;
+        ccpb.timestamp=time_stamp;
+        return true;
+    }
+    void releaseCustomCamBuffer(){
+
+        cam_pipe.ReleaseBuffer(0);
     }
 
 

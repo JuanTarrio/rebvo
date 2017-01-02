@@ -55,6 +55,8 @@ int main(int argn,char ** argv)
 
     archIMU *imu_dev=nullptr;
 
+    DataSetCam cam("/home/juan/Datasets/MH_03_medium/mav0/cam0/data/","/home/juan/Datasets/MH_03_medium/mav0/cam0/data.csv",{752,480},1e-9);
+
     if(cf.getParams().ImuMode==1){
 
 
@@ -72,6 +74,15 @@ int main(int argn,char ** argv)
 
     bool run=true;
     while(run && cf.Running()){
+
+        double tstamp;
+        std::shared_ptr <Image <RGB24Pixel> > ptr;
+        RGB24Pixel* data=cam.GrabBuffer(tstamp);
+        cf.requestCustomCamBuffer(ptr,tstamp);
+        (*ptr).copyFrom(data);
+        cam.ReleaseBuffer();
+        cf.releaseCustomCamBuffer();
+/*
 
 
         char c;
@@ -94,7 +105,7 @@ int main(int argn,char ** argv)
         default:
             PrintHelp();
             break;
-        }
+        }*/
 
 
     }

@@ -40,7 +40,7 @@ using namespace std;
 
 
 REBVO::REBVO(const char *configFile)
-    :pipe(CBUFSIZE,4)
+    :pipe(CBUFSIZE,4),cam_pipe(CCAMBUFSIZE,2)
 {
 
 
@@ -185,16 +185,12 @@ REBVO::REBVO(const char *configFile)
 }
 
 REBVO::REBVO(const REBVOParameters &parameters)
-    :params(parameters),pipe(CBUFSIZE,4),cam({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize)
+    :params(parameters),pipe(CBUFSIZE,4),cam_pipe(CCAMBUFSIZE,2),cam({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize)
 {
-
+    construct();
 }
 
 
-REBVO::~REBVO(){
-    if(imu)
-        delete imu;
-}
 
 void REBVO::construct(){
 
@@ -237,6 +233,10 @@ void REBVO::construct(){
         break;
 
     }
+
+    for(customCam::CustomCamPipeBuffer &pb:cam_pipe)
+        pb.img=std::shared_ptr<Image<RGB24Pixel> >(new Image<RGB24Pixel>(params.ImageSize));
+
     return;
 }
 
@@ -266,3 +266,10 @@ bool REBVO::CleanUp(){
     return true;
 }
 
+
+REBVO::~REBVO(){
+    if(!quit)
+        CleanUp();
+    if(imu)
+        delete imu;
+}

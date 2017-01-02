@@ -148,7 +148,7 @@ namespace util{
     inline bool isNaN(const TooN::Matrix<Ti,Tj> M){
         for(int i=0;i<Ti;i++)
             for(int j=0;j<Tj;j++)
-                if(isnan(M(i,j)))
+                if(std::isnan(M(i,j)))
                     return true;
         return false;
 
@@ -156,7 +156,7 @@ namespace util{
     template <int Ti>
     inline bool isNaN(const TooN::Vector<Ti> M){
         for(int i=0;i<Ti;i++)
-                if(isnan(M[i]))
+                if(std::isnan(M[i]))
                     return true;
         return false;
 

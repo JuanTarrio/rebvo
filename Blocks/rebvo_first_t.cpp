@@ -85,6 +85,9 @@ void REBVO::FirstThr(REBVO *cf){
     VideoCam *camara;
 
     switch(cf->params.CameraType){
+    case 3:
+        camara=new customCam(cf->cam_pipe,cam.sz,cf->params.SimFile.data());
+        break;
     case 2:
         camara=new DataSetCam(cf->params.DataSetDir.data(),cf->params.DataSetFile.data(),cam.sz,cf->params.CamTimeScale,cf->params.SimFile.data());
         break;

@@ -494,7 +494,7 @@ double edge_tracker::UpdateInverseDepthKalman(KeyLine &kli,
     }else if(kli.rho>RHO_MAX){
         kli.rho=RHO_MAX;
         //kli.s_rho+=RHO_MAX;
-    }else if(isnan(kli.rho) || isnan(kli.s_rho) || isinf(kli.rho) || isinf(kli.s_rho)){     //This checks should never happen
+    }else if(std::isnan(kli.rho) || std::isnan(kli.s_rho) || std::isinf(kli.rho) || std::isinf(kli.s_rho)){     //This checks should never happen
         std::cout<<"\nKL EKF Nan Rho!"<<rho_p<< " " << p_p<< " "<<vel[2]<<"\n";
         kli.rho=RhoInit;
         kli.s_rho=RHO_MAX;
@@ -605,7 +605,7 @@ double edge_tracker::UpdateInverseDepthKalmanSimple(KeyLine &kli,
     }else if(kli.rho>RHO_MAX){
         kli.rho=RHO_MAX;
         //kli.s_rho+=RHO_MAX;
-    }else if(isnan(kli.rho) || isnan(kli.s_rho) || isinf(kli.rho) || isinf(kli.s_rho)){     //This checks should never happen
+    }else if(std::isnan(kli.rho) || std::isnan(kli.s_rho) || std::isinf(kli.rho) || std::isinf(kli.s_rho)){     //This checks should never happen
         std::cout<<"\nKL EKF Nan Rho!"<<rho_p<< " " << p_p<< " "<<vel[2]<<"\n";
         kli.rho=RhoInit;
         kli.s_rho=RHO_MAX;
@@ -644,7 +644,7 @@ double edge_tracker::EstimateReScaling(double &RKp,             //Estimated unce
             continue;
         rTr+=kl[ikl].rho*kl[ikl].rho/(kl[ikl].s_rho0*kl[ikl].s_rho0);       //Weighted mean of corrected IDepth
         rTr0+=kl[ikl].rho0*kl[ikl].rho0/(kl[ikl].s_rho0*kl[ikl].s_rho0);    //Weighted mean of predicted IDepth
-        if(isnan(kl[ikl].rho0 || kl[ikl].rho)){
+        if(std::isnan(kl[ikl].rho0 || kl[ikl].rho)){
            printf("\n NAN: %f %f %f",kl[ikl].s_rho0,kl[ikl].rho0,kl[ikl].rho);
         }
     }
