@@ -26,6 +26,8 @@
 
 
 #include "video_encoder.h"
+namespace  rebvo{
+
 
 enum MFCState{MFC_ST_ERROR,MFC_ST_OPEN,MFC_ST_OK,MFC_ST_STREAM_ON};
 
@@ -91,4 +93,5 @@ public:
     void Autoconfig();
 };
 
+}
 #endif // VIDEO_MFC_H

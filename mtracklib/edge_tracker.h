@@ -3,7 +3,7 @@
 
 #include "edge_finder.h"
 #include "NormalDistribution.h"
-
+namespace  rebvo{
 
 class edge_tracker : public edge_finder
 {
@@ -48,7 +48,7 @@ public:
 
 };
 
-
+}
 
 
 #endif // EDGE_TRACKER_H

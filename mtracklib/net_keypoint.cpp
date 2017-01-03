@@ -1,6 +1,6 @@
 
 #include "net_keypoint.h"
-
+namespace  rebvo{
 
 
 int copy_net_keyline(edge_finder &from, net_keyline *to, int kl_size,double k_prof){
@@ -65,4 +65,4 @@ int copy_net_keyline_nextid(edge_finder &from, net_keyline *to, int kl_size){
 
 }
 
-
+}

@@ -1,5 +1,5 @@
 #include "customcam.h"
-
+namespace  rebvo{
 customCam::customCam(Pipeline<CustomCamPipeBuffer> &cam_pipe, Size2D frame_size, const char *log_name)
     :VideoCam(log_name,frame_size),pipe(cam_pipe)
 {
@@ -44,4 +44,5 @@ RGB24Pixel* customCam::GrabBuffer(double &tstamp, bool drop_frames){
 int customCam::ReleaseBuffer(){
     pipe.ReleaseBuffer(1);
     return 0;
+}
 }

@@ -1,5 +1,5 @@
 #include "iimage.h"
-
+namespace  rebvo{
 /*
 
   iimage: clase basica para el manejo de imagenes integrales
@@ -154,3 +154,4 @@ void iimage::build_average(int d,Image<DetectorImgType> &div)
 }
 
 
+}

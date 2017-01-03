@@ -29,6 +29,7 @@
 #include <video_io.h>
 #include <image.h>
 #include <string>
+namespace  rebvo{
 
 struct VCFrameHdr{
 
@@ -84,4 +85,6 @@ public:
     const int& PakNum(){return paknum;}
 };
 
+
+}
 #endif // VIDEOCAM_H

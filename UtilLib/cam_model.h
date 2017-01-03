@@ -28,7 +28,7 @@
 #include "common_types.h"
 #include "util.h"
 #include <math.h>
-
+namespace  rebvo{
 
 struct cam_model{
 
@@ -110,5 +110,5 @@ public:
     }
 
 };
-
+}
 #endif // CAM_MODEL_H

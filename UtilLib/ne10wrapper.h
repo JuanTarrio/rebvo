@@ -34,13 +34,14 @@
 //***********************************************************
 
 
+
+
+namespace Ne10 {
 //Static linear indexing of 2D fixed size vectors
 template <int cols>
 inline int Index2Dto1D(int row,int col){
     return row*cols+col;
 }
-
-namespace Ne10 {
 
 int InitNe10();
 

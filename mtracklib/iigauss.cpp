@@ -1,7 +1,7 @@
 #include "iigauss.h"
 
 #include <iostream>
-
+namespace  rebvo{
 /*
     Siguiendo la idea de Kovesi, utilizo aplicaciones sucesivas de filtros de caja, con
     imagenes integrales, para aproximar una filtrao gausseano de gran eficiencia
@@ -84,4 +84,5 @@ void iigauss::iismooth(Image<DetectorImgType>& iimg,Image<DetectorImgType>& out)
     }
 
     average(out,img_data,box_d[box_n-1],*div[box_n-1]);
+}
 }

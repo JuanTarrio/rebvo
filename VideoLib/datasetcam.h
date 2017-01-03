@@ -7,7 +7,7 @@
 #include "image.h"
 
 #include "videocam.h"
-
+namespace  rebvo{
 
 class DataSetCam : public VideoCam
 {
@@ -36,4 +36,5 @@ public:
     const bool & Error() override{return error;}
 };
 
+}
 #endif // DATACAM_H

@@ -5,7 +5,7 @@
 
 
 using namespace TooN;
-
+namespace  rebvo{
 global_tracker::global_tracker(cam_model &cam)
     :field(cam.sz),cam_mod(cam),FrameCount(0)
 {
@@ -249,7 +249,7 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
 
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++)
-            Rt[Index2Dto1D<3>(j,i)]=R0(i,j);
+            Rt[Ne10::Index2Dto1D<3>(j,i)]=R0(i,j);
         Vt[i]=VelRot[i];
     }
 
@@ -998,3 +998,4 @@ double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel
 
 template  double global_tracker::Minimizer_V<double>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  double match_thresh, int iter_max, double s_rho_min,uint MatchNumThresh,double reweigth_distance);
 template  double global_tracker::Minimizer_V<float>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  float match_thresh, int iter_max, float s_rho_min,uint MatchNumThresh,double reweigth_distance);
+}

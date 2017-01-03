@@ -25,7 +25,7 @@
 #define NORMALDISTRIBUTION_H
 
 #include <util.h>
-
+namespace  rebvo{
 namespace util{
 
 
@@ -146,6 +146,6 @@ public:
 
 
 }
-
+}
 
 #endif // NORMALDISTRIBUTION_H

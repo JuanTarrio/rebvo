@@ -24,6 +24,8 @@
 
 #include "depth_filler.h"
 #include <TooN/so3.h>
+
+namespace rebvo {
 depth_filler::depth_filler(const  Size2D &s_i, const u_int &scale_w, const u_int &scale_h, cam_model &cam)
     :cam_mod(&cam)
 {
@@ -311,3 +313,4 @@ void depth_filler::Integrate1StepRho(){
 
 }
 
+}

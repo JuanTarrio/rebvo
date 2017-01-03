@@ -1,6 +1,6 @@
 #include "sspace.h"
 #include <iostream>
-
+namespace  rebvo{
 /*
 
   Esta clase implementa el espacio de escalas (Lindenberg 94,98 y otros...) a la Lowe et. al. (SIFT)
@@ -59,4 +59,5 @@ void sspace::calc_gradient(){
         }
     }
 
+}
 }

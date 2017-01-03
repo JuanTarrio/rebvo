@@ -25,7 +25,7 @@
 #include "video_mjpeg.h"
 #include "util.h"
 #include <string.h>
-
+namespace  rebvo{
 MJPEGEncoder::MJPEGEncoder(const Size2D &f_size,int quality)
     :VideoEncoder()
 {
@@ -71,4 +71,5 @@ int MJPEGEncoder::PushFrame(RGB24Pixel *data){
 
     return 0;
 
+}
 }

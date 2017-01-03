@@ -25,7 +25,7 @@
 #include "videocam.h"
 #include "ttimer.h"
 #include "time.h"
-
+namespace  rebvo{
 
 VideoCam::VideoCam(const char *file_name, Size2D frame_size)
 {
@@ -142,4 +142,5 @@ bool VideoCam::RecordNFrames(int f_num){
     rec_n_frames=f_num;
     return r;
 
+}
 }

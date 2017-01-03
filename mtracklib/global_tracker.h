@@ -6,7 +6,7 @@
 
 #include <ne10wrapper.h>
 
-
+namespace  rebvo{
 struct gt_field_data{
     int dist;           //Integer Distance to keyline
     int ikl;            //Keyline ID
@@ -61,5 +61,5 @@ public:
 
 
 
-
+}
 #endif // GLOBAL_TRACKER_H

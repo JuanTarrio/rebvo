@@ -37,7 +37,7 @@
 #include <fstream>
 #include <stdlib.h>
 
-
+namespace  rebvo{
 
 template <class T>
 struct ConfigParam{
@@ -85,5 +85,5 @@ template <class T> bool Configurator::GetConfigByName(const char * class_name,co
     return false;
 }
 
-
+}
 #endif // CONFIGURATOR_H

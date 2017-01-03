@@ -17,6 +17,7 @@
 #include "net_keypoint.h"
 #include "depth_filler.h"
 
+namespace rebvo {
 struct RenderParams{
     net_keyline **net_kl;
     int *net_kln;
@@ -145,5 +146,5 @@ public:
     void InitTexture();
     void LoadTexture(Image<RGB24Pixel> &img_data);
 };
-
+}
 #endif // GL_VIEWER_H

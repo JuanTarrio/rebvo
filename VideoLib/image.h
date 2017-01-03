@@ -6,6 +6,8 @@
 #include <math.h>
 #include <common_types.h>
 #include <string.h>
+
+namespace  rebvo{
 //****** Simple class to manage generic 2D images, without the mayor libraries *******//
 
 //#define SAFE_IMAGE_ACCESS         //Flag to check for index errors
@@ -156,6 +158,6 @@ public:
 
 };
 
-
+}
 
 #endif // IMAGE_H

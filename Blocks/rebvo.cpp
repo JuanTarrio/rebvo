@@ -37,6 +37,7 @@
 
 
 using namespace std;
+namespace  rebvo{
 
 
 REBVO::REBVO(const char *configFile)
@@ -272,4 +273,6 @@ REBVO::~REBVO(){
         CleanUp();
     if(imu)
         delete imu;
+}
+
 }

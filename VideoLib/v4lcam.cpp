@@ -1,6 +1,6 @@
 #include "v4lcam.h"
 #include "util.h"
-
+namespace  rebvo{
 v4lCam::v4lCam(const char *dev_name,Size2D frame_size,int f_per_sec,const char *log_name)
     :VideoCam(log_name,frame_size)
 {
@@ -60,4 +60,5 @@ int v4lCam::ReleaseBuffer()
     if(error)
         return -1;
     return CamaraReleaseBuffer(this);
+}
 }

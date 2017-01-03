@@ -3,7 +3,7 @@
 
 #include "iigauss.h"
 #include "video_io.h"
-
+namespace  rebvo{
 class sspace
 {
 
@@ -40,5 +40,5 @@ public:
 
 
 };
-
+}
 #endif // SSPACE_H

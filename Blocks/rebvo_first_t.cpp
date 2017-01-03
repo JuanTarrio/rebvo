@@ -41,6 +41,8 @@
 
 
 using namespace std;
+
+namespace  rebvo{
 //FirstThr() deals with the capture and detection of the edgemap and optionally with
 //Auxiliary image building.
 
@@ -236,4 +238,4 @@ void REBVO::FirstThr(REBVO *cf){
     return;
 }
 
-
+}

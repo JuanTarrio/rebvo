@@ -23,3 +23,6 @@
 
 #include "minimizer.h"
 
+namespace  rebvo{
+
+}

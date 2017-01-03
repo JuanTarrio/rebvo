@@ -42,9 +42,12 @@
 #include "imugrabber.h"
 #include "customcam.h"
 
+namespace  rebvo{
 
-#define CBUFSIZE            0x08
-#define CCAMBUFSIZE         0x04
+
+
+constexpr int CBUFSIZE=0x08;
+constexpr int CCAMBUFSIZE=0x04;
 
 //#define TIME_DEBUG
 
@@ -398,5 +401,7 @@ public:
 
 
 };
+
+}
 
 #endif // CAMARAFRONTAL_H

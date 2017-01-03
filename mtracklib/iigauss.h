@@ -2,7 +2,7 @@
 #define IIGAUSS_H
 
 #include "iimage.h"
-
+namespace  rebvo{
 class iigauss : public iimage
 {
 public:
@@ -17,5 +17,5 @@ public:
     void smooth(Image<DetectorImgType>& in, Image<DetectorImgType>& out);
     void iismooth(Image<DetectorImgType>& iimg,Image<DetectorImgType>& out);
 };
-
+}
 #endif // IIGAUSS_H

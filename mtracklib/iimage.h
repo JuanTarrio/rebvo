@@ -5,7 +5,7 @@
 
 #include "util.h"
 #include "image.h"
-
+namespace  rebvo{
 typedef float DetectorImgType;
 
 class iimage
@@ -27,5 +27,5 @@ public:
     static void build_average(int d,Image<DetectorImgType> &div);
 
 };
-
+}
 #endif // IIMAGE_H

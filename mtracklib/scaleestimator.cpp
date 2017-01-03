@@ -27,7 +27,7 @@
 #include <TooN/so3.h>
 #include "util.h"
 using namespace TooN;
-
+namespace  rebvo{
 ScaleEstimator::ScaleEstimator()
 {
 }
@@ -303,7 +303,7 @@ double ScaleEstimator::estKaGMEKBias(   const TooN::Vector<3> &s_acel,
 }
 
 
-
+}
 
 
 

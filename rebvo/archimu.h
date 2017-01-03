@@ -56,7 +56,7 @@ class archIMU
     std::atomic_bool    quit;
     bool InitOk;
 
-    REBVO &grabber;
+    rebvo::REBVO &grabber;
     std::thread readerThr;
 
     static void ioThread(archIMU *imu);
@@ -64,7 +64,7 @@ class archIMU
 
 
 public:
-    archIMU(const char *device_name, REBVO &rebvo_grab);
+    archIMU(const char *device_name, rebvo::REBVO &rebvo_grab);
 
     void killIMU(){
         quit=false;

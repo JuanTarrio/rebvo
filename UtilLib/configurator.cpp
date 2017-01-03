@@ -25,7 +25,7 @@
 #include "configurator.h"
 
 using namespace std;
-
+namespace  rebvo{
 Configurator::Configurator()
 {
 }
@@ -186,4 +186,4 @@ bool Configurator::GetConfigByName(const char * class_name,const char *param_nam
 }
 
 
-
+}

@@ -24,7 +24,7 @@
 #include "simcam.h"
 #include "ttimer.h"
 #include <string.h>
-
+namespace  rebvo{
 
 simcam::simcam(const char *sim_name, Size2D frame_size, const char *log_name)
     :VideoCam(log_name,frame_size)
@@ -127,4 +127,5 @@ RGB24Pixel* simcam::GrabBuffer(double &tstamp, bool drop_frames){
 
 int simcam::ReleaseBuffer(){
     return 0;
+}
 }

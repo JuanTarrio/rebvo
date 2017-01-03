@@ -4,7 +4,7 @@
 //****** Some common types used all across the library ******
 
 #include "video_io.h"
-
+namespace  rebvo{
 template <typename T>
 struct Point2D{
     T x;
@@ -36,5 +36,5 @@ struct Point4D{
 
 
 typedef Point4D<double> Point4DD;
-
+}
 #endif // COMMON_TYPES_H

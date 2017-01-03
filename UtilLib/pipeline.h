@@ -30,7 +30,7 @@
 #include <mutex>
 #include <thread>
 #include <iostream>
-
+namespace  rebvo{
 template <typename OPipe>
 class Pipeline{
 
@@ -112,5 +112,5 @@ public:
     iterator end(){return &CircBuff[CircSize];}
 
 };
-
+}
 #endif // PIPELINE_H

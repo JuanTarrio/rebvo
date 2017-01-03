@@ -26,6 +26,8 @@
 
 #include "video_io.h"
 
+namespace  rebvo{
+
 #define VIDEO_ENCODER_TYPE_RAW      0x00
 #define VIDEO_ENCODER_TYPE_MJPEG    0x01
 #define VIDEO_ENCODER_TYPE_MFC      0x02
@@ -47,5 +49,7 @@ public:
 
     virtual int GetEncoderType(){return VIDEO_ENCODER_TYPE_RAW;}
 };
+
+}
 
 #endif // VIDEO_ENCODER_H

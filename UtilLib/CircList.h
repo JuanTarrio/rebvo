@@ -25,6 +25,7 @@
 #define CIRCLIST_H
 
 #include <stdexcept>
+namespace  rebvo{
 namespace util{
 
 //CircListIndexer: simple class to index circular buffers
@@ -110,5 +111,5 @@ public:
 
 
 }
-
+}
 #endif // CIRCLIST_H

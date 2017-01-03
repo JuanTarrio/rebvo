@@ -36,6 +36,8 @@
 
 #include <TooN/so3.h>
 
+namespace rebvo {
+
 #define MFC_MAX_STREAM_SIZE (2*1024*1024)
 
 
@@ -577,7 +579,7 @@ visualizer::visualizer(Configurator &config)
 }
 
 
-
+}
 
 
 

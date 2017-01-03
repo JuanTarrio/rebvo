@@ -45,6 +45,7 @@
 #define AcelSens    (9.81/250.0)
 
 
+using namespace rebvo;
 
 void archIMU::ioThread(archIMU *imu){
 

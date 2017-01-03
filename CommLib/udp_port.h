@@ -33,6 +33,7 @@
 #include <netinet/in.h>
 #include <asm/types.h>
 
+namespace  rebvo{
 
 #pragma pack(push,1)
 struct UDPFragmentHeader{
@@ -80,4 +81,5 @@ public:
     void setBlock(bool b);
 };
 
+}
 #endif // UDP_PORT_H

@@ -28,6 +28,7 @@
 #include "edge_tracker.h"
 #include "net_keypoint.h"
 
+namespace rebvo {
 
 class df_point{
 
@@ -188,5 +189,5 @@ public:
 
     double GetMinDist(){return current_min_dist;}
 };
-
+}
 #endif // DEPTH_FILLER_H

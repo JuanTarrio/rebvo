@@ -23,7 +23,7 @@
 
 
 #include "libcrc.h"
-
+namespace  rebvo{
 namespace util{
 
 /* Table of CRC values for highorder byte */
@@ -87,4 +87,4 @@ __u16 CRC16 (__u8* puchMsg, __u16 usDataLen)/* The function returns the CRC as a
 }
 
 }
-
+}

@@ -6,6 +6,7 @@
 #include <fstream>
 #include <configurator.h>
 #include <gd.h>
+namespace  rebvo{
 DataSetCam::DataSetCam(const char *DataSetDir,const char *DataSetFile, Size2D frame_size,double time_scale, const char *log_name)
     :VideoCam(log_name,frame_size),buffer(frame_size),strDir(DataSetDir)
 {
@@ -197,4 +198,5 @@ RGB24Pixel* DataSetCam::GrabBuffer(double &tstamp, bool drop_frames){
 
 int DataSetCam::ReleaseBuffer(){
     return 0;
+}
 }

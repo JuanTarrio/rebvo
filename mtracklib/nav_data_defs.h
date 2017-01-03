@@ -2,7 +2,7 @@
 #define NAV_DATA_DEFS_H
 
 #include "util.h"
-
+namespace  rebvo{
 struct compressed_nav_pkg{
     fvector<3,float> Pos;
     fvector<3,float> Pose;
@@ -12,6 +12,6 @@ struct compressed_nav_pkg{
     float dt;
     //fvector<4,float> ref_err;
 };
-
+}
 
 #endif // NAV_DATA_DEFS_H

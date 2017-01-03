@@ -25,7 +25,7 @@
 #define LIBCRC_H
 
 #include "asm/types.h"
-
+namespace  rebvo{
 
 namespace util{
 
@@ -33,5 +33,5 @@ __u16 CRC16 (__u8* puchMsg, __u16 usDataLen);
 
 }
 
-
+}
 #endif // LIBCRC_H

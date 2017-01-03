@@ -27,7 +27,7 @@
 #include <string.h>
 
 #include <TooN/TooN.h>
-
+namespace  rebvo{
 template <int size, typename T=double>
 class fvector{
 
@@ -91,5 +91,5 @@ public:
 
 };
 
-
+}
 #endif // FVECTOR_H

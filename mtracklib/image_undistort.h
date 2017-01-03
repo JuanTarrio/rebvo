@@ -5,7 +5,7 @@
 #include "cam_model.h"
 #include <exception>
 #include <stdexcept>
-
+namespace  rebvo{
 //********************************************************************************
 //image_undistort: Image undistorter using radial-tangential model and bilinear or NN interpolation
 //**********************************************************************************
@@ -96,4 +96,5 @@ void image_undistort::undistort(Image<DataType> &out,Image<DataType> &in){
         }
 }
 
+}
 #endif // IMAGE_UNDISTORT_H

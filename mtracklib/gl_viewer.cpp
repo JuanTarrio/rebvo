@@ -6,6 +6,7 @@
 
 #include "gl_viewer.h"
 
+namespace rebvo {
 /* attributes for a single buffered visual in RGBA format with at least
  * 4 bits per color and a 16 bit depth buffer */
 static int attrListSgl[] =
@@ -1232,4 +1233,5 @@ void gl_viewer::LoadMatrixFile(const char *name){
 
 
 
+}
 }

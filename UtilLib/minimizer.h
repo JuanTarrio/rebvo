@@ -27,7 +27,7 @@
 #include <TooN/TooN.h>
 #include <TooN/SVD.h>
 #include <TooN/Cholesky.h>
-
+namespace  rebvo{
 template <int nvars,int neqs,typename TParam>
 class Minimizer
 {
@@ -113,6 +113,6 @@ public:
 };
 
 
-
+}
 
 #endif // MINIMIZER_H

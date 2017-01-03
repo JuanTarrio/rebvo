@@ -1,5 +1,5 @@
 #include "keyframe.h"
-
+namespace  rebvo{
 keyframe::keyframe(edge_tracker& edges,const global_tracker &gtracker,double frame_t
                    ,TooN::Matrix <3,3> _Rot,TooN::Vector <3> _RotLie,TooN::Vector <3> _Vel,
                    TooN::Matrix <3,3> _Pose,TooN::Vector <3> _PoseLie,TooN::Vector <3> _Pos)
@@ -167,4 +167,5 @@ bool keyframe::loadKeyframesFromFile(const char *name,std::vector<keyframe> &kf_
     f.close();
     return true;
 
+}
 }

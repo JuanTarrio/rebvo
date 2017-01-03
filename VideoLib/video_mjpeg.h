@@ -30,6 +30,8 @@
 #include "video_encoder.h"
 #include <gd.h>
 
+namespace  rebvo{
+
 class MJPEGEncoder : public VideoEncoder
 {
 
@@ -53,5 +55,7 @@ public:
 
     int GetEncoderType(){return VIDEO_ENCODER_TYPE_MJPEG;}
 };
+
+}
 
 #endif // VIDEO_MJPEG_H

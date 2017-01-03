@@ -3,6 +3,8 @@
 
 #include "pipeline.h"
 #include "videocam.h"
+namespace  rebvo{
+
 class customCam : public VideoCam
 {
 
@@ -29,4 +31,5 @@ public:
     const bool & Error() override{return error;}
 };
 
+}
 #endif // CUSTOMCAM_H

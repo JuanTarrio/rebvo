@@ -7,7 +7,7 @@
 #include <TooN/Cholesky.h>
 
 using namespace TooN;
-
+namespace  rebvo{
 
 //********************************************************************
 // rotate_keylines(): Rotates the keylines acording to matrix RotF
@@ -859,4 +859,4 @@ void edge_tracker::BiasCorrect(TooN::Vector <6> &X,     //Previous estimated sta
     Wx.slice<3,3,3,3>()+=Wg;
 }
 
-
+}

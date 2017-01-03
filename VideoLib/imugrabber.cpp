@@ -25,7 +25,7 @@
 #include "configurator.h"
 #include <TooN/so3.h>
 
-
+namespace  rebvo{
 
 //***********************************************************************************
 // ImuGrabber(): constructor to start class from scratch
@@ -256,4 +256,5 @@ bool ImuGrabber::PushData(const ImuData&data)
     imu[write_inx]=data;
     ++write_inx;
     return true;
+}
 }

@@ -28,7 +28,7 @@
 #include "TooN/Cholesky.h"
 #include <iostream>
 #include <fstream>
-
+namespace  rebvo{
 class ScaleEstimator
 {
 public:
@@ -53,5 +53,5 @@ public:
 };
 
 
-
+}
 #endif // SCALEESTIMATOR_H

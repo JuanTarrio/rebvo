@@ -26,7 +26,7 @@
 
 #include <pthread.h>
 #include <time.h>
-
+namespace  rebvo{
 
 class TTimer
 {
@@ -69,5 +69,5 @@ public:
 
 
 extern TTimer GlobalTimer;
-
+}
 #endif // TTIMER_H

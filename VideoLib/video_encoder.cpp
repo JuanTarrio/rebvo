@@ -23,7 +23,7 @@
 
  #include "video_encoder.h"
 #include <string.h>
-
+namespace  rebvo{
 VideoEncoder::VideoEncoder(Size2D frame_size)
 {
     f_size=frame_size;
@@ -49,4 +49,5 @@ int VideoEncoder::PopFrame(char *stream_buf, int sb_size){
 int VideoEncoder::PushFrame(RGB24Pixel *data){
     this->data=data;
     return 0;
+}
 }

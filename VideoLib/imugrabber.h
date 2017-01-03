@@ -31,6 +31,8 @@
 #include <thread>
 #include <mutex>
 
+namespace  rebvo{
+
 //Structure to hold IMU data in vectorized circular buffer
 struct ImuData{
     double tstamp=0;
@@ -94,5 +96,7 @@ public:
 
     IntegratedImuData GrabAndIntegrate(double tstart,double tend);
 };
+
+}
 
 #endif // IMUGRABBER_H

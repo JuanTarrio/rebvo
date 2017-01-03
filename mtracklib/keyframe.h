@@ -5,7 +5,7 @@
 #include "edge_tracker.h"
 #include "global_tracker.h"
 #include <memory>
-
+namespace  rebvo{
 class keyframe
 {
 
@@ -41,5 +41,5 @@ public:
     static bool saveKeyframes2File(const char *name,std::vector<keyframe> &kf_list);
     static bool loadKeyframesFromFile(const char *name,std::vector<keyframe> &kf_list);
 };
-
+}
 #endif // KEYFRAME_H

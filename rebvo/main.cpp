@@ -29,6 +29,8 @@
 
 #include "datasetcam.h"
 
+using namespace rebvo;
+
 void PrintHelp(){
 
     std::cout<<R"help(

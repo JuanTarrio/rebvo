@@ -24,7 +24,7 @@
 #include "ttimer.h"
 #include "util.h"
 #include <stdio.h>
-
+namespace  rebvo{
 TTimer GlobalTimer;
 
 TTimer::TTimer()
@@ -183,4 +183,5 @@ void* TTimer::TimerThread(void *arg){
     return NULL;
 
 
+}
 }

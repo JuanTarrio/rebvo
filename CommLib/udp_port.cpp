@@ -29,7 +29,7 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
-
+namespace  rebvo{
 udp_port::udp_port(const char *remote_host, int port, bool bind_port, \
                    int max_pak_size, int pak_pipe_size, int max_fragment_size)
 {
@@ -240,4 +240,5 @@ bool udp_port::SendPacket(unsigned char * data, int data_size){
 
 
     return true;
+}
 }

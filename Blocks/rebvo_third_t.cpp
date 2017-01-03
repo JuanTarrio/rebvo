@@ -42,7 +42,7 @@
 
 using namespace std;
 
-
+namespace  rebvo{
 
 void REBVO::ThirdThread(REBVO *cf){
     using namespace TooN;
@@ -385,4 +385,4 @@ void REBVO::ThirdThread(REBVO *cf){
 
 }
 
-
+}

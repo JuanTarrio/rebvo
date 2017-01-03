@@ -1,6 +1,6 @@
 #include "image_undistort.h"
 
-
+namespace  rebvo{
 image_undistort::image_undistort(const cam_model&camera_model)
     :cam(camera_model),umap(cam.sz)
 {
@@ -70,5 +70,4 @@ image_undistort::image_undistort(const cam_model&camera_model)
 }
 
 
-
-
+}

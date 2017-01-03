@@ -4,6 +4,8 @@
 #include "edge_finder.h"
 #include "nav_data_defs.h"
 
+namespace  rebvo{
+
 #define NET_RHO_SCALING (10000.0)
 #define NET_POS_SCALING (64.0)
 
@@ -69,5 +71,5 @@ struct upk_net_keypoint{
 
 int copy_net_keyline(edge_finder &from, net_keyline *to, int kl_size, double k_prof);
 int copy_net_keyline_nextid(edge_finder &from, net_keyline *to, int kl_size);
-
+}
 #endif // NET_KEYPOINT_H

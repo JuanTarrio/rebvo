@@ -25,7 +25,7 @@
 #define SIMCAM_H
 
 #include "videocam.h"
-
+namespace  rebvo{
 class simcam : public VideoCam
 {
     bool error;
@@ -48,5 +48,7 @@ public:
     int ReleaseBuffer() override ;
     const bool & Error() override{return error;}
 };
+
+}
 
 #endif // SIMCAM_H

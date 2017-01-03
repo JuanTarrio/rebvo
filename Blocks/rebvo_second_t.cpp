@@ -37,9 +37,9 @@
 
 
 
-
-
 using namespace std;
+
+namespace  rebvo{
 
 void  REBVO::SecondThread(REBVO *cf){
 
@@ -491,3 +491,4 @@ void  REBVO::SecondThread(REBVO *cf){
     return;
 }
 
+}

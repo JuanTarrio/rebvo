@@ -31,6 +31,8 @@
 #include "configurator.h"
 #include <iostream>
 #include <vector>
+namespace rebvo {
+
 
 class visualizer
 {
@@ -97,5 +99,6 @@ public:
 
     bool Init();
 };
+}
 
 #endif // DISPLAYFRONTAL_H

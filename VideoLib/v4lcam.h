@@ -26,7 +26,7 @@
 #define V4LCAM_H
 
 #include "videocam.h"
-
+namespace  rebvo{
 //******* C++ Wrappr to video_io.h interface to V4L2 *************
 
 class v4lCam:public camera_context,public VideoCam
@@ -42,5 +42,7 @@ public:
     int ReleaseBuffer() override;
     const bool & Error() override{return error;}
 };
+
+}
 
 #endif // V4LCAM_H

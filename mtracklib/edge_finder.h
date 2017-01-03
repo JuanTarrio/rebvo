@@ -32,13 +32,15 @@
 #include "image.h"
 #include <fstream>
 
+namespace  rebvo{
+
 //Goal limits on Inverse Depth and Initialization
-#define RHO_MAX     20
-#define RHO_MIN     1e-3
-#define RhoInit     1
+constexpr double  RHO_MAX=20;
+constexpr double  RHO_MIN=1e-3;
+constexpr double  RhoInit=1;
 
 //Maximun number of KeyLines to track for (in memory size)
-#define KEYLINE_MAX     30000
+constexpr int KEYLINE_MAX=30000;
 
 struct KeyLine{
 
@@ -146,4 +148,5 @@ public:
 
 };
 
+}
 #endif // EDGE_FINDER_H

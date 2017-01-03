@@ -32,7 +32,7 @@
 
 #include "visualizer.h"
 
-
+using namespace rebvo;
 
 
 int main(int argn,char ** argv)

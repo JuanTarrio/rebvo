@@ -36,7 +36,7 @@
 
 
 #define MFC_MAX_PLANES 2
-
+namespace  rebvo{
 inline v4l2_memory io_type_to_memory(MFC_io_type type)
 {
     switch (type) {
@@ -692,3 +692,4 @@ int v4l_deq_event(struct io_dev *dev)
 }
 
 */
+}
