@@ -30,3 +30,4 @@
 # QT
 *.gcda
 *.rpo
+/Release/
