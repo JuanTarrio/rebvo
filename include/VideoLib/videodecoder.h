@@ -5,6 +5,7 @@
 
 
 
+namespace  rebvo{
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,4 +43,5 @@ public:
     bool DecodeFrame(u_char *coded_data,int cd_size,RGB24Pixel *data);
 };
 
+}
 #endif // VIDEODECODER_H

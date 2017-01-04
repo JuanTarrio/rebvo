@@ -47,7 +47,7 @@ SOURCES       = ../src/rebvo/rebvo.cpp \
 		../src/rebvo/rebvo_second_t.cpp \
 		../src/rebvo/rebvo_third_t.cpp \
 		../src/visualizer/visualizer.cpp \
-		../src/VideoLib/video_io.c \
+		../src/VideoLib/video_io.cpp \
 		../src/VideoLib/video_mfc.cpp \
 		../src/VideoLib/v4lcam.cpp \
 		../src/VideoLib/video_mjpeg.cpp \
@@ -492,8 +492,8 @@ compiler_clean:
 		../include/CommLib/udp_port.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/visualizer.o ../src/visualizer/visualizer.cpp
 
-../build/rebvolib/video_io.o: ../src/VideoLib/video_io.c ../include/VideoLib/video_io.h
-	$(CC) -c $(CFLAGS) $(INCPATH) -o ../build/rebvolib/video_io.o ../src/VideoLib/video_io.c
+../build/rebvolib/video_io.o: ../src/VideoLib/video_io.cpp ../include/VideoLib/video_io.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/video_io.o ../src/VideoLib/video_io.cpp
 
 ../build/rebvolib/video_mfc.o: ../src/VideoLib/video_mfc.cpp ../include/VideoLib/video_io.h \
 		../include/VideoLib/video_mfc.h \

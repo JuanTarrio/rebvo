@@ -34,6 +34,8 @@
 #include "VideoLib/video_io.h"
 #include "VideoLib/video_mfc.h"
 
+#define memzero(d) memset(&(d), 0, sizeof(d))
+
 
 #define MFC_MAX_PLANES 2
 namespace  rebvo{

@@ -32,9 +32,8 @@
 #include <libv4l2.h>
 #include <X11/Xlib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+
+namespace  rebvo{
 
 
 struct buffer_data {
@@ -113,14 +112,6 @@ int MostrarVideo(struct XVideoContext *xvc,union RGB24Pixel *data,DrawFrameFunc 
 int TerminarVideoOutput(struct XVideoContext *xvc);
 __u8 GetKey(struct XVideoContext *xvc);
 
-#define memzero(d) memset(&(d), 0, sizeof(d))
-
-#ifdef __cplusplus
 }
-
-
-
-#endif
-
 
 #endif

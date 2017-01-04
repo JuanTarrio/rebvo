@@ -31,6 +31,7 @@
 
 #include "VideoLib/video_io.h"
 
+namespace  rebvo{
 
 static void xioctl(int fh, int request, void *arg)
 {
@@ -114,8 +115,8 @@ int CamaraInit(const char * dev_name, struct camera_context *cam, struct Size2D 
 
 	cam->buf_data.buf_n=req.count;
 
-	cam->buf_data.start = calloc(cam->buf_data.buf_n, sizeof(void*));
-	cam->buf_data.length = calloc(cam->buf_data.buf_n, sizeof(size_t));
+    cam->buf_data.start = (void **)calloc(cam->buf_data.buf_n, sizeof(void*));
+    cam->buf_data.length = (size_t *)calloc(cam->buf_data.buf_n, sizeof(size_t));
 
 	for (i = 0; i < cam->buf_data.buf_n; ++i) {
 		memset(&buf,0,sizeof(buf));
@@ -218,7 +219,7 @@ union RGB24Pixel * CamaraGrabBuffer(struct camera_context *cam, struct timeval *
 
 	memcpy(tstamp,&cam->v2l_buf.timestamp,sizeof(struct timeval));
 
-	return cam->buf_data.start[cam->v2l_buf.index];
+    return ( RGB24Pixel *)cam->buf_data.start[cam->v2l_buf.index];
 }
 
 int CamaraReleaseBuffer(struct camera_context *cam){
@@ -361,4 +362,6 @@ __u8 GetKey(struct XVideoContext *xvc){
 	__u8 k=xvc->key;
 	xvc->key=0;
 	return k;
+}
+
 }

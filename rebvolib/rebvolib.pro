@@ -31,7 +31,7 @@ SOURCES +=  ../src/rebvo/rebvo.cpp\
     ../src/rebvo/rebvo_second_t.cpp \
     ../src/rebvo/rebvo_third_t.cpp \
     ../src/visualizer/visualizer.cpp\
-    ../src/VideoLib/video_io.c \
+    ../src/VideoLib/video_io.cpp \
     ../src/VideoLib/video_mfc.cpp\
     ../src/VideoLib/v4lcam.cpp \
     ../src/VideoLib/video_mjpeg.cpp \
