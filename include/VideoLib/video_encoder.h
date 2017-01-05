@@ -28,9 +28,7 @@
 
 namespace  rebvo{
 
-#define VIDEO_ENCODER_TYPE_RAW      0x00
-#define VIDEO_ENCODER_TYPE_MJPEG    0x01
-#define VIDEO_ENCODER_TYPE_MFC      0x02
+enum VideoEncoderType {VIDEO_ENCODER_TYPE_RAW=0x00,VIDEO_ENCODER_TYPE_MJPEG=0x01,VIDEO_ENCODER_TYPE_MFC=0x02};
 
 class VideoEncoder
 {

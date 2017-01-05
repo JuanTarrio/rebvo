@@ -61,8 +61,7 @@ SOURCES +=  ../src/rebvo/rebvo.cpp\
     ../src/UtilLib/libcrc.cpp \
     ../src/CommLib/udp_port.cpp
 
-HEADERS += ../include/Blocks/incfiles.h \
-    ../include/Blocks/rebvo.h\
+HEADERS += ../include/rebvo/rebvo.h\
     ../include/visualizer/visualizer.h\
     ../include/VideoLib/video_io.h \
     ../include/VideoLib/image.h \

@@ -42,7 +42,7 @@ namespace  rebvo{
 
 
 REBVO::REBVO(const char *configFile)
-    :pipe(CBUFSIZE,4),cam_pipe(CCAMBUFSIZE,2)
+    :pipe(CBUFSIZE,4),cam_pipe(CCAMBUFSIZE,2),outputFunc(nullptr)
 {
 
 
@@ -187,7 +187,7 @@ REBVO::REBVO(const char *configFile)
 }
 
 REBVO::REBVO(const REBVOParameters &parameters)
-    :params(parameters),pipe(CBUFSIZE,4),cam_pipe(CCAMBUFSIZE,2),cam({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize)
+    :params(parameters),pipe(CBUFSIZE,4),cam_pipe(CCAMBUFSIZE,2),cam({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize),outputFunc(nullptr)
 {
     construct();
 }
@@ -239,6 +239,21 @@ void REBVO::construct(){
     for(customCam::CustomCamPipeBuffer &pb:cam_pipe)
         pb.img=std::shared_ptr<Image<RGB24Pixel> >(new Image<RGB24Pixel>(params.ImageSize));
 
+
+    //***** PipeLine init ******
+
+    //Initializes every object in the pipeline buffer
+    //for exchange between threads
+
+    for(PipeBuffer &pbuf : pipe){
+
+        pbuf.ss=new sspace(params.Sigma0,params.Sigma1,cam.sz,3);
+        pbuf.ef=new edge_tracker(cam,255*3);
+        pbuf.gt=new global_tracker (pbuf.ef->GetCam());
+        pbuf.img=new Image<float>(cam.sz);
+        pbuf.imgc=new Image<RGB24Pixel>(cam.sz);
+        pbuf.t=0;
+    }
     return;
 }
 
@@ -274,6 +289,15 @@ REBVO::~REBVO(){
         CleanUp();
     if(imu)
         delete imu;
+
+    for(PipeBuffer &pbuf : pipe){
+
+        delete pbuf.ss;
+        delete pbuf.ef;
+        delete pbuf.gt;
+        delete pbuf.img;
+        delete pbuf.imgc;
+    }
 }
 
 }

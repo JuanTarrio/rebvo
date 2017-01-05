@@ -86,13 +86,28 @@ public:
 
     }
 
-    //Busy text of the buffer to adquiare the next position
+    //Busy test of the buffer to acquire the next position
     //Sleep secs is the number of second betwen each test
     OPipe &RequestBuffer(const int PlayerId,const double sleep_secs=1e-4){
         uint id;
         while((id=RequestBufferNonBlock(PlayerId)) == -1)
             std::this_thread::sleep_for(std::chrono::duration<double>(sleep_secs)); //If buffer not ready sleep...
         return CircBuff[id];
+    }
+
+    //Busy test of the buffer to acquire the next position
+    //Sleep secs is the number of second betwen each test
+    //Timeout is timeout
+    OPipe* RequestBufferTimeoutable(const int PlayerId,const double timeout_secs=0,const double sleep_secs=1e-4){
+        uint id;
+        uint try_num=timeout_secs/sleep_secs+1;
+        while((id=RequestBufferNonBlock(PlayerId)) == -1){
+            if(--try_num<=0){
+                return nullptr;
+            }
+            std::this_thread::sleep_for(std::chrono::duration<double>(sleep_secs)); //If buffer not ready sleep...
+        }
+        return &CircBuff[id];
     }
 
     //Operations for accesing the pipe buffer like a regular arrar

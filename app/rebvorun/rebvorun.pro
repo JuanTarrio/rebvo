@@ -13,6 +13,7 @@ CONFIG += console
 INCLUDEPATH += ../../include/
 
 LIBS += ../../rebvolib/librebvolib.a
+PRE_TARGETDEPS += ../../rebvolib/librebvolib.a
 
 LIBS += -L/usr/local/lib \
     -lX11 \
@@ -34,5 +35,5 @@ SOURCES +=  main.cpp \
 
 HEADERS += archimu.h 
 
-
 OTHER_FILES += GlobalConfig
+

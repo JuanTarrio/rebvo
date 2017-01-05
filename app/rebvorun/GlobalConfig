@@ -96,7 +96,7 @@
 &DataSetCamera
 
     DataSetDir=/home/odroid/Datasets/MH_03_medium/mav0/cam0/data/                        //The directory of the dataset
-    DataSetFile=/home/odroid/Datasets/MH_03_medium/mav0/cam0/data.csv                    //The file of the dataset (relative to the directory)
+    DataSetFile=/home/odroid/Datasets/MH_03_medium/mav0/cam0/data.csv                    //The file of the dataset
     TimeScale=1e-9
 
 &IMU

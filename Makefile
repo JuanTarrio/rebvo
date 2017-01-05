@@ -76,86 +76,86 @@ sub-app-rebvorun-qmake_all: sub-rebvolib-qmake_all FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile
 	cd app/rebvorun/ && $(MAKE) -f Makefile qmake_all
-sub-app-rebvorun: FORCE
+sub-app-rebvorun: sub-rebvolib FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile
 sub-app-rebvorun-make_first-ordered: sub-rebvolib-make_first-ordered  FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile 
-sub-app-rebvorun-make_first: FORCE
+sub-app-rebvorun-make_first: sub-rebvolib-make_first FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile 
 sub-app-rebvorun-all-ordered: sub-rebvolib-all-ordered  FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile all
-sub-app-rebvorun-all: FORCE
+sub-app-rebvorun-all: sub-rebvolib-all FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile all
 sub-app-rebvorun-clean-ordered: sub-rebvolib-clean-ordered  FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile clean
-sub-app-rebvorun-clean: FORCE
+sub-app-rebvorun-clean: sub-rebvolib-clean FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile clean
 sub-app-rebvorun-distclean-ordered: sub-rebvolib-distclean-ordered  FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile distclean
-sub-app-rebvorun-distclean: FORCE
+sub-app-rebvorun-distclean: sub-rebvolib-distclean FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile distclean
 sub-app-rebvorun-install_subtargets-ordered: sub-rebvolib-install_subtargets-ordered  FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile install
-sub-app-rebvorun-install_subtargets: FORCE
+sub-app-rebvorun-install_subtargets: sub-rebvolib-install_subtargets FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile install
 sub-app-rebvorun-uninstall_subtargets-ordered: sub-rebvolib-uninstall_subtargets-ordered  FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile uninstall
-sub-app-rebvorun-uninstall_subtargets: FORCE
+sub-app-rebvorun-uninstall_subtargets: sub-rebvolib-uninstall_subtargets FORCE
 	@test -d app/rebvorun/ || mkdir -p app/rebvorun/
 	cd app/rebvorun/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/rebvorun/rebvorun.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile uninstall
 sub-app-visualizer-qmake_all: sub-app-rebvorun-qmake_all FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile
 	cd app/visualizer/ && $(MAKE) -f Makefile qmake_all
-sub-app-visualizer: FORCE
+sub-app-visualizer: sub-rebvolib FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile
 sub-app-visualizer-make_first-ordered: sub-app-rebvorun-make_first-ordered  FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile 
-sub-app-visualizer-make_first: FORCE
+sub-app-visualizer-make_first: sub-rebvolib-make_first FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile 
 sub-app-visualizer-all-ordered: sub-app-rebvorun-all-ordered  FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile all
-sub-app-visualizer-all: FORCE
+sub-app-visualizer-all: sub-rebvolib-all FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile all
 sub-app-visualizer-clean-ordered: sub-app-rebvorun-clean-ordered  FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile clean
-sub-app-visualizer-clean: FORCE
+sub-app-visualizer-clean: sub-rebvolib-clean FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile clean
 sub-app-visualizer-distclean-ordered: sub-app-rebvorun-distclean-ordered  FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile distclean
-sub-app-visualizer-distclean: FORCE
+sub-app-visualizer-distclean: sub-rebvolib-distclean FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile distclean
 sub-app-visualizer-install_subtargets-ordered: sub-app-rebvorun-install_subtargets-ordered  FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile install
-sub-app-visualizer-install_subtargets: FORCE
+sub-app-visualizer-install_subtargets: sub-rebvolib-install_subtargets FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile install
 sub-app-visualizer-uninstall_subtargets-ordered: sub-app-rebvorun-uninstall_subtargets-ordered  FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile uninstall
-sub-app-visualizer-uninstall_subtargets: FORCE
+sub-app-visualizer-uninstall_subtargets: sub-rebvolib-uninstall_subtargets FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++-64 -o Makefile ) && $(MAKE) -f Makefile uninstall
 

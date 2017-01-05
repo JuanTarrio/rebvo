@@ -6,9 +6,10 @@ Tarrio, J. J., & Pedre, S. (2015). Realtime Edge-Based Visual Odometry
 for a Monocular Camera. In Proceedings of the IEEE International Conference
 on Computer Vision (pp. 702-710).
 
-REBVO tracks a camera in Realtime using edges. The system is split in 2 components.
-An on-board part (rebvo itself) doing all the processing and sending data over UDP 
-and an OpenGL visualizer. 
+REBVO tracks a camera in Realtime using edges. The system is split in 3 components.
+A library containing the core (rebvolib/librebvolib.a)
+An on-board app (app/rebvorun) to launch the library to do all the processing and send data over UDP
+An an OpenGL visualizer (app/visualizer) to show the newwork tranmitted data.
 
 Introductory video: https://youtu.be/7pn29iGklgI
 
@@ -35,38 +36,76 @@ In ubuntu and most linux dist this libraries can be downloaded directly from the
 
 ### Compiling
 
-REBVO has been developed using QT creator, so a project file is provided in each of the
-components folder, (rebvo and visualizer). Also two makefiles are provided on each 
-of the folders, for amd64 and arm architectures. The first can easily be edited for 
-x86.
+REBVO has been developed using QT creator, so a project file is provided in the main folder. Also a makefile is provided on the main directory for 64bit machines.
 
-Use:
+For x86 and ARM compile using (on the root directory):
 
-make -f MakefileAMD64
+make
 
-On ARM:
 
-make -f MakefileARM
+For AMD64 compile using (on the root directory):
+
+make
 
 #### Compile using NE10
 
 The system can use the NE10 for neon simd support. In order to use it, the
 correspondent line has to be uncommented in the arm makefile. 
 
+
 ### Imu Integration
 
 IMU measurements are integrated trough the ImuGrabber class, that implements a circular buffer, timestamp search utilities and inter-frame integration.
 
 For IMU data in a csv dataset style the ImuGraber supports a file loadding function (Config IMUMode=2).
-For a custom interface IMU a class similar to archimu should be written (Config IMUMode=1), that reads the IMU in a separate thread and pushes timestamped data using IMUGrabber::pushData().
+For a custom IMU, timestamped data can be pushed using REBVO::pushIMU() function.
 
 #### Imu Fussion
 
-IMU fussion is done using a two stage bayesian filter. Sensor noise covariances should be set for optimal performance. Scale estimation reponse dinamics should be tunned ussing
+IMU fussion is done using a two stage bayesian filter. Sensor noise covariances should be set for optimal performance.
 
-Scale estimation response dynamics should be tuned for a trade-off between precision and robustness.
+Scale estimation response dynamics should be tuned for a trade-off between precision and robustness using the ScaleStdDevMult parameter.
 
 An initial guess for Giro Bias should be provided for highly biased sensors, an initial automatic guess could be used if the system is started still.
+
+
+### Camera Drivers
+
+Three classes are provided for camera managment:
+
+-- v4lCam is a wrapper to the C functions provided in video_io for interacting with
+   the v4l2 lib.
+
+-- SimCamera is a simple class designed to load uncompresed video from a file. For compressed video
+   formats check the Video2SimCam section.
+
+-- DataSetCam is used to load the images from the TUM datasets used to benchmark the
+   paper (add the dataset directory and image file list to the config file).
+
+-- Custom cam, a class for external loading of images
+
+All three classes inherit from VideoCam class, this class is able to generate the
+video files used by simcam.
+
+
+#### Using the custom camera
+
+If the custom camera is selected, images has to be loaded to the rebvo object. Use the REBVO:requestCustomCamBuffer()
+funtion to request an Image buffer, save your image to that buffer and call REBVO::releaseCustomCamBuffer to release.
+This can be done in the aplication thread, images are passed transparently using a pipe circular buffer.
+
+#### Video2SimCam Utility
+
+Currently rebvo canot load compressed video directly (a feature that is gonna be added soon), so
+a simple utility is provided in the Video2SimCam folder that uses OpenCV VideoCapture to uncompress
+the video in the SimCam format (can take a lot of disk space!).
+
+###Customizing the Output
+
+A callback function can be configured using the library function  REBVO::setOutputCallback(). This a callback is called on the third thread with a reference
+to a struct containing all the algorithm's output.
+
+The funtion REBVO::getNav() can also bue used to extract navigation parameters
 
 ### Configuring the system
 
@@ -124,7 +163,7 @@ ImageSize, Focal Length and Principal Point should match the config in rebvo.
 Just run the two programs on the same o network connected computers and move
 the camera trying to maximize translation.
 
-REBVO component accept the following command line commands:
+REBVORUN component accept the following command line commands:
 
 q: Quit
 
@@ -192,31 +231,6 @@ End: Quit
 If the savelog option is enabled the system outputs 2 files, a .m log file and a
 trajectory file (timestamp tx ty tz qx qy qz qw) that can be used to benchmark
 the algorithm.
-
-### Camera Drivers
-
-Three classes are provided for camera managment:
-
--- v4lCam is a wrapper to the C functions provided in video_io for interacting with
-   the v4l2 lib. 
-
--- SimCamera is a simple class designed to load uncompresed video from a file. For compressed video
-   formats check the Video2SimCam section.
-
--- DataSetCam is used to load the images from the TUM datasets used to benchmark the
-   paper (add the dataset directory and image file list to the config file).
-
-All three classes inherit from VideoCam class, this class is able to generate the 
-video files used by simcam. 
-
-If you want to use your own camera loader, just write a child overwriting the virtual
-functions in VideoCam and add it to the first thread of rebvo.
-
-#### Video2SimCam Utility
-
-Currently rebvo canot load compressed video directly (a feature that is gonna be added soon), so
-a simple utility is provided in the Video2SimCam folder that uses OpenCV VideoCapture to uncompress
-the video in the SimCam format (can take a lot of disk space!).
 
 
 

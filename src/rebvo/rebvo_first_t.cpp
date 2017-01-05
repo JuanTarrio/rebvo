@@ -66,20 +66,7 @@ void REBVO::FirstThr(REBVO *cf){
     image_undistort undistorter(cam);
     Image<RGB24Pixel> img_dist(cam.sz);
 
-    //***** PipeLine init ******
 
-    //Initializes every object in the pipeline buffer
-    //for exchange between threads
-
-    for(PipeBuffer &pbuf : cf->pipe){
-
-        pbuf.ss=new sspace(cf->params.Sigma0,cf->params.Sigma1,cam.sz,3);
-        pbuf.ef=new edge_tracker(cam,255*3);
-        pbuf.gt=new global_tracker (pbuf.ef->GetCam());
-        pbuf.img=new Image<float>(cam.sz);
-        pbuf.imgc=new Image<RGB24Pixel>(cam.sz);
-        pbuf.t=0;
-    }
 
 
     //***** Cam init *****

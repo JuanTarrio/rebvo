@@ -1,7 +1,9 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 SUBDIRS = rebvolib \
-          app/rebvorun\
-          app/visualizer
+          rebvorun\
+          visualizer
+rebvorun.subdir=app/rebvorun
+visualizer.subdir=app/visualizer
 rebvorun.depends = rebvolib
 visualizer.depends = rebvolib

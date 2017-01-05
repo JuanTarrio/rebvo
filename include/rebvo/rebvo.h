@@ -56,141 +56,161 @@ constexpr int CCAMBUFSIZE=0x04;
 #define COND_TIME_DEBUG(arg)
 #endif
 
+
+
 struct REBVOParameters{
 
+
+
     //REBVO params
-
-    int encoder_type;
-    std::string	encoder_dev;
+    int CameraType;                     //0=V4L, 1=SimCam, 2=Dataset cam, 3=custom cam
 
 
-    std::string SimFile;
-    std::string CameraDevice;
-    std::string	VideoNetHost;
-    int	VideoNetPort;
-    int VideoNetEnabled;
-    int BlockingUDP;
 
-    double sim_save_nframes;
-    int CameraType;
+    std::string	VideoNetHost;           //Remote host to send image, keyline and nav data (where the visualizer is run)
+    int	VideoNetPort;                   //Remote port
+    int VideoNetEnabled;                //Enable video tranmission?
+    int BlockingUDP;                    //Use blocking sokets? turn on if lossing packests on transmition, may slow down the system
 
 
-    //DSCam param
+    int VideoSave;                      //Optionally save video after running
+    std::string VideoSaveFile;          //Video file to save to
+    int VideoSaveBuffersize;            //Buffer size
 
-    std::string DataSetFile;
-    std::string DataSetDir;
+
+    int encoder_type;                   //Video encoder type, 0=raw,1=Motion JPEG, 2=Samsung MFC
+    std::string	encoder_dev;            //If using Samsung MFC encoder, encoder device
+    uint EdgeMapDelay;                  //Frame delay between video and edge-maps
+
+
+    bool SaveLog;                       //Save log on-off
+    std::string LogFile;                //Log file in .m format
+    std::string TrayFile;               //Trayectory in TUM dataset format [t pos quat]
+
+
+
+    //DataSetCam param
+
+    std::string DataSetFile;            //The directory of the dataset
+    std::string DataSetDir;             //The file of the dataset
+    double CamTimeScale;                //Timescale multiplier for the dataset file
 
     //Camara parameters
-    double config_fps;
-    double CamTimeScale;
-
-    int useUndistort;
-    bool rotatedCam;
 
 
-    Size2D ImageSize;
-    float z_f_x;
+    Size2D ImageSize;                   //Frame size
+    float z_f_x;                        //Camera XY focal length
     float z_f_y;
-    float pp_y;
+    float pp_y;                         //Camera principal point
     float pp_x;
-    cam_model::rad_tan_distortion kc;
+    cam_model::rad_tan_distortion kc;   //Distortion parameters
 
-    int simu_time_on;
-    int simu_time_step;
-    double simu_time_sweep;
-    double simu_time_start;
+
+    double config_fps;                  //Frames per second
+    int useUndistort;                   //Use undistortion
+    bool rotatedCam;                    //Rotate camera 180deg
+
+
+    std::string CameraDevice;           //V4L Camera device
+
+    //simcam and simulation parameters
+    std::string SimFile;                    //SimCam video file
+    double sim_save_nframes;                //Number of frames to save for simulation (uncompressed video)
+
+    int simu_time_on;                       //Simulate time or use system time
+    int simu_time_step;                     //Timestep in nanosecons
+    double simu_time_sweep;                 //Simulated time sweep
+    double simu_time_start;                 //Simulated time start
 
 
     //IMU parameters
 
-    int ImuMode;
-    std::string ImuFile;
-    std::string SE3File;
-    double ImuTimeScale;
-    double GiroMeasStdDev;
-    double GiroBiasStdDev;
-    bool InitBias;
+
+    int ImuMode;                            //0=no imu, 1= use the archquitecture specific class, 2=load full data from ImuFile
+    std::string ImuFile;                    //Imu file
+    std::string SE3File;                    //File containing the SE3 transformation from IMU to Camera
+    double ImuTimeScale;                    //TimeScale of the IMU file
+
+    bool InitBias;                          //0=Use initial guess, 1=use InitBiasFrameNum frames to estimate bias
     int InitBiasFrameNum;
-    TooN::Vector <3> BiasInitGuess;
-    double g_module;
+
+    TooN::Vector <3> BiasInitGuess;         //Bias initial guess in camera frame
+
+    double GiroMeasStdDev;                  //Giro Noise Std Dev
+    double GiroBiasStdDev;                  //Giro Bias Random Walk Noise
+    double AcelMeasStdDev;                  //Accelerometer Noise Std Dev
+    double g_module;                        //meassured gravity module
+
+    double g_module_uncer;                  //Uncertainty in the G module, can be keeped at a big value
+    double g_uncert;                        //Process uncertainty on the G vector
+    double VBiasStdDev;                     //Process uncertainty in the visual bias estimation (keep small)
+    double ScaleStdDevMult;                 //Scale process uncertinty in relation to visual, USE THIS PARAMETER TO TUNE FILTER RESPONSE TIME
+    double ScaleStdDevMax;                  //Max Scale process uncertinty, should leave fixed
+    double ScaleStdDevInit;                 //Initial uncertainty for the scale
 
 
-    double AcelMeasStdDev;
-    double g_module_uncer;
-    double g_uncert;
-    double VBiasStdDev;
-    double ScaleStdDevMult;
-    double ScaleStdDevMax;
-    double ScaleStdDevInit;
-    double SampleTime;
-    int CircBufferSize;
+    double SampleTime;                  //Sample time for custom IMU
+    int CircBufferSize;                 //Imu grabber circular buffer size
 
-    double TimeDesinc;
+    double TimeDesinc;                  //Time desincrozitation IMU2Cam (sec)
 
 
     //Processor parameters
 
-    int cpu0;
+    int cpuSetAffinity;             //Switch to set afinity on off
+    int cpu0;                       //Processor threads affiniy
     int cpu1;
     int cpu2;
-    int cpuSetAffinity;
 
 
-    int VideoSave;
-    std::string VideoSaveFile;
-    int VideoSaveBuffersize;
-
-
-    std::string LogFile;
-    std::string TrayFile;
-    bool SaveLog;
-    uint EdgeMapDelay;
 
     //Detector parameters
 
-    double Sigma0;
+    double Sigma0;                  //The 2 scales used for DoG calculation
     double Sigma1;
 
-    int DetectorPlaneFitSize;
-    double DetectorPosNegThresh;
-    double DetectorDoGThresh;
+    int DetectorPlaneFitSize;       //Window size for plane fitting to the DoG = (DetectorPlaneFitSize*2+1)^2
+    double DetectorPosNegThresh;    //Max percentual difference for DoG nonmaximal suppresion
+    double DetectorDoGThresh;       //Relation between DoG threshold and Gradient threshold ~1/Sigma0^4
 
-    int ReferencePoints;
-    int MaxPoints;
+    int ReferencePoints;            //Reference to the number of points when autothreshold
+    int MaxPoints;                  //Absolute maximun number of points
 
-    double DetectorThresh;
-    double DetectorAutoGain;
-    double DetectorMaxThresh;
+    double DetectorThresh;          //Manual theshold
+    double DetectorAutoGain;        //Auto threshold gain, 0=manual
+    double DetectorMaxThresh;       //Limits for autothreshold
     double DetectorMinThresh;
+
 
     //Tracker-Mapper Parameters
 
-    int MatchThreshold;
 
-    double SearchRange;
+    int MatchThreshold;                     //Minimun number of keyline matches required for further procesing
 
-    double QCutOffNumBins;
-    double QCutOffQuantile;
+    double SearchRange;                      //Pixel range for tracking and mapping
 
-    int TrackerIterNum;
-    int TrackerInitIterNum;
-    int TrackerInitType;
+    double QCutOffNumBins;                  //Number of bins on the histogram for percentile calculation
+    double QCutOffQuantile;                 //Percentile of the KLs to use
 
-    double TrackerMatchThresh;
+    int TrackerIterNum;                     //Tracker number of iterations
+    int TrackerInitIterNum;                 //Double ititialization iteration number
+    int TrackerInitType;                    //Tracker Initialization prior (0=zero,1=last frame,2=try both)
+
+    double TrackerMatchThresh;              //Tracking thesh on the scalar product
 
     double LocationUncertaintyMatch;
-    double MatchThreshModule;
-    double MatchThreshAngle;
+    double MatchThreshModule;               //Matching thesh on the gradient module
+    double MatchThreshAngle;                //Matching thesh on the gradient angle (degrees)
 
-    double ReweigthDistance;
+    double ReweigthDistance;                //Reweigh error hubber residual
 
-    uint MatchNumThresh;
+    uint MatchNumThresh;                    //Minimun number of matches for tracking
 
-    double RegularizeThresh;
-    double ReshapeQAbsolute;
-    double ReshapeQRelative;
-    double LocationUncertainty;
-    double DoReScaling;
+    double RegularizeThresh;                //Regularization threshold on the gradient
+    double ReshapeQAbsolute;                //EKF Modelled absolute error on Inv-Depth
+    double ReshapeQRelative;                //EKF Modelled relative error on Inv-IDepth
+    double LocationUncertainty;             //Modelled Pixel uncertainty on the matching step
+    double DoReScaling;                     //Apply re-scaling after EKF
 
 
 };
@@ -299,7 +319,7 @@ struct PipeBuffer{
 };
 
 
-
+typedef bool outputCallback(PipeBuffer &data);
 
 
 class REBVO
@@ -325,6 +345,7 @@ class REBVO
     int snap_n=0;
     std::atomic_bool system_reset;
 
+
     //Custom cam pipeline
     Pipeline <customCam::CustomCamPipeBuffer> cam_pipe;
 
@@ -334,10 +355,14 @@ class REBVO
 
     ImuGrabber *imu=nullptr;
 
+    //output callback
+
+    std::atomic<outputCallback*> outputFunc;
+
 
     void pushNav(const NavData &navdat){
-         std::lock_guard<std::mutex> locker(nav_mutex);
-         nav=navdat;
+        std::lock_guard<std::mutex> locker(nav_mutex);
+        nav=navdat;
     }
 
     void construct();
@@ -367,18 +392,19 @@ public:
 
     std::vector <keyframe> kf_list;
 
-    //
+    //Get nav data (saved on the second thread)
     NavData getNav(){
-         std::lock_guard<std::mutex> locker(nav_mutex);
-         NavData navdat=nav;
-         return navdat;
+        std::lock_guard<std::mutex> locker(nav_mutex);
+        NavData navdat=nav;
+        return navdat;
     }
 
+    //Get REBVO params
     const REBVOParameters& getParams(){
         return params;
     }
 
-
+    //add timestamped IMU data to the pipeline (thread safe)
     bool pushIMU(const ImuData&data){
 
         if(imu)
@@ -386,16 +412,28 @@ public:
         return false;
     }
 
-    bool requestCustomCamBuffer(std::shared_ptr<Image <RGB24Pixel> > &ptr,double time_stamp){
+    //request a ptr to an Image object to push image on the pipeline of the custom camera
+    bool requestCustomCamBuffer(std::shared_ptr<Image <RGB24Pixel> > &ptr,double time_stamp,double timeout_secs=0){
 
-        customCam::CustomCamPipeBuffer &ccpb=cam_pipe.RequestBuffer(0);
-        ptr=ccpb.img;
-        ccpb.timestamp=time_stamp;
+        customCam::CustomCamPipeBuffer *ccpb=cam_pipe.RequestBufferTimeoutable(0,timeout_secs);
+        if(ccpb==nullptr)
+            return false;
+        ptr=(*ccpb).img;
+        (*ccpb).timestamp=time_stamp;
         return true;
     }
+
+
+    //release the pointer for image loading on the customcam buffer
     void releaseCustomCamBuffer(){
 
         cam_pipe.ReleaseBuffer(0);
+    }
+
+    //set a callback funtion to be called on the third thread with a reference to the pipebuffer containing all the algorithm output
+    //call with nullptr to release callback
+    void setOutputCallback(outputCallback* callfunc){
+        outputFunc=callfunc;
     }
 
 

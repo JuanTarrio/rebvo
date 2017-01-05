@@ -6,8 +6,8 @@
 
 namespace  rebvo{
 
-#define NET_RHO_SCALING (10000.0)
-#define NET_POS_SCALING (64.0)
+constexpr double NET_RHO_SCALING=(10000.0);
+constexpr double NET_POS_SCALING=(64.0);
 
 #pragma pack(push,1)
 

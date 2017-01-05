@@ -335,6 +335,13 @@ void REBVO::ThirdThread(REBVO *cf){
             h_log<<histo[i]<<",";
         h_log<<histo[h_num-1]<<"\n";
         h_log.flush();
+
+
+        //******** Call callback if present *****************//
+
+        if(cf->outputFunc)
+            cf->outputFunc(pbuf);
+
         //******** The system can optionaly take a snapshot (use for debuging purposes) ******//
 
         if(cf->saveImg){

@@ -12,6 +12,7 @@ CONFIG += console
 INCLUDEPATH += ../../include/
 
 LIBS += ../../rebvolib/librebvolib.a
+PRE_TARGETDEPS += ../../rebvolib/librebvolib.a
 
 LIBS += -L/usr/local/lib -lX11  -lv4l2 -lm -lgd -llapack -lpthread -lGL -lGLU -lglut -lgd -lavcodec -lavutil
 
