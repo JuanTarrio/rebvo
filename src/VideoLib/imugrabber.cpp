@@ -183,8 +183,9 @@ std::pair <util::CircListIndexer,util::CircListIndexer> ImuGrabber::SeachByTimeS
     util::CircListIndexer begin=inx;
 
     do{
-        if((++inx)==write_inx)
+        if((++inx)==write_inx){
             return std::pair<util::CircListIndexer,util::CircListIndexer>(begin,begin); //return empty list
+        }
     }while(imu[inx].tstamp<tend);
 
 

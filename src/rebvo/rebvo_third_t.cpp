@@ -262,7 +262,6 @@ void REBVO::ThirdThread(REBVO *cf){
                 }
             }
 
-
             ++net_buf_inx;
 
 

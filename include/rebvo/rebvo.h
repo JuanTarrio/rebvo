@@ -436,7 +436,9 @@ public:
         outputFunc=callfunc;
     }
 
-
+	bool isInitOk() const {
+		return InitOK;
+	}
 };
 
 }

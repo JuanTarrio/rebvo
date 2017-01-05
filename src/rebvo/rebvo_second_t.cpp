@@ -109,17 +109,26 @@ void  REBVO::SecondThread(REBVO *cf){
 
     //****** Dummy processing of the first frame ******
 
+	{
+    	PipeBuffer &new_buf=cf->pipe.RequestBuffer(1);
+    	if(new_buf.quit){
+        	cf->pipe.ReleaseBuffer(1);
+        	PipeBuffer &old_buf=cf->pipe.RequestBuffer(2);
+        	old_buf.quit=false;
+        	cf->pipe.ReleaseBuffer(2);
+        	cf->quit=true;
 
-    cf->pipe.RequestBuffer(1);
-    cf->pipe.ReleaseBuffer(1);
-
+    	}else{
+    		cf->pipe.ReleaseBuffer(1);
+    	}
+	}
     //****** Main loop *******
 
     while(!cf->quit){
 
         bool EstimationOk=true;
 
-        COND_TIME_DEBUG(dtp=t_loop.stop();)
+        COND_TIME_DEBUG(dtp=t_loop.stostd::cout << "1st exit" << std::endl;p();)
 
         // 2 pipeline buffers are used in this thread
         PipeBuffer &new_buf=cf->pipe.RequestBuffer(1);  //This represent the newest edge-map
@@ -131,7 +140,6 @@ void  REBVO::SecondThread(REBVO *cf){
             cf->pipe.ReleaseBuffer(2);
             break;
         }
-
 
         dt_frame=(new_buf.t-old_buf.t);
 

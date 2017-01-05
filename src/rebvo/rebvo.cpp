@@ -285,6 +285,7 @@ bool REBVO::CleanUp(){
 
 
 REBVO::~REBVO(){
+
     if(!quit)
         CleanUp();
     if(imu)

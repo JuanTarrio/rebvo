@@ -56,13 +56,15 @@ int customCam::GrabFrame(RGB24Pixel *data, double &tstamp, bool drop_frames){
 RGB24Pixel* customCam::GrabBuffer(double &tstamp, bool drop_frames){
 
 
-    CustomCamPipeBuffer &pbuf=pipe.RequestBuffer(1);
+    CustomCamPipeBuffer *pbuf=pipe.RequestBufferTimeoutable(1,0.001);
+
+    if(!pbuf)
+    	return nullptr;
 
 
-
-    tstamp=pbuf.timestamp;
+    tstamp=pbuf->timestamp;
     paknum++;
-    return (*pbuf.img).Data();
+    return (*pbuf->img).Data();
 }
 
 int customCam::ReleaseBuffer(){
