@@ -38,14 +38,18 @@ In ubuntu and most linux dist this libraries can be downloaded directly from the
 
 REBVO has been developed using QT creator, so a project file is provided in the main folder. Also a makefile is provided on the main directory for 64bit machines.
 
-For x86 and ARM compile using (on the root directory):
+For x86 compile using (on the root directory):
 
 make
 
+For 64bit desktop use:
 
-For AMD64 compile using (on the root directory):
+make REBVOFLAGS=-m64
 
-make
+for ARM:
+
+make REBVOFLAGS='-mtune=cortex-a15 -mfpu=neon'
+
 
 #### Compile using NE10
 

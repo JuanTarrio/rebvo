@@ -24,8 +24,8 @@ LIBS += -L/usr/local/lib \
     -lpthread #-lNE10
 
 
-QMAKE_CXXFLAGS += -std=c++11 -Wno-unused-parameter -Wno-sign-compare # -mcpu=cortex-a15 -mtune=cortex-a15 -mfpu=neon -O2
-QMAKE_CFLAGS += -std=c++11 -Wno-unused-parameter -Wno-sign-compare # -mcpu=cortex-a15 -mtune=cortex-a15 -mfpu=neon -O2
+QMAKE_CXXFLAGS += -std=c++11 -Wno-unused-parameter -Wno-sign-compare $(REBVOFLAGS)# -mcpu=cortex-a15 -mtune=cortex-a15 -mfpu=neon -O2
+QMAKE_CFLAGS += -std=c++11 -Wno-unused-parameter -Wno-sign-compare $(REBVOFLAGS)# -mcpu=cortex-a15 -mtune=cortex-a15 -mfpu=neon -O2
 QMAKE_LFLAGS += -std=c++11 
 
 
