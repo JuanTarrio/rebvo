@@ -42,7 +42,7 @@ namespace  rebvo{
 
 
 REBVO::REBVO(const char *configFile)
-    :pipe(CBUFSIZE,4),cam_pipe(CCAMBUFSIZE,2),outputFunc(nullptr)
+    :quit(true),pipe(CBUFSIZE,4),cam_pipe(CCAMBUFSIZE,2),outputFunc(nullptr)
 {
 
 
@@ -165,7 +165,7 @@ REBVO::REBVO(const char *configFile)
         InitOK&=config.GetConfigByName("IMU","ScaleStdDevMult",params.ScaleStdDevMult,true);
         InitOK&=config.GetConfigByName("IMU","ScaleStdDevMax",params.ScaleStdDevMax,true);
         InitOK&=config.GetConfigByName("IMU","ScaleStdDevInit",params.ScaleStdDevInit,true);
-        InitOK&=config.GetConfigByName("IMU","CamImuSE3File",params.SE3File,true);
+        params.UseCamIMUSE3File=config.GetConfigByName("IMU","CamImuSE3File",params.SE3File,true);
         InitOK&=config.GetConfigByName("IMU","TimeDesinc",params.TimeDesinc,true);
 
     }
@@ -187,7 +187,9 @@ REBVO::REBVO(const char *configFile)
 }
 
 REBVO::REBVO(const REBVOParameters &parameters)
-    :params(parameters),pipe(CBUFSIZE,4),cam_pipe(CCAMBUFSIZE,2),cam({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize),outputFunc(nullptr)
+    :params(parameters),quit(true),pipe(CBUFSIZE,4),
+      cam_pipe(CCAMBUFSIZE,2),cam({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize),
+      outputFunc(nullptr)
 {
     construct();
 }
@@ -209,7 +211,7 @@ void REBVO::construct(){
         imu=new ImuGrabber(params.CircBufferSize,params.SampleTime);
 
 
-        if(!imu->LoadCamImuSE3(params.SE3File.data())){
+        if(params.UseCamIMUSE3File && !imu->LoadCamImuSE3(params.SE3File.data())){
             cout << "REBVO: Failed to load cam-imu transformation \n" <<endl;
             InitOK=false;
             return;
@@ -226,7 +228,7 @@ void REBVO::construct(){
             return;
         }
     }
-        if(!imu->LoadCamImuSE3(params.SE3File.data())){
+        if(params.UseCamIMUSE3File && !imu->LoadCamImuSE3(params.SE3File.data())){
             cout << "Failed to load cam-imu transformation \n" <<endl;
             InitOK=false;
             return;

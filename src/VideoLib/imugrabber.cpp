@@ -158,6 +158,15 @@ bool ImuGrabber::LoadCamImuSE3(const char *se3_file)
 
 }
 
+bool ImuGrabber::LoadCamImuSE3(const TooN::Matrix<3,3> &RCam2IMU,const TooN::Vector<3> &TCam2IMU)
+{
+    RDataSetCam2IMU=RCam2IMU;
+    TDataSetCam2IMU=TCam2IMU;
+    return true;
+
+}
+
+
 //***********************************************************************************
 // SeachByTimeStamp(): search for a range of timestaps in the circular buffer
 //***********************************************************************************

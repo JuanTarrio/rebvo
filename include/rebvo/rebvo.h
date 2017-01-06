@@ -130,6 +130,7 @@ struct REBVOParameters{
 
     int ImuMode;                            //0=no imu, 1= use the archquitecture specific class, 2=load full data from ImuFile
     std::string ImuFile;                    //Imu file
+    bool UseCamIMUSE3File;
     std::string SE3File;                    //File containing the SE3 transformation from IMU to Camera
     double ImuTimeScale;                    //TimeScale of the IMU file
 
@@ -359,8 +360,16 @@ class REBVO
 
     //output callback
 
+    std::mutex call_mutex;
     std::function<bool(PipeBuffer &)> outputFunc;
 
+    bool callCallBack(PipeBuffer & pbuf){
+        std::lock_guard<std::mutex> locker(call_mutex);
+
+        if(outputFunc)
+            return outputFunc(pbuf);
+        return true;
+    }
 
     void pushNav(const NavData &navdat){
         std::lock_guard<std::mutex> locker(nav_mutex);
@@ -406,6 +415,17 @@ public:
         return params;
     }
 
+    //Set transformation from IMU to Camera
+
+    bool setCamImuSE3(const TooN::Matrix<3,3> &RCam2IMU,const TooN::Vector<3> &TCam2IMU){
+        if(!quit)
+            return false;
+        if(imu)
+            return imu->LoadCamImuSE3(RCam2IMU,TCam2IMU);
+
+        return false;
+    }
+
     //add timestamped IMU data to the pipeline (thread safe)
     bool pushIMU(const ImuData&data){
 
@@ -436,10 +456,12 @@ public:
     //call with nullptr to release callback
     template <typename T>
     void setOutputCallbackMethod(T & obj,bool(T::*method)(PipeBuffer &) ){
+        std::lock_guard<std::mutex> locker(call_mutex);
         outputFunc=std::bind(method,obj,std::placeholders::_1);
     }
 
     void setOutputCallbackFunction(bool(*func)(PipeBuffer &) ){
+        std::lock_guard<std::mutex> locker(call_mutex);
         outputFunc=std::bind(func,std::placeholders::_1);
     }
 

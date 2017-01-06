@@ -89,13 +89,14 @@ public:
     static std::vector <ImuData> LoadDataSet( const char *data_file, bool comp_data,double time_scale,bool &error);
 
     bool LoadCamImuSE3(const char *se3_file);
-
+    bool LoadCamImuSE3(const TooN::Matrix<3,3> &RCam2IMU,const TooN::Vector<3> &TCam2IMU);
 
     bool PushData(const ImuData&data);
 
     std::pair <util::CircListIndexer,util::CircListIndexer> SeachByTimeStamp(double tstart,double tend);
 
     IntegratedImuData GrabAndIntegrate(double tstart,double tend);
+
 };
 
 }

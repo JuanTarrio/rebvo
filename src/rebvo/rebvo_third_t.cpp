@@ -338,8 +338,7 @@ void REBVO::ThirdThread(REBVO *cf){
 
         //******** Call callback if present *****************//
 
-        if(cf->outputFunc)
-            cf->outputFunc(pbuf);
+        cf->callCallBack(pbuf);
 
         //******** The system can optionaly take a snapshot (use for debuging purposes) ******//
 
