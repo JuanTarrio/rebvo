@@ -42,11 +42,23 @@ void PrintHelp(){
 
 }
 
+class callclass{
+public:
+
+    bool callFunc(PipeBuffer &p){
+        //do something on the timespan of the rebvo third thread
+        return true;
+    }
+};
+
+
+
 int main(int argn,char ** argv)
 {
 
     std::string ConfigName(argn>1?argv[1]:"GlobalConfig");
 
+    callclass callme;
 
 
     REBVO cf(ConfigName.data());
@@ -68,6 +80,8 @@ int main(int argn,char ** argv)
             return -1;
         }
     }
+
+    cf.setOutputCallbackMethod(callme,&callclass::callFunc);
 
     PrintHelp();
 
@@ -104,3 +118,4 @@ int main(int argn,char ** argv)
     cf.CleanUp();
     return 0;
 }
+

@@ -40,6 +40,8 @@
 #include "mtracklib/keyframe.h"
 #include "VideoLib/imugrabber.h"
 #include "VideoLib/customcam.h"
+#include <functional>
+
 
 namespace  rebvo{
 
@@ -319,7 +321,7 @@ struct PipeBuffer{
 };
 
 
-typedef bool outputCallback(PipeBuffer &data);
+//typedef bool outputCallback(PipeBuffer &data);
 
 
 class REBVO
@@ -357,7 +359,7 @@ class REBVO
 
     //output callback
 
-    std::atomic<outputCallback*> outputFunc;
+    std::function<bool(PipeBuffer &)> outputFunc;
 
 
     void pushNav(const NavData &navdat){
@@ -432,8 +434,13 @@ public:
 
     //set a callback funtion to be called on the third thread with a reference to the pipebuffer containing all the algorithm output
     //call with nullptr to release callback
-    void setOutputCallback(outputCallback* callfunc){
-        outputFunc=callfunc;
+    template <typename T>
+    void setOutputCallbackMethod(T & obj,bool(T::*method)(PipeBuffer &) ){
+        outputFunc=std::bind(method,obj,std::placeholders::_1);
+    }
+
+    void setOutputCallbackFunction(bool(*func)(PipeBuffer &) ){
+        outputFunc=std::bind(func,std::placeholders::_1);
     }
 
 	bool isInitOk() const {

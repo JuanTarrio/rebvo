@@ -174,7 +174,7 @@ std::pair <util::CircListIndexer,util::CircListIndexer> ImuGrabber::SeachByTimeS
 
     do{
         if((++inx)==write_inx)
-            return std::pair<util::CircListIndexer,util::CircListIndexer>(inx,inx); //return empty list
+            return std::pair<util::CircListIndexer,util::CircListIndexer>(inx,inx); //return empty list pointing to read_inx+1
     }while(imu[inx].tstamp<=tstart);
 
     //if here, there is more data and imu[inx].tstamp>tstart
@@ -184,7 +184,7 @@ std::pair <util::CircListIndexer,util::CircListIndexer> ImuGrabber::SeachByTimeS
 
     do{
         if((++inx)==write_inx){
-            return std::pair<util::CircListIndexer,util::CircListIndexer>(begin,begin); //return empty list
+            return std::pair<util::CircListIndexer,util::CircListIndexer>(begin,begin); //return empty list pointin to read_inx+1
         }
     }while(imu[inx].tstamp<tend);
 
@@ -237,7 +237,7 @@ IntegratedImuData ImuGrabber::GrabAndIntegrate(double tstart,       //timestamp 
 
     {
         std::lock_guard<std::mutex> locker(rw_mut);
-        read_inx=search_range.second-1;                                                         //update readed inx (release the buffer)
+        read_inx=search_range.second-1;                                                     //update readed inx (release the buffer)
     }
     return i_data;
 }
