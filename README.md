@@ -51,11 +51,15 @@ for ARM:
 make REBVOFLAGS='-mtune=cortex-a15 -mfpu=neon'
 
 
-#### Compile using NE10
+for ARM using NE10
 
-The system can use the NE10 for neon simd support. In order to use it, the
-correspondent line has to be uncommented in the arm makefile. 
+make REBVOFLAGS='-mtune=cortex-a15 -mfpu=neon -DUSE_NE10 -lNE10'
 
+#### Output
+
+Library: rebvolib/librebvolib.a
+Rebvo Launcher: app/rebvorun/rebvorun
+Visualizer: app/visualizer/visualizer
 
 ### Imu Integration
 
@@ -199,7 +203,7 @@ z,x: Increase/Decease maximum depth in top view
 
 #### Commands in the OpenGL windows
 
-w,s,a,d: Walk the view like DukeNuke3D
+w,s,a,d: Walk the view in a DukeNukem style
 arrows: Rotate the view
 
 f,r: flight
