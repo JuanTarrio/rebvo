@@ -455,12 +455,12 @@ public:
     //set a callback funtion to be called on the third thread with a reference to the pipebuffer containing all the algorithm output
     //call with nullptr to release callback
     template <typename T>
-    void setOutputCallbackMethod(T & obj,bool(T::*method)(PipeBuffer &) ){
+    void setOutputCallback(bool(T::*method)(PipeBuffer &), T * obj){
         std::lock_guard<std::mutex> locker(call_mutex);
         outputFunc=std::bind(method,obj,std::placeholders::_1);
     }
 
-    void setOutputCallbackFunction(bool(*func)(PipeBuffer &) ){
+    void setOutputCallback(bool(*func)(PipeBuffer &) ){
         std::lock_guard<std::mutex> locker(call_mutex);
         outputFunc=std::bind(func,std::placeholders::_1);
     }
