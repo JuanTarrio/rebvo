@@ -74,7 +74,7 @@
 
 &REBVO
 
-    CameraType=3                                                                        //0=V4L, 1=SimCam, 2=Dataset cam, 3= custom cam
+    CameraType=2                                                                        //0=V4L, 1=SimCam, 2=Dataset cam, 3= custom cam
 
     VideoNetHost=127.0.0.1							//Remote host to send the data
     VideoNetPort=2708									//Remote port
@@ -101,10 +101,10 @@
     TimeScale=1e-9
 
 &IMU
-    ImuMode=1                                                          //1= use the archquitecture specific class, 2=load full data from ImuFile
+    ImuMode=2                                                          //1= use the archquitecture specific class, 2=load full data from ImuFile
     ImuFile=/home/juan/Datasets/MH_03_medium/mav0/imu0/data.csv         //File containing the SE3 transformation from IMU to Camera
-    CamImuSE3File=/home/l_vis/rebvo/rebivo/app/rebvorun/se3_EuRoC.csv                                         //TimeScale of the IMU file
-    TimeScale=1 //1e-9
+    CamImuSE3File=se3_EuRoC.csv                                         //TimeScale of the IMU file
+    TimeScale=1e-9
 
     TimeDesinc=0                                                        //Time desincrozitation IMU2Cam (sec)
 

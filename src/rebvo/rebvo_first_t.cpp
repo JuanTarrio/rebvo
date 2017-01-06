@@ -132,8 +132,14 @@ void REBVO::FirstThr(REBVO *cf) {
 		}
 
 		if (cf->imu) {
-			pbuf.imu = cf->imu->GrabAndIntegrate(t0 + cf->params.TimeDesinc,
-					t + cf->params.TimeDesinc);
+            while(!cf->quit){
+                pbuf.imu = cf->imu->GrabAndIntegrate(t0 + cf->params.TimeDesinc,
+                                                     t + cf->params.TimeDesinc);
+                if(pbuf.imu.n>0)
+                    break;
+
+                std::this_thread::sleep_for(std::chrono::duration<double>(cf->params.SampleTime));  //Sleep for IMU sampl time to wait for more data
+            }
 		}
 
 		COND_TIME_DEBUG(dt=t-t0;)
