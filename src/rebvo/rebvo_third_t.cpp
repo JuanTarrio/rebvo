@@ -36,7 +36,7 @@
 
 #include "VideoLib/video_mfc.h"
 #include "VideoLib/video_mjpeg.h"
-#include "mtracklib/net_keypoint.h"
+#include "CommLib/net_keypoint.h"
 #include "CommLib/udp_port.h"
 
 
@@ -53,14 +53,9 @@ void REBVO::ThirdThread(REBVO *cf){
     /*****   Set cpu Afinity of the thread   ******/
 
     if(cf->params.cpuSetAffinity){
-        cpu_set_t cpusetp;
-
-        CPU_ZERO(&cpusetp);
-        CPU_SET(cf->params.cpu2,&cpusetp);
-        if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
-            printf("\nThird Thread: No puedo setear CPU affinity!\n");
+        if(!REBVO::setAffinity(cf->params.cpu2)){
+            std::cout <<"REBVO: Cannot set cpu affinity on the third thread";
             cf->quit=true;
-            return;
         }
     }
 

@@ -38,7 +38,7 @@
 #include "mtracklib/edge_tracker.h"
 #include "mtracklib/global_tracker.h"
 #include "mtracklib/keyframe.h"
-#include "VideoLib/imugrabber.h"
+#include "UtilLib/imugrabber.h"
 #include "VideoLib/customcam.h"
 #include <functional>
 
@@ -169,8 +169,8 @@ struct REBVOParameters{
 
     //Detector parameters
 
-    double Sigma0;                  //The 2 scales used for DoG calculation
-    double Sigma1;
+    double Sigma0;                  //The  scale and multiplier used for DoG calculation (Sigma1~Sigma0*k_sigma)
+    double KSigma;
 
     int DetectorPlaneFitSize;       //Window size for plane fitting to the DoG = (DetectorPlaneFitSize*2+1)^2
     double DetectorPosNegThresh;    //Max percentual difference for DoG nonmaximal suppresion
@@ -377,6 +377,16 @@ class REBVO
     }
 
     void construct();
+
+    VideoCam * initCamera();
+
+    static bool setAffinity(int cpu){
+        cpu_set_t cpusetp;
+
+        CPU_ZERO(&cpusetp);
+        CPU_SET(cpu, &cpusetp);
+        return pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpusetp) == 0;
+    }
 
 
 public:

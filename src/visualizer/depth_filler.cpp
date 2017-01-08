@@ -22,7 +22,7 @@
  *******************************************************************************/
 
 
-#include "mtracklib/depth_filler.h"
+#include "visualizer/depth_filler.h"
 #include <TooN/so3.h>
 
 namespace rebvo {
@@ -118,9 +118,6 @@ void depth_filler::FillEdgeData(net_keyline *kl,int kn,Point2DF p_off,double v_t
 
     }
 
-    DK=1;
-    DPose=TooN::Identity;
-    DPos=TooN::Zeros;
 
 }
 

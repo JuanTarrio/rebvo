@@ -332,7 +332,7 @@ void edge_finder::detect(sspace *ss,
                          int plane_fit_size,    //Size of window for plane fitting
                          double pos_neg_thresh, //DoG Pos-Neg max difference
                          double dog_thresh,     //DoG gradient thresh (proporcional to &tresh)
-                         int kl_max,            //Maxnimun number of KeyLines
+                         int kl_max,            //Maximun number of KeyLines
                          double &tresh,         //Current threshold
                          int &l_kl_num,         //Number of KLs on the last edgemap
                          int kl_ref,            //Requested number of KLs (for auto-thresh)

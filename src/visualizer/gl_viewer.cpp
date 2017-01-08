@@ -27,7 +27,7 @@
 #include <GL/freeglut.h>
 #include <TooN/so3.h>
 
-#include "mtracklib/gl_viewer.h"
+#include "visualizer/gl_viewer.h"
 
 namespace rebvo {
 /* attributes for a single buffered visual in RGBA format with at least
@@ -344,7 +344,7 @@ void gl_viewer::drawFiller(depth_filler *df,Image <RGB24Pixel> &img_data,bool co
 
 
     glPushMatrix();
-    STR_View(df->GetDK(),df->GetDPos(),df->GetDPose());
+    //STR_View(df->GetDK(),df->GetDPos(),df->GetDPose());
 
     if(!color_depth){
         glEnable(GL_TEXTURE_2D);
@@ -367,7 +367,7 @@ void gl_viewer::drawFiller(depth_filler *df,Image <RGB24Pixel> &img_data,bool co
 
                 float color[3];
 
-                Depth2Color(std::min(std::min(df->GetImgDist(x,y),df->GetImgDist(x+1,y)),std::min(df->GetImgDist(x,y+1),df->GetImgDist(x+1,y+1)))*df->GetDK(),color);
+                Depth2Color(std::min(std::min(df->GetImgDist(x,y),df->GetImgDist(x+1,y)),std::min(df->GetImgDist(x,y+1),df->GetImgDist(x+1,y+1))),color);
 
                 glColor3f(color[0], color[1], color[2]);
 
@@ -407,7 +407,7 @@ void gl_viewer::drawFiller(depth_filler *df,Image <RGB24Pixel> &img_data,bool co
 void gl_viewer::drawFillerMesh(depth_filler *df,float zf,Point2DF &pp,bool draw_mesh){
 
     glPushMatrix();
-    STR_View(df->GetDK(),df->GetDPos(),df->GetDPose());
+    //STR_View(df->GetDK(),df->GetDPos(),df->GetDPose());
 
     for(int y=0;y<df->s.h-1;y++){
         for(int x=0;x<df->s.w-1;x++){

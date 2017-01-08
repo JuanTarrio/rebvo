@@ -1,8 +1,8 @@
 #ifndef NET_KEYPOINT_H
 #define NET_KEYPOINT_H
 
-#include "edge_finder.h"
-#include "nav_data_defs.h"
+#include "mtracklib/edge_finder.h"
+#include "mtracklib/nav_data_defs.h"
 
 namespace  rebvo{
 

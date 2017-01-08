@@ -31,7 +31,7 @@
 #include "UtilLib/ttimer.h"
 #include "VideoLib/datasetcam.h"
 #include "mtracklib/scaleestimator.h"
-#include "mtracklib/image_undistort.h"
+#include "VideoLib/image_undistort.h"
 
 #include "VideoLib/v4lcam.h"
 #include "VideoLib/simcam.h"
@@ -41,6 +41,28 @@ using namespace std;
 namespace rebvo {
 //FirstThr() deals with the capture and detection of the edgemap and optionally with
 //Auxiliary image building.
+
+VideoCam * REBVO::initCamera(){
+    switch (params.CameraType) {
+    case 3:
+        return new customCam(cam_pipe, cam.sz, params.SimFile.data());
+        break;
+    case 2:
+        return new DataSetCam(params.DataSetDir.data(),
+                params.DataSetFile.data(), cam.sz, params.CamTimeScale,
+                params.SimFile.data());
+        break;
+    case 1:
+        return new simcam(params.SimFile.data(), cam.sz);
+        break;
+    case 0:
+    default:
+        return new v4lCam(params.CameraDevice.data(), cam.sz,
+                params.config_fps, params.SimFile.data());
+        break;
+    }
+}
+
 
 void REBVO::FirstThr(REBVO *cf) {
 
@@ -62,29 +84,10 @@ void REBVO::FirstThr(REBVO *cf) {
 
 	//***** Cam init *****
 
-	VideoCam *camara;
-
-	switch (cf->params.CameraType) {
-	case 3:
-		camara = new customCam(cf->cam_pipe, cam.sz, cf->params.SimFile.data());
-		break;
-	case 2:
-		camara = new DataSetCam(cf->params.DataSetDir.data(),
-				cf->params.DataSetFile.data(), cam.sz, cf->params.CamTimeScale,
-				cf->params.SimFile.data());
-		break;
-	case 1:
-		camara = new simcam(cf->params.SimFile.data(), cam.sz);
-		break;
-	case 0:
-	default:
-		camara = new v4lCam(cf->params.CameraDevice.data(), cam.sz,
-				cf->params.config_fps, cf->params.SimFile.data());
-		break;
-	}
+    VideoCam *camara=cf->initCamera();
 
 	if (camara->Error()) {
-		cout << "Failed to initialize the camera " << endl;
+        cout << "REBVO: Failed to initialize the main camera " << endl;
 		cf->quit = true;
 		return;
 	}
@@ -94,25 +97,13 @@ void REBVO::FirstThr(REBVO *cf) {
 	std::thread Thr1(SecondThread, cf);
 
 	if (cf->params.cpuSetAffinity) {
-		cpu_set_t cpusetp;
-
-		CPU_ZERO(&cpusetp);
-		CPU_SET(cf->params.cpu0, &cpusetp);
-		if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpusetp)
-				!= 0) {
-			printf("\nThread: Can't' set CPU affinity!\n");
-			cf->quit = true;
-		}
+        if(!REBVO::setAffinity(cf->params.cpu0)){
+            std::cout <<"REBVO: Cannot set cpu affinity on the first thread";
+            cf->quit=true;
+        }
 	}
 
 	//******* Main loop ******
-
-	if (camara->WaitFrame(false) < 0) {
-		cout << "Error en wait frame\n";
-		return;
-	}
-	data = camara->GrabBuffer(t0, false);
-	camara->ReleaseBuffer();
 
 	util::timer tproc;
 
@@ -123,7 +114,7 @@ void REBVO::FirstThr(REBVO *cf) {
 
 		//Grab frame
 		while ((data = camara->GrabBuffer(t, false)) == nullptr) {
-			if (cf->quit) {
+            if (cf->quit || camara->Error()) {
 				pbuf.quit = true; //If no more frames, release the pipeline buffer
 				cf->pipe.ReleaseBuffer(0);               //with the quit flag on
 				std::cout << "bye bye cruel world" << std::endl;

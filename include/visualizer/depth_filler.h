@@ -25,8 +25,8 @@
 #ifndef DEPTH_FILLER_H
 #define DEPTH_FILLER_H
 
-#include "edge_tracker.h"
-#include "net_keypoint.h"
+#include "mtracklib/edge_tracker.h"
+#include "CommLib/net_keypoint.h"
 
 namespace rebvo {
 
@@ -55,9 +55,6 @@ public:
 class depth_filler
 {
 
-    TooN::Matrix <3,3> DPose;
-    TooN::Vector <3> DPos;
-    double DK;
 
 
     double *pos_data_d;
@@ -78,9 +75,7 @@ public:
 
     df_point * data;
 
-    TooN::Matrix <3,3> GetDPose(){return DPose;}
-    TooN::Vector <3> GetDPos(){return DPos;}
-    double GetDK(){return DK;}
+
 
     depth_filler(const  Size2D &s_i, const u_int &scale_w, const u_int &scale_h, cam_model &cam);
     depth_filler();
@@ -105,11 +100,7 @@ public:
         float x,y;
         cam.Img2Hom<float>(x,y,histo_x*scl_w,histo_y*scl_h);
         TooN::Vector <3> P0=TooN::makeVector(x/cam.zfm,y/cam.zfm,1)/data[histo_y*s.w+histo_x].rho;
-
-        if(transform)
-            return (DPose*P0+DPos)*DK;
-        else
-            return P0;
+        return P0;
     }
 
     TooN::Vector <3> GetImg3DPos(float x,float y,bool transform=true){
@@ -140,10 +131,7 @@ public:
         cam.Img2Hom<float>(x,y,x,y);
         TooN::Vector <3> P0=TooN::makeVector(x/cam.zfm,y/cam.zfm,1)/rho;
 
-        if(transform)
-            return (DPose*P0+DPos)*DK;
-        else
-            return P0;
+        return P0;
     }
 
     double GetDist(int x,int y){

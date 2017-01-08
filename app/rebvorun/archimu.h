@@ -28,7 +28,7 @@
 #include <mutex>
 #include <atomic>
 #include "UtilLib/configurator.h"
-#include "VideoLib/imugrabber.h"
+#include "UtilLib/imugrabber.h"
 #include "rebvo/rebvo.h"
 
 #pragma pack(push,1)

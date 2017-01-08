@@ -102,7 +102,7 @@ REBVO::REBVO(const char *configFile)
     InitOK&=config.GetConfigByName("REBVO","EncoderDevice",params.encoder_dev,true);
 
     InitOK&=config.GetConfigByName("Detector","Sigma0",params.Sigma0,true);
-    InitOK&=config.GetConfigByName("Detector","Sigma1",params.Sigma1,true);
+    InitOK&=config.GetConfigByName("Detector","KSigma",params.KSigma,true);
     InitOK&=config.GetConfigByName("Detector","ReferencePoints",params.ReferencePoints,true);
     InitOK&=config.GetConfigByName("Detector","MaxPoints",params.MaxPoints,true);
     InitOK&=config.GetConfigByName("Detector","DetectorThresh",params.DetectorThresh,true);
@@ -249,7 +249,7 @@ void REBVO::construct(){
 
     for(PipeBuffer &pbuf : pipe){
 
-        pbuf.ss=new sspace(params.Sigma0,params.Sigma1,cam.sz,3);
+        pbuf.ss=new sspace(params.Sigma0,params.KSigma,cam.sz,3);
         pbuf.ef=new edge_tracker(cam,255*3);
         pbuf.gt=new global_tracker (pbuf.ef->GetCam());
         pbuf.img=new Image<float>(cam.sz);

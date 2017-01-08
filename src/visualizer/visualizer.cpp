@@ -30,8 +30,8 @@
 #include "VideoLib/video_encoder.h"
 #include "VideoLib/videodecoder.h"
 
-#include "mtracklib/gl_viewer.h"
-#include "mtracklib/depth_filler.h"
+#include "visualizer/gl_viewer.h"
+#include "visualizer/depth_filler.h"
 #include "CommLib/udp_port.h"
 
 #include <TooN/so3.h>

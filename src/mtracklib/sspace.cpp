@@ -11,11 +11,11 @@ namespace  rebvo{
 */
 
 sspace::sspace(double sigma0,
-               double sigma1,
+               double k_sigma,
                const Size2D &size,
                int bf_num)
-    :sigma0(sigma0),sigma1(sigma1),bf_n(bf_num),
-      filters{iigauss(size,sigma0,bf_num),iigauss(size,sigma1,bf_num)},
+    :bf_n(bf_num),
+      filter0(size,sigma0,bf_num),filter1(size,filter0.sigma_r*k_sigma,bf_num),
       img{Image<DetectorImgType>(size),Image<DetectorImgType>(size)},dog(size),img_dx(size),img_dy(size)
 {
 
@@ -29,8 +29,8 @@ sspace::sspace(double sigma0,
 void sspace::build(Image<DetectorImgType> &data){
 
 
-    filters[0].smooth(data,img[0]);    //calcula los filtros usando la imagen integral
-    filters[1].smooth(data,img[1]);    //calcula los filtros usando la imagen integral
+    filter0.smooth(data,img[0]);    //calcula los filtros usando la imagen integral
+    filter1.smooth(data,img[1]);    //calcula los filtros usando la imagen integral
 
     build_dog();                        //build DoG
     calc_gradient();                    //Calc gradient

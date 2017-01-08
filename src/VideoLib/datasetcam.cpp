@@ -154,6 +154,7 @@ int DataSetCam::WaitFrame(bool drop_frames){
 
     if(img_inx>=std::min(img_time.size(),img_list.size())){
         std::cout << "\nDataSetCamera: End of file list after "<<img_inx<<" Images\n";
+        error=true;
         return -1;
     }
 

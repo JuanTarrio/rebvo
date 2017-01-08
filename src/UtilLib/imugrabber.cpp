@@ -21,7 +21,7 @@
 
  *******************************************************************************/
 
-#include "VideoLib/imugrabber.h"
+#include "UtilLib/imugrabber.h"
 #include "UtilLib/configurator.h"
 #include <TooN/so3.h>
 

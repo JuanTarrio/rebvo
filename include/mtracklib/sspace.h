@@ -9,12 +9,11 @@ class sspace
 
 private:
 
-    double sigma0;
-    double sigma1;
     int bf_n;
 
 
-    iigauss filters[2];
+    iigauss filter0;
+    iigauss filter1;
 
     Image<DetectorImgType> img[2];
     Image<DetectorImgType> dog;
@@ -26,7 +25,7 @@ public:
 
 
 
-    sspace(double sigma0, double sigma1,const Size2D &size,int bf_num);
+    sspace(double sigma0, double k_sigma, const Size2D &size, int bf_num);
 
     void calc_gradient();
 

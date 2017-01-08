@@ -14,7 +14,7 @@
 
 #include "VideoLib/video_io.h"
 
-#include "net_keypoint.h"
+#include "CommLib/net_keypoint.h"
 #include "depth_filler.h"
 
 namespace rebvo {

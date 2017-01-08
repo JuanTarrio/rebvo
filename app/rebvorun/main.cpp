@@ -81,7 +81,7 @@ int main(int argn,char ** argv)
         }
     }
 
-    cf.setOutputCallbackMethod(callme,&callclass::callFunc);
+    cf.setOutputCallback(&callclass::callFunc,&callme);
 
     PrintHelp();
 

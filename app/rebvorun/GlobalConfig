@@ -7,7 +7,7 @@
 &Detector                               //The detection is based on zero crossing of the DoG
 
     Sigma0=1.7818                       //The 2 scales used for DoG calculation
-    Sigma1=2.30029                      //1.7818 2.30029 2.72174 3.56359
+    KSigma=1.2599                       //1.7818 2.30029 2.72174 3.56359
 
     ReferencePoints=6000               //Reference to the number of points when autothreshold
     MaxPoints=7000                     //Absolute maximun number of points

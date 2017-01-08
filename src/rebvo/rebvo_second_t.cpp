@@ -87,14 +87,9 @@ void  REBVO::SecondThread(REBVO *cf){
     //**** Set cpu Afinity for this thread *****
 
     if(cf->params.cpuSetAffinity){
-        cpu_set_t cpusetp;
-
-        CPU_ZERO(&cpusetp);
-        CPU_SET(cf->params.cpu1,&cpusetp);
-        if(pthread_setaffinity_np(pthread_self(),sizeof(cpu_set_t),&cpusetp)!=0){
-            printf("\nSecond Thread: No puedo setear CPU affinity!\n");
+        if(!REBVO::setAffinity(cf->params.cpu1)){
+            std::cout <<"REBVO: Cannot set cpu affinity on the second thread";
             cf->quit=true;
-            return;
         }
     }
 

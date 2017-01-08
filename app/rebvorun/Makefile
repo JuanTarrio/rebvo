@@ -295,7 +295,7 @@ compiler_clean:
 		../../include/mtracklib/global_tracker.h \
 		../../include/UtilLib/ne10wrapper.h \
 		../../include/mtracklib/keyframe.h \
-		../../include/VideoLib/imugrabber.h \
+		../../include/UtilLib/imugrabber.h \
 		../../include/VideoLib/customcam.h \
 		../../include/VideoLib/videocam.h \
 		archimu.h \
@@ -304,7 +304,7 @@ compiler_clean:
 
 ../../build/app/rebvorun/archimu.o: archimu.cpp archimu.h \
 		../../include/UtilLib/configurator.h \
-		../../include/VideoLib/imugrabber.h \
+		../../include/UtilLib/imugrabber.h \
 		../../include/UtilLib/CircList.h \
 		../../include/rebvo/rebvo.h \
 		../../include/UtilLib/pipeline.h \

@@ -276,7 +276,7 @@ compiler_clean:
 
 ../../build/app/visualizer/main.o: main.cpp ../../include/visualizer/visualizer.h \
 		../../include/VideoLib/video_io.h \
-		../../include/mtracklib/net_keypoint.h \
+		../../include/CommLib/net_keypoint.h \
 		../../include/mtracklib/edge_finder.h \
 		../../include/mtracklib/sspace.h \
 		../../include/mtracklib/iigauss.h \
@@ -296,7 +296,7 @@ compiler_clean:
 		../../include/mtracklib/global_tracker.h \
 		../../include/UtilLib/ne10wrapper.h \
 		../../include/mtracklib/keyframe.h \
-		../../include/VideoLib/imugrabber.h \
+		../../include/UtilLib/imugrabber.h \
 		../../include/VideoLib/customcam.h \
 		../../include/VideoLib/videocam.h \
 		../../include/UtilLib/configurator.h
