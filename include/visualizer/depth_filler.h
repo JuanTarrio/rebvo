@@ -36,11 +36,10 @@ public:
     bool fixed;
 
     double depth;
-    double v_depth;
 
     double rho;
-    double v_rho;
     double s_rho;
+    double I_rho;
 
     Point2DF pi;
 
@@ -75,9 +74,8 @@ public:
     depth_filler(cam_model &cam,const Size2D &blockSize);
 
     void ResetData();
-    void FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double v_thresh);
+    void FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double v_thresh,int m_num_t);
     void Integrate1Step();
-    void Integrate1StepRho();
     void Integrate(int iter_num, bool init_cf=true);
 
     void InitCoarseFine();

@@ -316,7 +316,7 @@ int visualizer::Run(){
 
     const int EMSaveNum=EdgeMapSaveNumber<1?1:EdgeMapSaveNumber;
 
-    std::vector<depth_filler> d_filler(EdgeMapSaveNumber,depth_filler(cam,{5,5}));
+    std::vector<depth_filler> d_filler(EdgeMapSaveNumber,depth_filler(cam,{10,10}));
 
     int NextEMIndex=0;
 
@@ -450,9 +450,9 @@ recv_frame_err:
             rp.nav=net_hdr->nav;
 
             d_filler[0].ResetData();
-            d_filler[0].FillEdgeData(net_kl,net_kln,{0,0},0.3);
+            d_filler[0].FillEdgeData(net_kl,net_kln,{0,0},DF_ThreshRelRho,DF_ThreshMatchNum);
             d_filler[0].InitCoarseFine();
-            d_filler[0].Integrate(10);
+            d_filler[0].Integrate(DF_IterNum);
             d_filler[0].ComputeColor(Zeros);
 
 
@@ -553,24 +553,29 @@ visualizer::visualizer(Configurator &config)
 {
 
 
-    carga&=config.GetConfigByName("DisplayFrontal","Host",Host,true);
-    carga&=config.GetConfigByName("DisplayFrontal","Port",Port,true);
+    carga&=config.GetConfigByName("Visualizer","Host",Host,true);
+    carga&=config.GetConfigByName("Visualizer","Port",Port,true);
 
-    carga&=config.GetConfigByName("DisplayFrontal","ImageWidth",ImageSize.w,true);
+    carga&=config.GetConfigByName("Visualizer","ImageWidth",ImageSize.w,true);
 
-    carga&=config.GetConfigByName("DisplayFrontal","ImageHeight",ImageSize.h,true);
+    carga&=config.GetConfigByName("Visualizer","ImageHeight",ImageSize.h,true);
 
-    carga&=config.GetConfigByName("DisplayFrontal","DepthShow",depth_show_max,true);
+    carga&=config.GetConfigByName("Visualizer","DepthShow",depth_show_max,true);
 
 
-    carga&=config.GetConfigByName("DisplayFrontal","TraySource",TraySource,true);
+    carga&=config.GetConfigByName("Visualizer","TraySource",TraySource,true);
 
-    carga&=config.GetConfigByName("DisplayFrontal","NumberOfViews",ViewNumber,true);
+    carga&=config.GetConfigByName("Visualizer","NumberOfViews",ViewNumber,true);
 
-    carga&=config.GetConfigByName("CamaraFrontal","ZfX",ZfX,true);
+    carga&=config.GetConfigByName("Camera","ZfX",ZfX,true);
 
-    carga&=config.GetConfigByName("DisplayFrontal","EdgeMapSaveNumber",EdgeMapSaveNumber,true);
-    carga&=config.GetConfigByName("DisplayFrontal","XLibView",XLibView,true);
+    carga&=config.GetConfigByName("Visualizer","EdgeMapSaveNumber",EdgeMapSaveNumber,true);
+    carga&=config.GetConfigByName("Visualizer","XLibView",XLibView,true);
+
+    carga&=config.GetConfigByName("DepthFiller","ThreshRelRho",DF_ThreshRelRho,true);
+    carga&=config.GetConfigByName("DepthFiller","ThreshMatchNum",DF_ThreshMatchNum,true);
+            carga&=config.GetConfigByName("DepthFiller","IterNum",DF_IterNum,true);
+
 
 
 }

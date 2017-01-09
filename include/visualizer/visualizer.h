@@ -84,6 +84,9 @@ private:
 
     int ViewNumber;
     int EdgeMapSaveNumber;
+    int DF_ThreshMatchNum;
+    int DF_ThreshRelRho;
+    int DF_IterNum;
 
     int XLibView;
 

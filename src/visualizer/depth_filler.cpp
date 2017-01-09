@@ -43,26 +43,26 @@ void depth_filler::ResetData(){
         data[i].fixed=false;
 
         data[i].depth=1;
-        data[i].v_depth=1e6;
         data[i].rho=1;
-        data[i].v_rho=1e6;
-
+        data[i].I_rho=0;
+        data[i].s_rho=1e10;
         data[i].visibility=true;
     }
 
 }
 
-void depth_filler::FillEdgeData(net_keyline *kl,int kn,Point2DF p_off,double v_thresh){
+void depth_filler::FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double v_thresh, int m_num_t){
 
 
     for (int ikl=0;ikl<kn;ikl++){
 
+        net_keyline &nkl=kl[ikl];
 
-        double rho=kl[ikl].rho/NET_RHO_SCALING;
-        double s_rho=kl[ikl].s_rho/NET_RHO_SCALING;
+        double kl_rho=nkl.rho/NET_RHO_SCALING;
+        double kl_s_rho=nkl.s_rho/NET_RHO_SCALING;
 
 
-        if(1/(s_rho*s_rho)<20)
+        if(kl_s_rho/kl_rho>v_thresh || nkl.m_num<m_num_t)
             continue;
 
   //      if(s_depth*rho>v_thresh)
@@ -71,22 +71,21 @@ void depth_filler::FillEdgeData(net_keyline *kl,int kn,Point2DF p_off,double v_t
      //   if(s_rho/rho>v_thresh)
      //       continue;
 
-        Point2DF p;
-        p.x=(kl[ikl].qx+p_off.x)/bl_size.w;
-        p.y=(kl[ikl].qy+p_off.y)/bl_size.h;
-        int inx=((int)p.y)*size.w+(int)p.x;
-
-        data[inx].pi.x=kl[ikl].qx+p_off.x;
-        data[inx].pi.y=kl[ikl].qy+p_off.y;
+        int inx=data.GetIndex((nkl.qx+p_off.x)/bl_size.w,(nkl.qy+p_off.y)/bl_size.h);
 
 
-        data[inx].rho=rho;
-        data[inx].s_rho=s_rho;
+        data[inx].pi.x=nkl.qx+p_off.x;
+        data[inx].pi.y=nkl.qy+p_off.y;
+
+        double i_rho=data[inx].I_rho*data[inx].rho;
+        double kl_I_rho=1/(kl_s_rho*kl_s_rho);
+        i_rho+=kl_rho*kl_I_rho;
+        data[inx].I_rho+=kl_I_rho;
+        double v_rho=data[inx].I_rho>0?1.0/data[inx].I_rho:1e20;
+        data[inx].rho=i_rho*v_rho;
+        data[inx].s_rho=sqrt(v_rho);
 
         data[inx].fixed=true;
-
-
-
 
 
     }
@@ -128,15 +127,13 @@ void depth_filler::Integrate(int iter_num,bool init_cf){
 
     for(int iter=0;iter<iter_num;iter++){
 
-        Integrate1StepRho();
+        Integrate1Step();
 
     }
 
     for(int inx=0;inx<size.w*size.h;inx++){
-        data[inx].v_rho=data[inx].s_rho*data[inx].s_rho;
-        double s_depth=data[inx].v_rho/(data[inx].rho*sqrt(3*(data[inx].rho*data[inx].rho+data[inx].v_rho*data[inx].v_rho)));
+        data[inx].I_rho=1/(data[inx].s_rho*data[inx].s_rho);
         data[inx].depth=1/data[inx].rho;
-        data[inx].v_depth=s_depth*s_depth;
 
 
     }
@@ -183,59 +180,12 @@ void depth_filler::InitCoarseFine(){
 
 void depth_filler::Integrate1Step(){
 
-    for(int y=0;y<size.h;y++){
-        for(int x=0;x<size.w;x++){
-
-            double z=0;
-            int n=0;
-
-            int inx=y*size.w+x;
-
-            if(data[inx].fixed){
-                pos_data_d[inx]=(data[inx]).depth;
-                pos_data_v[inx]=data[inx].v_depth;
-                continue;
-            }
-
-            for(int dy=-1;dy<=1;dy++){
-                for(int dx=-1;dx<=1;dx++){
-
-                    if(dx==0&&dy==0)
-                        continue;
-
-                    int p_x=x+dx;
-                    int p_y=y+dy;
-
-                    if(p_x<0 || p_x>=size.w || p_y<0 || p_y >= size.h)
-                        continue;
-
-                    z+=data[p_y*size.w+p_x].depth;
-                    n++;
-
-                }
-            }
-
-            pos_data_d[inx]=data[inx].depth=z/n;
-            pos_data_v[inx]=1e6;
-        }
-    }
-
-
-    for(int inx=0;inx<size.w*size.h;inx++){
-        data[inx].depth=pos_data_d[inx];
-        data[inx].v_depth=pos_data_v[inx];
-    }
-}
-
-
-void depth_filler::Integrate1StepRho(){
-
     double w=1.8;
 
     for(int y=0;y<size.h;y++){
         for(int x=0;x<size.w;x++){
 
-            int inx=y*size.w+x;
+            int inx=data.GetIndex(x,y);
 
             if(data[inx].fixed){
                 //pos_data_d[inx]=data[inx].rho;
@@ -259,9 +209,9 @@ void depth_filler::Integrate1StepRho(){
                         if(p_x<0 || p_x>=size.w || p_y<0 || p_y >= size.h)
                             continue;
 
-                        r+=data[p_y*size.w+p_x].rho;//data[p_y*s.w+p_x].s_rho;
-                        sr+=data[p_y*size.w+p_x].s_rho;
-                        isr+=1/data[p_y*size.w+p_x].s_rho;
+                        r+=data(p_x,p_y).rho;//data[p_y*s.w+p_x].s_rho;
+                        sr+=data(p_x,p_y).s_rho;
+                        isr+=1/data(p_x,p_y).s_rho;
                         n++;
 
                     }

@@ -46,6 +46,8 @@ int copy_net_keyline(edge_finder &from, net_keyline *to, int kl_size,double k_pr
 
         to[j].n_kl=-1;
 
+        to[j].m_num=util::clamp_uchar(kl.m_num);
+
         kl.net_id=j;
 
         j++;

@@ -21,6 +21,8 @@ struct net_keyline{
 
     short n_kl;
 
+    u_char m_num;
+
     union {
         struct {
             u_char x;
