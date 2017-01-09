@@ -25,7 +25,7 @@ struct RenderParams{
     float zf;
     Point2DF pp;
     int net_kpn;
-    depth_filler *d_filler;
+    std::vector<depth_filler*> d_filler;
     bool draw_crash_cuad;
     std::vector<TooN::Vector<3> > *pos_tray;
     TooN::Matrix<3,3> *Pose;

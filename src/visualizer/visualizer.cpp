@@ -314,12 +314,11 @@ int visualizer::Run(){
     printf("\nDisplayfrontal: Socket iniciado en %s:%d\n",Host.data(),Port);
 
 
-    const int EMSaveNum=EdgeMapSaveNumber;
+    const int EMSaveNum=EdgeMapSaveNumber<1?1:EdgeMapSaveNumber;
 
-    depth_filler *d_filler=new depth_filler[EMSaveNum];
-
+    std::vector<depth_filler*> d_filler;
     for(int i=0;i<EMSaveNum;i++)
-        d_filler[i]=depth_filler(frameSize,5,5,cam);
+        d_filler.push_back(new depth_filler(cam,{5,5}));
 
     int NextEMIndex=0;
 
@@ -452,11 +451,11 @@ recv_frame_err:
 
             rp.nav=net_hdr->nav;
 
-            d_filler[0].ResetData();
-            d_filler[0].FillEdgeData(net_kl,net_kln,{0,0},0.3);
-            d_filler[0].InitCoarseFine();
-            d_filler[0].Integrate(10);
-            d_filler[0].ComputeColor(Zeros);
+            d_filler[0]->ResetData();
+            d_filler[0]->FillEdgeData(net_kl,net_kln,{0,0},0.3);
+            d_filler[0]->InitCoarseFine();
+            d_filler[0]->Integrate(10);
+            d_filler[0]->ComputeColor(Zeros);
 
 
             rp.net_kpn=net_hdr->key_num;

@@ -26,47 +26,20 @@
 #include <TooN/so3.h>
 
 namespace rebvo {
-depth_filler::depth_filler(const  Size2D &s_i, const u_int &scale_w, const u_int &scale_h, cam_model &cam)
-    :cam_mod(&cam)
+depth_filler::depth_filler(cam_model &cam,const Size2D &blockSize)
+    :cam_mod(cam),im_size(cam.sz),bl_size(blockSize),size{im_size.w/bl_size.w,im_size.h/bl_size.h},
+      current_min_dist(1e20),pos_data_d(size),pos_data_v(size),data(size)
 {
 
-    this->s_i=s_i;
 
-    scl_w=scale_w;
-    scl_h=scale_h;
-
-    s.w=s_i.w/scl_w;
-    s.h=s_i.h/scl_h;
-
-    data=new df_point[s.w*s.h];
-    pos_data_d=new double[s.w*s.h];
-    pos_data_v=new double[s.w*s.h];
-
-
-    current_min_dist=1e20;
 
 }
 
-depth_filler::depth_filler()
-    :cam_mod(NULL)
-{
 
-    s_i.w=0;
-    s_i.h=0;
-    scl_w=0;
-    scl_h=0;
-    s.w=0;
-    s.h=0;
-    data=NULL;
-    pos_data_d=NULL;
-    pos_data_v=NULL;
-    current_min_dist=1e20;
-
-}
 
 void depth_filler::ResetData(){
 
-    for(int i=0;i<s.w*s.h;i++){
+    for(int i=0;i<size.w*size.h;i++){
         data[i].fixed=false;
 
         data[i].depth=1;
@@ -99,9 +72,9 @@ void depth_filler::FillEdgeData(net_keyline *kl,int kn,Point2DF p_off,double v_t
      //       continue;
 
         Point2DF p;
-        p.x=(kl[ikl].qx+p_off.x)/scl_w;
-        p.y=(kl[ikl].qy+p_off.y)/scl_h;
-        int inx=((int)p.y)*s.w+(int)p.x;
+        p.x=(kl[ikl].qx+p_off.x)/bl_size.w;
+        p.y=(kl[ikl].qy+p_off.y)/bl_size.h;
+        int inx=((int)p.y)*size.w+(int)p.x;
 
         data[inx].pi.x=kl[ikl].qx+p_off.x;
         data[inx].pi.y=kl[ikl].qy+p_off.y;
@@ -126,13 +99,13 @@ void depth_filler::FillEdgeData(net_keyline *kl,int kn,Point2DF p_off,double v_t
 void depth_filler::ComputeColor(TooN::Vector<3> rel_pos){
 
     current_min_dist=1e20;
-    for(int x=0;x<s.w;x++)
-        for(int y=0;y<s.h;y++){
+    for(int x=0;x<size.w;x++)
+        for(int y=0;y<size.h;y++){
             TooN::Vector <3> P=Get3DPos(x,y)-rel_pos;
 
-            data[y*s.w+x].dist=TooN::norm(P);
+            data[y*size.w+x].dist=TooN::norm(P);
 
-            util::keep_min(current_min_dist,data[y*s.w+x].dist);
+            util::keep_min(current_min_dist,data[y*size.w+x].dist);
 
         }
 }
@@ -144,7 +117,7 @@ void depth_filler::Integrate(int iter_num,bool init_cf){
         InitCoarseFine();
     }else{
 
-        for(int inx=0;inx<s.w*s.h;inx++){
+        for(int inx=0;inx<size.w*size.h;inx++){
             if(data[inx].fixed)
                 continue;
             data[inx].rho=1;
@@ -159,7 +132,7 @@ void depth_filler::Integrate(int iter_num,bool init_cf){
 
     }
 
-    for(int inx=0;inx<s.w*s.h;inx++){
+    for(int inx=0;inx<size.w*size.h;inx++){
         data[inx].v_rho=data[inx].s_rho*data[inx].s_rho;
         double s_depth=data[inx].v_rho/(data[inx].rho*sqrt(3*(data[inx].rho*data[inx].rho+data[inx].v_rho*data[inx].v_rho)));
         data[inx].depth=1/data[inx].rho;
@@ -173,17 +146,17 @@ void depth_filler::Integrate(int iter_num,bool init_cf){
 void depth_filler::InitCoarseFine(){
 
 
-    for(int size_x=s.w,size_y=s.h;size_x>1 && size_y>1;size_x/=2,size_y/=2){
+    for(int size_x=size.w,size_y=size.h;size_x>1 && size_y>1;size_x/=2,size_y/=2){
 
-        for(int x=0;x<=s.w-size_x;x+=size_x)
-            for(int y=0;y<=s.h-size_y;y+=size_y){
+        for(int x=0;x<=size.w-size_x;x+=size_x)
+            for(int y=0;y<=size.h-size_y;y+=size_y){
 
                 double mean_rho=0;
                 int n=0;
 
                 for(int dx=0;dx<size_x;dx++)
                     for(int dy=0;dy<size_y;dy++){
-                        int inx=(y+dy)*s.w+x+dx;
+                        int inx=(y+dy)*size.w+x+dx;
                         if(data[inx].fixed){
                             mean_rho+=data[inx].rho;
                             n++;
@@ -193,7 +166,7 @@ void depth_filler::InitCoarseFine(){
                     mean_rho/=n;
                     for(int dx=0;dx<size_x;dx++)
                         for(int dy=0;dy<size_y;dy++){
-                            int inx=(y+dy)*s.w+x+dx;
+                            int inx=(y+dy)*size.w+x+dx;
                             if(!data[inx].fixed){
                                 data[inx].rho=mean_rho;
                             }
@@ -210,16 +183,16 @@ void depth_filler::InitCoarseFine(){
 
 void depth_filler::Integrate1Step(){
 
-    for(int y=0;y<s.h;y++){
-        for(int x=0;x<s.w;x++){
+    for(int y=0;y<size.h;y++){
+        for(int x=0;x<size.w;x++){
 
             double z=0;
             int n=0;
 
-            int inx=y*s.w+x;
+            int inx=y*size.w+x;
 
             if(data[inx].fixed){
-                pos_data_d[inx]=data[inx].depth;
+                pos_data_d[inx]=(data[inx]).depth;
                 pos_data_v[inx]=data[inx].v_depth;
                 continue;
             }
@@ -233,10 +206,10 @@ void depth_filler::Integrate1Step(){
                     int p_x=x+dx;
                     int p_y=y+dy;
 
-                    if(p_x<0 || p_x>=s.w || p_y<0 || p_y >= s.h)
+                    if(p_x<0 || p_x>=size.w || p_y<0 || p_y >= size.h)
                         continue;
 
-                    z+=data[p_y*s.w+p_x].depth;
+                    z+=data[p_y*size.w+p_x].depth;
                     n++;
 
                 }
@@ -248,7 +221,7 @@ void depth_filler::Integrate1Step(){
     }
 
 
-    for(int inx=0;inx<s.w*s.h;inx++){
+    for(int inx=0;inx<size.w*size.h;inx++){
         data[inx].depth=pos_data_d[inx];
         data[inx].v_depth=pos_data_v[inx];
     }
@@ -259,10 +232,10 @@ void depth_filler::Integrate1StepRho(){
 
     double w=1.8;
 
-    for(int y=0;y<s.h;y++){
-        for(int x=0;x<s.w;x++){
+    for(int y=0;y<size.h;y++){
+        for(int x=0;x<size.w;x++){
 
-            int inx=y*s.w+x;
+            int inx=y*size.w+x;
 
             if(data[inx].fixed){
                 //pos_data_d[inx]=data[inx].rho;
@@ -283,12 +256,12 @@ void depth_filler::Integrate1StepRho(){
                         int p_x=x+dx;
                         int p_y=y+dy;
 
-                        if(p_x<0 || p_x>=s.w || p_y<0 || p_y >= s.h)
+                        if(p_x<0 || p_x>=size.w || p_y<0 || p_y >= size.h)
                             continue;
 
-                        r+=data[p_y*s.w+p_x].rho;//data[p_y*s.w+p_x].s_rho;
-                        sr+=data[p_y*s.w+p_x].s_rho;
-                        isr+=1/data[p_y*s.w+p_x].s_rho;
+                        r+=data[p_y*size.w+p_x].rho;//data[p_y*s.w+p_x].s_rho;
+                        sr+=data[p_y*size.w+p_x].s_rho;
+                        isr+=1/data[p_y*size.w+p_x].s_rho;
                         n++;
 
                     }

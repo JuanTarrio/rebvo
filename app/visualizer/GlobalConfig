@@ -18,7 +18,7 @@
     TraySource=1                //0=Network, 1=Radio
     NumberOfViews=1		//Number of OpenGL 3D views
     XLibView=1			//Use XLib display?S
-    EdgeMapSaveNumber=5
+    EdgeMapSaveNumber=1
 
 
 

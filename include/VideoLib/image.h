@@ -7,6 +7,7 @@
 
 #include "VideoLib/common_types.h"
 #include "VideoLib/video_io.h"
+#include <iostream>
 namespace  rebvo{
 //****** Simple class to manage generic 2D images, without the mayor libraries *******//
 
@@ -18,25 +19,36 @@ protected:
     const Size2D size={0,0};    //Img size
     const uint bsize=0;         //Data size
     DataType *data=nullptr;     //Plain data
-    bool data_owned=false;      //Flag to determine is the data is detroyed with the object
+    int *data_owned=nullptr;      //Reference conunter to determine is the data is detroyed with the object
 public:
 
+    Image() = delete ;
     Image(const Size2D &i_size)                      //Initilization from frame, data owned
         : size(i_size),bsize(i_size.w*i_size.h),
-          data(new DataType[i_size.w*i_size.h]),data_owned(true){}
+          data(new DataType[i_size.w*i_size.h]),data_owned(new int(1)){}
 
     Image(DataType* i_data,const Size2D &i_size)     //Inialization from data, not owned
         : size(i_size),bsize(i_size.w*i_size.h),
-          data(i_data),data_owned(false){}
+          data(i_data),data_owned(new int(2)){}
 
-    Image(const Image &img)                      //Initilization from other image, data not owned
+    Image(const Image &img)                      //Initilization from other image, increment ref ptr
         : size(img.size),bsize(img.bsize),
-          data(img.data),data_owned(false){}
+          data(img.data),data_owned(img.data_owned){
+        (*data_owned)++;
+    }
 
 
     ~Image(){
-        if(data_owned && data!=nullptr)
-            delete [] data;
+        if(data_owned){
+            --(*data_owned);
+
+            if((*data_owned)<0)
+                std::cout<<"FuckImage 1\n";
+            if((*data_owned)==0 && data!=nullptr){
+                delete data_owned;
+                delete [] data;
+            }
+        }
     }
 
     void SetOwn(bool isOwn){data_owned=isOwn;}

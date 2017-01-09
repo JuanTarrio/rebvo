@@ -351,16 +351,16 @@ void gl_viewer::drawFiller(depth_filler *df,Image <RGB24Pixel> &img_data,bool co
         LoadTexture(img_data);
     }
 
-    for(int y=0;y<=df->s_i.h-df->scl_h;y+=df->scl_h){
-        for(int x=0;x<=df->s_i.w-df->scl_w;x+=df->scl_w){
+    for(int y=0;y<=df->imageSize().h-df->blockSize().h;y+=df->blockSize().h){
+        for(int x=0;x<=df->imageSize().w-df->blockSize().w;x+=df->blockSize().w){
 
             if(!df->IsImgVisible(x,y))
                 continue;
 
             TooN::Vector <3> P00=df->GetImg3DPos(x,y);
-            TooN::Vector <3> P10=df->GetImg3DPos(x,y+df->scl_h);
-            TooN::Vector <3> P01=df->GetImg3DPos(x+df->scl_w,y);
-            TooN::Vector <3> P11=df->GetImg3DPos(x+df->scl_w,y+df->scl_h);
+            TooN::Vector <3> P10=df->GetImg3DPos(x,y+df->blockSize().h);
+            TooN::Vector <3> P01=df->GetImg3DPos(x+df->blockSize().w,y);
+            TooN::Vector <3> P11=df->GetImg3DPos(x+df->blockSize().w,y+df->blockSize().h);
 
 
             if(color_depth){
@@ -381,11 +381,11 @@ void gl_viewer::drawFiller(depth_filler *df,Image <RGB24Pixel> &img_data,bool co
 
             glTexCoord2f((float)x/(float)img_data.Size().w,(float)y/(float)img_data.Size().h);
             glVertex3f(P00[0], P00[1], P00[2]);
-            glTexCoord2f((float)(x+df->scl_w)/(float)img_data.Size().w,(float)y/(float)img_data.Size().h);
+            glTexCoord2f((float)(x+df->blockSize().w)/(float)img_data.Size().w,(float)y/(float)img_data.Size().h);
             glVertex3f(P01[0], P01[1], P01[2]);
-            glTexCoord2f((float)(x+df->scl_w)/(float)img_data.Size().w,(float)(y+df->scl_h)/(float)img_data.Size().h);
+            glTexCoord2f((float)(x+df->blockSize().w)/(float)img_data.Size().w,(float)(y+df->blockSize().h)/(float)img_data.Size().h);
             glVertex3f(P11[0], P11[1], P11[2]);
-            glTexCoord2f((float)x/(float)img_data.Size().w,(float)(y+df->scl_h)/(float)img_data.Size().h);
+            glTexCoord2f((float)x/(float)img_data.Size().w,(float)(y+df->blockSize().h)/(float)img_data.Size().h);
             glVertex3f(P10[0], P10[1], P10[2]);
 
             glEnd();
@@ -409,23 +409,23 @@ void gl_viewer::drawFillerMesh(depth_filler *df,float zf,Point2DF &pp,bool draw_
     glPushMatrix();
     //STR_View(df->GetDK(),df->GetDPos(),df->GetDPose());
 
-    for(int y=0;y<df->s.h-1;y++){
-        for(int x=0;x<df->s.w-1;x++){
+    for(int y=0;y<df->gridSize().h-1;y++){
+        for(int x=0;x<df->gridSize().w-1;x++){
 
-            int inx=y*df->s.w+x;
+            int inx=y*df->gridSize().w+x;
 
-            if(!df->data[inx].visibility && !df->data[inx+1].visibility && !df->data[inx+df->s.w+1].visibility && !df->data[inx+df->s.w].visibility)
+            if(!df->data[inx].visibility && !df->data[inx+1].visibility && !df->data[inx+df->gridSize().w+1].visibility && !df->data[inx+df->gridSize().w].visibility)
                 continue;
 
             double z0=df->data[inx].depth;
             double z1=df->data[inx+1].depth;
-            double z2=df->data[inx+df->s.w+1].depth;
-            double z3=df->data[inx+df->s.w].depth;
+            double z2=df->data[inx+df->gridSize().w+1].depth;
+            double z3=df->data[inx+df->gridSize().w].depth;
 
-            double ix0=((x+0.5)*df->scl_w-(double)pp.x)/zf;
-            double iy0=((y+0.5)*df->scl_h-(double)pp.y)/zf;
-            double ix1=((x+1+0.5)*df->scl_w-(double)pp.x)/zf;
-            double iy1=((y+1+0.5)*df->scl_h-(double)pp.y)/zf;
+            double ix0=((x+0.5)*df->blockSize().w-(double)pp.x)/zf;
+            double iy0=((y+0.5)*df->blockSize().h-(double)pp.y)/zf;
+            double ix1=((x+1+0.5)*df->blockSize().w-(double)pp.x)/zf;
+            double iy1=((y+1+0.5)*df->blockSize().h-(double)pp.y)/zf;
 
 
             float color[3];
@@ -887,8 +887,8 @@ void gl_viewer::renderGL(RenderParams &rp)
     }
 
      if(RenderSurface>0)
-         for(int i=0;i<rp.total_em;i++){
-             drawFiller(&rp.d_filler[i],*rp.img_data,RenderSurface==2);
+         for(int i=0;i<(rp.d_filler).size();i++){
+             drawFiller((rp.d_filler[i]),*rp.img_data,RenderSurface==2);
          }
 
 //    drawSiftKeyPoints(rp.net_kp,rp.net_kpn,rp.zf,rp.pp);
@@ -901,7 +901,7 @@ void gl_viewer::renderGL(RenderParams &rp)
     switch(RenderCuad){
     case 1:
         //drawQuads(rp.c_det->V,rp.em_comp[rp.current_em].GetGEst()/20,rp.c_det->time2impact,rp.draw_crash_cuad);
-        drawQuadsR(rp.ref_err,(TooN::Vector<3>)rp.nav.G/20,rp.d_filler->GetMinDist(),rp.draw_crash_cuad);
+        drawQuadsR(rp.ref_err,(TooN::Vector<3>)rp.nav.G/20,(rp.d_filler).size()>0?(rp.d_filler[0])->GetMinDist():1e10,rp.draw_crash_cuad);
         break;
     case 2:
         drawCamera(0,0,0,0.05);
