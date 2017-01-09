@@ -8,7 +8,10 @@
 #include "VideoLib/common_types.h"
 #include "VideoLib/video_io.h"
 #include <iostream>
+#include <cstring>
+
 namespace  rebvo{
+
 //****** Simple class to manage generic 2D images, without the mayor libraries *******//
 
 //#define SAFE_IMAGE_ACCESS         //Flag to check for index errors
@@ -16,42 +19,54 @@ namespace  rebvo{
 template <typename DataType>
 class Image{
 protected:
-    const Size2D size={0,0};    //Img size
-    const uint bsize=0;         //Data size
+    Size2D size={0,0};    //Img size
+    uint bsize=0;         //Data size
     DataType *data=nullptr;     //Plain data
-    int *data_owned=nullptr;      //Reference conunter to determine is the data is detroyed with the object
+    bool data_owned=false;
 public:
+    Image(){}
 
-    Image() = delete ;
-    Image(const Size2D &i_size)                      //Initilization from frame, data owned
+    Image(const Size2D &i_size)                      //Initilization from frame
         : size(i_size),bsize(i_size.w*i_size.h),
-          data(new DataType[i_size.w*i_size.h]),data_owned(new int(1)){}
+          data(new DataType[i_size.w*i_size.h]),
+          data_owned(true){}
 
-    Image(DataType* i_data,const Size2D &i_size)     //Inialization from data, not owned
+    Image(DataType* i_data,const Size2D &i_size)     //Inialization from data, not copy
         : size(i_size),bsize(i_size.w*i_size.h),
-          data(i_data),data_owned(new int(2)){}
+          data(i_data),
+          data_owned(false){}
 
-    Image(const Image &img)                      //Initilization from other image, increment ref ptr
+    Image(const Image &img)                      //Copy Initilization from other image
         : size(img.size),bsize(img.bsize),
-          data(img.data),data_owned(img.data_owned){
-        (*data_owned)++;
+          data(new DataType[size.w*size.h]),
+          data_owned(true){
+        std::memcpy(data,img.data,bsize*sizeof(DataType));
+    }
+
+    Image(Image &&img)                      //Move initilization from other image
+        : size(img.size),bsize(img.bsize),
+          data(img.data),
+          data_owned(img.data_owned){
+
+        img.data_owned=false;                     //prevent thte other image to delete data on destroy
     }
 
 
     ~Image(){
-        if(data_owned){
-            --(*data_owned);
-
-            if((*data_owned)<0)
-                std::cout<<"FuckImage 1\n";
-            if((*data_owned)==0 && data!=nullptr){
-                delete data_owned;
-                delete [] data;
-            }
-        }
+        if(data_owned && data)
+            delete [] data;
     }
 
-    void SetOwn(bool isOwn){data_owned=isOwn;}
+    void resize(const Size2D &sz){
+        if(sz.h==size.h && sz.w==size.w)    //if size are equal, return
+            return;
+        size=sz;
+        bsize=size.w*size.h;
+        if(data)
+            delete []data;
+        data=new DataType[bsize];
+
+    }
 
 
 
@@ -105,29 +120,37 @@ public:
     //data copy
     Image<DataType> & operator = (const Image<DataType> &img){
 
-        if(&img==this)
-            return *this;
+        resize(img.size);
 
-        if(img.size.h!=size.h || img.size.w!=size.w || img.bsize!=bsize)
-            throw std::length_error("Error on copy image, must be the same size!");
-
-        memcpy(data,img.data,bsize*sizeof(DataType));
+        std::memcpy(data,img.data,bsize*sizeof(DataType));
         return *this;
 
     }
 
+    //data copy
+    Image<DataType> & operator = ( Image<DataType> &&img){
+        size=img.size;
+        bsize=img.bSize();
+        if(data)
+            delete [] data;
+        data=img.data;
+        data_owned=img.data_owned;
+        img.data_owned=false;           //data is no longer owned by img
+        return *this;
+    }
+
     Image<DataType> & operator = (DataType *img){
-        memcpy(data,img,bsize*sizeof(DataType));
+        std::memcpy(data,img,bsize*sizeof(DataType));
         return *this;
     }
 
     void copyTo (DataType *img){
-        memcpy(img,data,bsize*sizeof(DataType));
+        std::memcpy(img,data,bsize*sizeof(DataType));
         return;
     }
 
     void copyFrom (DataType *img){
-        memcpy(data,img,bsize*sizeof(DataType));
+        std::memcpy(data,img,bsize*sizeof(DataType));
         return;
     }
 

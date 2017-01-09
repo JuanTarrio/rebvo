@@ -10,9 +10,10 @@ public:
     double sigma;		    //sigma objetivo
     double sigma_r;		    //sigma obtenido
     int *box_d;			    //ancho de cada filtro caja
-    Image<DetectorImgType> **div;	//los divisores para cada filtro
+    Image<DetectorImgType> *div;	//los divisores para cada filtro
 
     iigauss(const Size2D &size,double sigma,int box_num);
+    ~iigauss();
 
     void smooth(Image<DetectorImgType>& in, Image<DetectorImgType>& out);
     void iismooth(Image<DetectorImgType>& iimg,Image<DetectorImgType>& out);

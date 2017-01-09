@@ -209,7 +209,7 @@ void edge_finder::build_mask(sspace *ss,        //State space containing image d
 
 inline int NextPoint(const int &x, const int &y,    //Keyline coordinate
                      const Point2DF &m,             //KeyLine grad
-                     Image<int>img_mask)            //Keyline Image Mask
+                     Image<int>&img_mask)            //Keyline Image Mask
 {
     const auto tx=-m.y;
     const auto ty=m.x;  //KL Tangent Direction

@@ -25,7 +25,7 @@ struct RenderParams{
     float zf;
     Point2DF pp;
     int net_kpn;
-    std::vector<depth_filler*> d_filler;
+    std::vector<depth_filler> *d_filler;
     bool draw_crash_cuad;
     std::vector<TooN::Vector<3> > *pos_tray;
     TooN::Matrix<3,3> *Pose;
@@ -124,8 +124,8 @@ public:
     bool glDrawLoop(RenderParams &rp, bool ReRender);
 
     void drawKeyLines(net_keyline **net_kl, int *net_kln, int net_klistn, float zf, Point2DF &pp, bool tresh,bool DrawSigma);
-    void drawFiller(depth_filler *df, Image <RGB24Pixel> &img_data, bool color_depth);
-    void drawFillerMesh(depth_filler *df, float zf, Point2DF &pp, bool draw_mesh);
+    void drawFiller(depth_filler &df, Image <RGB24Pixel> &img_data, bool color_depth);
+    void drawFillerMesh(depth_filler &df, float zf, Point2DF &pp, bool draw_mesh);
     void resetView();
     void translateView(float x,float y,float z);
     void rotateViewX(float a);

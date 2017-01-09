@@ -73,11 +73,17 @@ iigauss::iigauss(const Size2D &size, double sigma, int box_num)
     /* std::cout << "wl = " << wl << " m = " << m << " n = " << box_num << "s = " << sigma << " sr = " << sigma_r \
         << " %e = "<< fabs(sigma_r-sigma)/sigma*100 << std::endl;*/
 
-    div=new Image<DetectorImgType>*[box_n];	  //Cada tamaño de filtro requiere un cierto conjunto de divisores (ver average()...)
+    div=new Image<DetectorImgType>[box_n];	  //Cada tamaño de filtro requiere un cierto conjunto de divisores (ver average()...)
     for(int i=0;i<box_n;i++){
-        div[i]=new Image<DetectorImgType>(size);
-        build_average(box_d[i],*div[i]); //lo calculo para cada tamaño
+        div[i]=Image<DetectorImgType>(size);
+        build_average(box_d[i],div[i]); //lo calculo para cada tamaño
     }
+}
+
+iigauss::~iigauss(){
+    if (div)
+        delete [] div;
+
 }
 
 // smooth() realiza el filtrado propiamente dicho, aplicando sucesivamente los filtros de caja
@@ -87,11 +93,11 @@ void iigauss::smooth(Image<DetectorImgType> &in, Image<DetectorImgType> &out){
     load(in);						//genera la primera imagen integral
 
     for(int i=0;i<box_n-1;i++){
-        average(out,img_data,box_d[i],*div[i]);		//filtro de caja
+        average(out,img_data,box_d[i],div[i]);		//filtro de caja
         load(out);					//regenera la imagen integral
     }
 
-    average(out,img_data,box_d[box_n-1],*div[box_n-1]);	//ultimo filtrado
+    average(out,img_data,box_d[box_n-1],div[box_n-1]);	//ultimo filtrado
 }
 
 // Esta funcion es igual a smooth() salvo que toma como dato la primera imagen integral,
@@ -100,14 +106,14 @@ void iigauss::smooth(Image<DetectorImgType> &in, Image<DetectorImgType> &out){
 void iigauss::iismooth(Image<DetectorImgType>& iimg,Image<DetectorImgType>& out){
 
 
-    average(out,iimg,box_d[0],*div[0]);
+    average(out,iimg,box_d[0],div[0]);
     load(out);
 
     for(int i=1;i<box_n-1;i++){
-        average(out,img_data,box_d[i],*div[i]);
+        average(out,img_data,box_d[i],div[i]);
         load(out);
     }
 
-    average(out,img_data,box_d[box_n-1],*div[box_n-1]);
+    average(out,img_data,box_d[box_n-1],div[box_n-1]);
 }
 }

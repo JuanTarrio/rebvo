@@ -316,9 +316,7 @@ int visualizer::Run(){
 
     const int EMSaveNum=EdgeMapSaveNumber<1?1:EdgeMapSaveNumber;
 
-    std::vector<depth_filler*> d_filler;
-    for(int i=0;i<EMSaveNum;i++)
-        d_filler.push_back(new depth_filler(cam,{5,5}));
+    std::vector<depth_filler> d_filler(EdgeMapSaveNumber,depth_filler(cam,{5,5}));
 
     int NextEMIndex=0;
 
@@ -347,7 +345,7 @@ int visualizer::Run(){
     rp.pp.y=ImageSize.h/2;
 
     rp.net_kpn=0;
-    rp.d_filler=d_filler;
+    rp.d_filler=&d_filler;
     rp.pos_tray=&pos_tray;
     rp.Pose=&Pose;
     rp.current_em=NextEMIndex;
@@ -451,11 +449,11 @@ recv_frame_err:
 
             rp.nav=net_hdr->nav;
 
-            d_filler[0]->ResetData();
-            d_filler[0]->FillEdgeData(net_kl,net_kln,{0,0},0.3);
-            d_filler[0]->InitCoarseFine();
-            d_filler[0]->Integrate(10);
-            d_filler[0]->ComputeColor(Zeros);
+            d_filler[0].ResetData();
+            d_filler[0].FillEdgeData(net_kl,net_kln,{0,0},0.3);
+            d_filler[0].InitCoarseFine();
+            d_filler[0].Integrate(10);
+            d_filler[0].ComputeColor(Zeros);
 
 
             rp.net_kpn=net_hdr->key_num;

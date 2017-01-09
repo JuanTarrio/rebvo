@@ -36,6 +36,7 @@
 #include "UtilLib/configurator.h"
 
 
+int total=0;
 
 using namespace std;
 namespace  rebvo{
