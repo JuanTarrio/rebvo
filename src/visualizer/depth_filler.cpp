@@ -21,7 +21,6 @@
 
  *******************************************************************************/
 
-
 #include "visualizer/depth_filler.h"
 #include <TooN/so3.h>
 
@@ -31,7 +30,7 @@ depth_filler::depth_filler(cam_model &cam,const Size2D &blockSize)
       current_min_dist(1e20),pos_data_d(size),pos_data_v(size),data(size)
 {
 
-
+    ResetData();
 
 }
 
@@ -47,10 +46,13 @@ void depth_filler::ResetData(){
         data[i].I_rho=0;
         data[i].s_rho=1e10;
         data[i].visibility=true;
+        data[i].father=this;
     }
 
 }
 
+
+//Fill edge data using net_keyline structure
 void depth_filler::FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double v_thresh, int m_num_t){
 
 
@@ -74,8 +76,6 @@ void depth_filler::FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double 
         int inx=data.GetIndex((nkl.qx+p_off.x)/bl_size.w,(nkl.qy+p_off.y)/bl_size.h);
 
 
-        data[inx].pi.x=nkl.qx+p_off.x;
-        data[inx].pi.y=nkl.qy+p_off.y;
 
         double i_rho=data[inx].I_rho*data[inx].rho;
         double kl_I_rho=1/(kl_s_rho*kl_s_rho);
@@ -93,14 +93,62 @@ void depth_filler::FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double 
 
 }
 
+//fill edge data directly from edge tracker list
+/**
+ * @brief depth_filler::FillEdgeData
+ * @param et keyline list
+ * @param v_thresh threshold on relative error
+ * @param m_num_t threshold on matched num
+ */
+void depth_filler::FillEdgeData(edge_tracker&et,
+                                double v_thresh,
+                                int m_num_t)
+{
 
 
-void depth_filler::ComputeColor(TooN::Vector<3> rel_pos){
+    for ( KeyLine &kl:et){
+
+
+        if(kl.s_rho/kl.rho>v_thresh || kl.m_num<m_num_t)
+            continue;
+
+
+
+        int inx=data.GetIndex((kl.c_p.x)/bl_size.w,(kl.c_p.y)/bl_size.h);
+
+
+        double i_rho=data[inx].I_rho*data[inx].rho;     //block information vector
+
+        double kl_I_rho=1/(kl.s_rho*kl.s_rho);          //KL information matrix
+
+        i_rho+=kl.rho*kl_I_rho;                         //Inforamtion update
+        data[inx].I_rho+=kl_I_rho;
+
+        double v_rho=data[inx].I_rho>0?1.0/data[inx].I_rho:1e20;
+        data[inx].rho=i_rho*v_rho;
+        data[inx].s_rho=sqrt(v_rho);
+
+        data[inx].fixed=true;
+
+
+    }
+
+
+}
+
+
+
+/**
+ * @brief depth_filler::ComputeColor
+ * @param rel_pos
+ */
+
+void depth_filler::computeDistance(TooN::Vector<3> rel_pos){
 
     current_min_dist=1e20;
     for(int x=0;x<size.w;x++)
         for(int y=0;y<size.h;y++){
-            TooN::Vector <3> P=Get3DPos(x,y)-rel_pos;
+            TooN::Vector <3> P=get3DPos(x,y)-rel_pos;
 
             data[y*size.w+x].dist=TooN::norm(P);
 
@@ -109,6 +157,24 @@ void depth_filler::ComputeColor(TooN::Vector<3> rel_pos){
         }
 }
 
+/**
+ * @brief depth_filler::ResetVisibility reset visibility on every block
+
+*/
+
+
+void depth_filler::ResetVisibility()
+{
+    for(int i=0;i<size.w*size.h;i++){
+        data[i].visibility=true;
+    }
+}
+
+/**
+ * @brief depth_filler::Integrate
+ * @param iter_num
+ * @param init_cf
+ */
 
 void depth_filler::Integrate(int iter_num,bool init_cf){
 
@@ -149,6 +215,7 @@ void depth_filler::InitCoarseFine(){
             for(int y=0;y<=size.h-size_y;y+=size_y){
 
                 double mean_rho=0;
+                double mean_srho=0;
                 int n=0;
 
                 for(int dx=0;dx<size_x;dx++)
@@ -156,16 +223,20 @@ void depth_filler::InitCoarseFine(){
                         int inx=(y+dy)*size.w+x+dx;
                         if(data[inx].fixed){
                             mean_rho+=data[inx].rho;
+                            //mean_srho+=data[inx].s_rho;
+                            util::keep_max(mean_srho,data[inx].s_rho);
                             n++;
                         }
                     }
                 if(n>0){
                     mean_rho/=n;
+                    //mean_srho/=n;
                     for(int dx=0;dx<size_x;dx++)
                         for(int dy=0;dy<size_y;dy++){
                             int inx=(y+dy)*size.w+x+dx;
                             if(!data[inx].fixed){
                                 data[inx].rho=mean_rho;
+                                data[inx].s_rho=mean_srho;
                             }
                         }
                 }
@@ -177,10 +248,14 @@ void depth_filler::InitCoarseFine(){
 }
 
 
+/**
+ * @brief depth_filler::Integrate1Step
+ *
+ */
 
 void depth_filler::Integrate1Step(){
 
-    double w=1.8;
+    double w=1;//1.8;
 
     for(int y=0;y<size.h;y++){
         for(int x=0;x<size.w;x++){
@@ -220,10 +295,7 @@ void depth_filler::Integrate1Step(){
                 data[inx].rho=(1-w)*data[inx].rho+w*r/n;
                 data[inx].s_rho=sr/n;
 
-                if(data[inx].rho){
-                    data[inx].rho=r/n;
-                    //printf("r%f %f ",data[inx].rho,r/n);
-                }
+
 
             }
         }

@@ -1,0 +1,12 @@
+//KF Line Viewer Configuration File
+//& beginning sentences denote sections
+
+&KFVisualizer
+NumberOfViews=1
+
+
+&DepthFiller
+    PixelBlockSize=5
+    ThreshMatchNum=5
+    ThreshRelRho=1
+    IterNum=10

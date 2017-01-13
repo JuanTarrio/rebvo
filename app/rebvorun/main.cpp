@@ -36,7 +36,7 @@ void PrintHelp(){
                REBVO Commands:
                q: Quit
                r: Reset
-               s: Start Save Video
+               s: Save KF and Quit
                p: Take Snapshot
                )help";
 
@@ -86,6 +86,7 @@ int main(int argn,char ** argv)
     PrintHelp();
 
     bool run=true;
+    bool savekf=false;
     while(run && cf.Running()){
 
 
@@ -98,13 +99,18 @@ int main(int argn,char ** argv)
             std::cout << "\nExiting ...\n";
             break;
         case 's':
-            cf.StartSimSave();
+            run=false;
+            savekf=true;
+            std::cout << "\nExiting ...\n";
             break;
         case 'p':
             cf.TakeSnapshot();
             break;
         case 'r':
             cf.Reset();
+            break;
+        case 'k':
+            cf.toggleKeyFrames();
             break;
         default:
             PrintHelp();
@@ -114,6 +120,9 @@ int main(int argn,char ** argv)
 
     }
 
+    if(savekf){
+        std::cout <<"Saving KF: "<<(keyframe::saveKeyframes2File("kf_list.kf",cf.kf_list)?"OK":"Error")<<"\n";
+    }
 
     cf.CleanUp();
     return 0;

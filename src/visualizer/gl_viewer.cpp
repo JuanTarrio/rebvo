@@ -340,16 +340,18 @@ void gl_viewer::LoadTexture(Image <RGB24Pixel> &img_data){
 }
 
 
-void gl_viewer::drawFiller(depth_filler &df,Image <RGB24Pixel> &img_data,bool color_depth){
+void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, double scale){
 
 
     glPushMatrix();
     //STR_View(df.GetDK(),df.GetDPos(),df.GetDPose());
 
-    if(!color_depth){
+    if(img_data){
         glEnable(GL_TEXTURE_2D);
-        LoadTexture(img_data);
+        LoadTexture(*img_data);
     }
+
+    glBegin(GL_QUADS);
 
     for(int y=0;y<=df.imageSize().h-df.blockSize().h;y+=df.blockSize().h){
         for(int x=0;x<=df.imageSize().w-df.blockSize().w;x+=df.blockSize().w){
@@ -357,121 +359,130 @@ void gl_viewer::drawFiller(depth_filler &df,Image <RGB24Pixel> &img_data,bool co
             if(!df.IsImgVisible(x,y))
                 continue;
 
-            TooN::Vector <3> P00=df.GetImg3DPos(x,y);
-            TooN::Vector <3> P10=df.GetImg3DPos(x,y+df.blockSize().h);
-            TooN::Vector <3> P01=df.GetImg3DPos(x+df.blockSize().w,y);
-            TooN::Vector <3> P11=df.GetImg3DPos(x+df.blockSize().w,y+df.blockSize().h);
+            TooN::Vector <3> P00=df.getImg3DPos(x,y);
+            TooN::Vector <3> P10=df.getImg3DPos(x,y+df.blockSize().h);
+            TooN::Vector <3> P01=df.getImg3DPos(x+df.blockSize().w,y);
+            TooN::Vector <3> P11=df.getImg3DPos(x+df.blockSize().w,y+df.blockSize().h);
 
 
-            if(color_depth){
+            if(img_data){
 
-                float color[3];
+                glColor3f(1.0, 1.0, 1.0);
 
-                Depth2Color(std::min(std::min(df.GetImgDist(x,y),df.GetImgDist(x+1,y)),std::min(df.GetImgDist(x,y+1),df.GetImgDist(x+1,y+1))),color);
 
-                glColor3f(color[0], color[1], color[2]);
+                glTexCoord2f((float)x/(float)img_data->Size().w,(float)y/(float)img_data->Size().h);
+                glVertex3f(P00[0], P00[1], P00[2]);
+                glTexCoord2f((float)(x+df.blockSize().w)/(float)img_data->Size().w,(float)y/(float)img_data->Size().h);
+                glVertex3f(P01[0], P01[1], P01[2]);
+                glTexCoord2f((float)(x+df.blockSize().w)/(float)img_data->Size().w,(float)(y+df.blockSize().h)/(float)img_data->Size().h);
+                glVertex3f(P11[0], P11[1], P11[2]);
+                glTexCoord2f((float)x/(float)img_data->Size().w,(float)(y+df.blockSize().h)/(float)img_data->Size().h);
+                glVertex3f(P10[0], P10[1], P10[2]);
+
 
             }else{
 
-                glColor3f(1.0, 1.0, 1.0);
+                float color[3];
+
+                Depth2Color(std::min(std::min(df.GetImgDist(x,y),df.GetImgDist(x+1,y)),std::min(df.GetImgDist(x,y+1),df.GetImgDist(x+1,y+1)))*scale,color);
+
+                glColor3f(color[0], color[1], color[2]);
+                glVertex3f(P00[0], P00[1], P00[2]);
+                glVertex3f(P01[0], P01[1], P01[2]);
+                glVertex3f(P11[0], P11[1], P11[2]);
+                glVertex3f(P10[0], P10[1], P10[2]);
+
             }
 
 
-            glBegin(GL_QUADS);
 
-            glTexCoord2f((float)x/(float)img_data.Size().w,(float)y/(float)img_data.Size().h);
-            glVertex3f(P00[0], P00[1], P00[2]);
-            glTexCoord2f((float)(x+df.blockSize().w)/(float)img_data.Size().w,(float)y/(float)img_data.Size().h);
-            glVertex3f(P01[0], P01[1], P01[2]);
-            glTexCoord2f((float)(x+df.blockSize().w)/(float)img_data.Size().w,(float)(y+df.blockSize().h)/(float)img_data.Size().h);
-            glVertex3f(P11[0], P11[1], P11[2]);
-            glTexCoord2f((float)x/(float)img_data.Size().w,(float)(y+df.blockSize().h)/(float)img_data.Size().h);
-            glVertex3f(P10[0], P10[1], P10[2]);
-
-            glEnd();
 
 
 
         }
     }
 
-    if(!color_depth){
+
+    glEnd();
+
+    if(img_data){
         glDisable(GL_TEXTURE_2D);
-        LoadTexture(img_data);
+        LoadTexture(*img_data);
     }
     glPopMatrix();
     
 }
 
 
-void gl_viewer::drawFillerMesh(depth_filler &df,float zf,Point2DF &pp,bool draw_mesh){
-
-    glPushMatrix();
-    //STR_View(df.GetDK(),df.GetDPos(),df.GetDPose());
-
-    for(int y=0;y<df.gridSize().h-1;y++){
-        for(int x=0;x<df.gridSize().w-1;x++){
-
-            int inx=y*df.gridSize().w+x;
-
-            if(!df.data[inx].visibility && !df.data[inx+1].visibility && !df.data[inx+df.gridSize().w+1].visibility && !df.data[inx+df.gridSize().w].visibility)
-                continue;
-
-            double z0=df.data[inx].depth;
-            double z1=df.data[inx+1].depth;
-            double z2=df.data[inx+df.gridSize().w+1].depth;
-            double z3=df.data[inx+df.gridSize().w].depth;
-
-            double ix0=((x+0.5)*df.blockSize().w-(double)pp.x)/zf;
-            double iy0=((y+0.5)*df.blockSize().h-(double)pp.y)/zf;
-            double ix1=((x+1+0.5)*df.blockSize().w-(double)pp.x)/zf;
-            double iy1=((y+1+0.5)*df.blockSize().h-(double)pp.y)/zf;
+void gl_viewer::drawFillerUnc(depth_filler &df, cam_model &cam, double scale, bool is_uper,float alpha){
 
 
-            float color[3];
-
-            Depth2Color(std::min(std::min(df.GetDist(x,y),df.GetDist(x+1,y)),std::min(df.GetDist(x,y+1),df.GetDist(x+1,y+1))),color);
-
-            glColor3f(color[0], color[1], color[2]);
-
-            glBegin(GL_QUADS);
-
-            const double wire_off=draw_mesh?1e-2:0;
-            glVertex3f(ix0*z0, iy0*z0, z0+wire_off);
-            glVertex3f(ix1*z1, iy0*z1, z1+wire_off);
-            glVertex3f(ix1*z2, iy1*z2, z2+wire_off);
-            glVertex3f(ix0*z3, iy1*z3, z3+wire_off);
-
-            glEnd();
 
 
-            if(draw_mesh){
+        glBegin(GL_LINES);
+
+        for(int y=0;y<=df.imageSize().h-df.blockSize().h;y+=df.blockSize().h){
+            for(int x=0;x<=df.imageSize().w-df.blockSize().w;x+=df.blockSize().w){
+
+                if(!df.IsImgVisible(x,y))
+                    continue;
 
 
-                glColor3f(0.6, 0.6, 0.6);
+                double srho00,srho10,srho01,srho11;
+                double rho00=df.getImgRho(x,y,&srho00);
+                double rho10=df.getImgRho(x,y+df.blockSize().h,&srho10);
+                double rho01=df.getImgRho(x+df.blockSize().w,y,&srho01);
+                double rho11=df.getImgRho(x+df.blockSize().w,y+df.blockSize().h,&srho11);
 
-                glBegin(GL_LINES);
+                if(is_uper){
+                    rho00+=srho00;
+                    rho01+=srho01;
+                    rho10+=srho10;
+                    rho11+=srho11;
+                }else{
+                    rho00-=srho00;
+                    rho01-=srho01;
+                    rho10-=srho10;
+                    rho11-=srho11;
+                }
 
-                glVertex3f(ix0*z0, iy0*z0, z0);
-                glVertex3f(ix1*z1, iy0*z1, z1);
-                glVertex3f(ix1*z1, iy0*z1, z1);
-                glVertex3f(ix1*z2, iy1*z2, z2);
-                glVertex3f(ix1*z2, iy1*z2, z2);
-                glVertex3f(ix0*z3, iy1*z3, z3);
-                glVertex3f(ix0*z3, iy1*z3, z3);
-                glVertex3f(ix0*z0, iy0*z0, z0);
+                util::Constrain(rho00,RHO_MIN,RHO_MAX);
+                util::Constrain(rho01,RHO_MIN,RHO_MAX);
+                util::Constrain(rho10,RHO_MIN,RHO_MAX);
+                util::Constrain(rho11,RHO_MIN,RHO_MAX);
 
-                glEnd();
+                Point3D<float> P00=cam.unprojectImgCord(Point3D<float>((double)x,(double)y,rho00));
+                Point3D<float> P10=cam.unprojectImgCord(Point3D<float>((double)x,(double)(y+df.blockSize().h),rho10));
+                Point3D<float> P01=cam.unprojectImgCord(Point3D<float>((double)(x+df.blockSize().w),(double)y,rho01));
+                Point3D<float> P11=cam.unprojectImgCord(Point3D<float>((double)(x+df.blockSize().w),(double)(y+df.blockSize().h),rho11));
+
+
+
+                float color[3];
+
+                Depth2Color(std::min(std::min(df.GetImgDist(x,y),df.GetImgDist(x+1,y)),std::min(df.GetImgDist(x,y+1),df.GetImgDist(x+1,y+1)))*scale,color);
+
+                glColor4f(color[0], is_uper?1:0, color[2],alpha);
+                glVertex3f(P00.x, P00.y, P00.z);
+                glVertex3f(P01.x, P01.y, P01.z);
+                glVertex3f(P01.x, P01.y, P01.z);
+                glVertex3f(P11.x, P11.y, P11.z);
+                glVertex3f(P11.x, P11.y, P11.z);
+                glVertex3f(P10.x, P10.y, P10.z);
+                glVertex3f(P10.x, P10.y, P10.z);
+                glVertex3f(P00.x, P00.y, P00.z);
+
+
+
             }
-
-
-
         }
-    }
+
+
+        glEnd();
 
 
 
-    glPopMatrix();
+
 
 
 }
@@ -592,6 +603,145 @@ void gl_viewer::drawKeyLines(net_keyline **net_kl, int *net_kln, int net_klistn,
 
 }
 
+
+
+void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,bool draw_unc,bool draw_filler)
+{
+
+
+    glPushMatrix();
+    STR_View(kf.K,kf.Pos,kf.Pose);
+
+    glDepthFunc(GL_ALWAYS);
+
+
+
+    //glBegin(GL_QUADS);
+
+    TooN::Matrix <3,3>DPose=TooN::Identity;
+    TooN::Vector <3>DPos=TooN::Zeros;
+
+    if(kf_match){
+        DPose=kf.Pose.T()*kf_match->Pose;
+        DPos=kf.Pose.T()*(kf_match->Pos-kf.Pos);
+    }
+
+    if(render_mode>0){
+
+
+        glBegin(GL_LINES);
+
+        for(int kli=0;kli<kf.edges().KNum();kli++){
+            KeyLine &kl=kf.edges()[kli];
+
+            if(kl.n_id<0)
+                continue;
+
+            float x1,x2,y1,y2,z1,z2,c,dz1,dz2;
+
+            bool connected=false;
+
+            c=kl.s_rho;
+            c=1/(c*c);
+
+            z1=1/kl.rho;
+            dz1=z1-1/(kl.rho+kl.s_rho);
+
+            x1=(kl.p_m.x)*z1/kf.camera.zfm;
+            y1=(kl.p_m.y)*z1/kf.camera.zfm;
+
+
+            KeyLine &kl2=(kf.edges())[kl.n_id];
+
+            z2=1/kl2.rho;
+            dz2=z2-1/(kl2.rho+kl2.s_rho);
+
+
+            x2=(kl2.p_m.x)*z2/kf.camera.zfm;
+            y2=(kl2.p_m.y)*z2/kf.camera.zfm;
+
+            if(fabs(z1-z2)<std::min(dz1,dz2)){
+                connected=true;
+            }
+
+            if(render_mode==2){
+                if(c<20 || !connected)
+                    continue;
+                float c3[3];
+                Depth2Color((z1+z2)/2,c3);
+
+                glColor3f(c3[0],c3[1],c3[2]);
+            }else{
+                //c/=25.5;
+                c=kl.rho/kl.s_rho;
+                util::keep_min(c,1.0);
+
+
+                if(connected)
+                    glColor3f(c, 0, 1-c);
+                else
+                    glColor3f(c, 1-c, 1-c);
+            }
+
+
+            glVertex3f(x1, y1, z1);
+            glVertex3f(x2, y2, z2);
+
+            if(draw_unc){
+                glColor3f(1, 1, 0);
+                double sigma_z;
+
+                sigma_z=dz1;
+
+                if(sigma_z>10)
+                    glColor4f(0.1, 0.1, 0,0.1);
+
+                double k=(z1+sigma_z)/z1;
+                glVertex3f(x1*k, y1*k, z1*k);
+                k=(z1-sigma_z)/z1;
+                glVertex3f(x1*k, y1*k, z1*k);
+            }
+            /*
+        if(kf_match && kl.kf_id>=0){
+
+
+
+            z2=1/kf_match->edges()[kl.kf_id].rho;
+            x2=(kf_match->edges()[kl.kf_id].p_m.x)*z2/kf_match->camera.zfm;
+            y2=(kf_match->edges()[kl.kf_id].p_m.y)*z2/kf_match->camera.zfm;
+
+            glColor3f(0, 1, 0);
+            glVertex3f(x1, y1, z1);
+            TooN::Vector<3>p2=DPose*TooN::makeVector(x2,y2,z2)+DPos;
+            glVertex3f(p2[0],p2[1],p2[2]);
+
+        }
+        */
+        }
+
+        glEnd();
+
+    }
+
+
+    glDepthFunc(GL_LEQUAL);
+
+    if(draw_filler && kf.depthFillerAval()){
+        drawFiller(kf.depthFill(),nullptr,kf.K);
+
+        if(draw_unc){
+
+            drawFillerUnc(kf.depthFill(),kf.camera,kf.K,true,0.5);
+            drawFillerUnc(kf.depthFill(),kf.camera,kf.K,false,0.5);
+        }
+    }
+
+    drawCamera(0,0,0,0.05);
+
+
+    glPopMatrix();
+
+}
 
 
 void gl_viewer::Depth2Color(float z,float c[3]){
@@ -865,9 +1015,9 @@ void gl_viewer::STR_View(const double &scale,const TooN::Vector<3> &pos, const T
             matrix[j*4+i]=Pose(i,j);
     matrix[15]=1;
 
-    glScaled(scale,scale,scale);
     glTranslatef(pos[0],pos[1],pos[2]);
     glMultMatrixd(matrix);
+    glScaled(scale,scale,scale);
 }
 
 void gl_viewer::renderGL(RenderParams &rp)
@@ -880,28 +1030,43 @@ void gl_viewer::renderGL(RenderParams &rp)
 
     glPushMatrix();
 
-    if(FixView==2 && rp.pos_tray->size()>0){
+    if(FixView==2 &&rp.pos_tray &&rp.Pose && rp.pos_tray->size()>0){
         fixView(*rp.pos_tray,*rp.Pose);
     }else if(FixView==1){
         fixViewG(rp.nav.G);
     }
 
-     if(RenderSurface>0)
+     if(RenderSurface>0 && rp.d_filler)
          for(int i=0;i<(*rp.d_filler).size();i++){
-             drawFiller((*rp.d_filler)[i],*rp.img_data,RenderSurface==2);
+             drawFiller((*rp.d_filler)[i],RenderSurface==2?(nullptr):(rp.img_data));
          }
-
-//    drawSiftKeyPoints(rp.net_kp,rp.net_kpn,rp.zf,rp.pp);
-
 
 
     if(RenderLines>0)
         drawKeyLines(rp.net_kl,rp.net_kln,rp.net_klistn,rp.zf,rp.pp,RenderLines==2,RenderSigma);
 
+
+    if(rp.kflist)
+        for(int i=0;i<rp.kflist->size();i++)
+            if((*rp.kf_show_mask)[i]){
+                if(rp.render_match && i>0 && (*rp.kf_show_mask)[i-1]){
+                    drawKeyFrame((*rp.kflist)[i],RenderLines,&(*rp.kflist)[i-1],RenderSigma,RenderSurface>0);
+                }else{
+                    drawKeyFrame((*rp.kflist)[i],RenderLines,nullptr,RenderSigma,RenderSurface>0);
+
+                }
+            }
+
+
     switch(RenderCuad){
     case 1:
         //drawQuads(rp.c_det->V,rp.em_comp[rp.current_em].GetGEst()/20,rp.c_det->time2impact,rp.draw_crash_cuad);
-        drawQuadsR(rp.ref_err,(TooN::Vector<3>)rp.nav.G/20,(*rp.d_filler).size()>0?((*rp.d_filler)[0]).GetMinDist():1e10,rp.draw_crash_cuad);
+    {
+        double min_dist=1e20;
+        if(rp.d_filler && (*rp.d_filler).size()>0)
+            min_dist=((*rp.d_filler)[0]).GetMinDist();
+        drawQuadsR(rp.ref_err,(TooN::Vector<3>)rp.nav.G/20,min_dist,rp.draw_crash_cuad);
+    }
         break;
     case 2:
         drawCamera(0,0,0,0.05);
@@ -914,6 +1079,8 @@ void gl_viewer::renderGL(RenderParams &rp)
 
 
     glPopMatrix();
+
+
     /* swap the buffers if we have doublebuffered */
     if (doubleBuffered)
     {
@@ -1071,7 +1238,7 @@ void gl_viewer::drawSphere(float x,float y,float z,float rx,float ry,float rz,in
 
 
 
-bool gl_viewer::glDrawLoop(RenderParams &rp,bool ReRender){
+bool gl_viewer::glDrawLoop(RenderParams &rp,bool ReRender,KeySym *key){
 
 
     XEvent event;
@@ -1104,6 +1271,9 @@ bool gl_viewer::glDrawLoop(RenderParams &rp,bool ReRender){
         case KeyPress:
         {
             KeySym k=XLookupKeysym(&event.xkey, 0);
+
+            if(key)
+                *key=k;
             if(k>=XK_0 && k<=XK_9){
 
                 int view_id=k-XK_0;

@@ -109,6 +109,36 @@ public:
         hy=iy-pp.y;
     }
 
+    template <typename PointType>
+    inline PointType projectHomCord(const PointType &p3d){
+        float &&x=p3d.x/p3d.z*zfm;
+        float &&y=p3d.y/p3d.z*zfm;
+        float &&r=1/p3d.z;
+        return {x,y,r};
+    }
+    template <typename PointType>
+    inline PointType projectImgCord(const PointType &p3d){
+        float &&x=p3d.x/p3d.z*zfm+pp.x;
+        float &&y=p3d.y/p3d.z*zfm+pp.y;
+        float &&r=1/p3d.z;
+        return {x,y,r};
+    }
+
+    template <typename PointType>
+    inline PointType unprojectHomCord(const PointType &pIm){
+        float &&x=pIm.x/pIm.z/zfm;
+        float &&y=pIm.y/pIm.z/zfm;
+        float &&z=1.0/pIm.z;
+        return {x,y,z};
+    }
+    template <typename PointType>
+    inline PointType unprojectImgCord(const PointType &pIm){
+        float &&x=(pIm.x-pp.x)/pIm.z/zfm;
+        float &&y=(pIm.y-pp.y)/pIm.z/zfm;
+        float &&z=1.0/pIm.z;
+        return {x,y,z};
+    }
+
 };
 }
 #endif // CAM_MODEL_H

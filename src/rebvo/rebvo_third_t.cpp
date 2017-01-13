@@ -335,6 +335,16 @@ void REBVO::ThirdThread(REBVO *cf){
 
         cf->callCallBack(pbuf);
 
+
+        //******** Push KEYFRAME ***************************//
+
+
+          if(cf->saveKeyframes && (pbuf.p_id%10)==0){
+              cf->kf_list.push_back(keyframe(*pbuf.ef,*pbuf.gt,pbuf.t,pbuf.K,pbuf.nav.Rot,pbuf.nav.RotLie,pbuf.nav.Vel,pbuf.nav.Pose,pbuf.nav.PoseLie,pbuf.nav.Pos));
+
+              std::cout <<"\nadded keyframe\n";
+          }
+
         //******** The system can optionaly take a snapshot (use for debuging purposes) ******//
 
         if(cf->saveImg){

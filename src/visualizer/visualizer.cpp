@@ -44,26 +44,17 @@ namespace rebvo {
 int visualizer::OnPaint(XVideoContext *xvc, void *param){
 
     visualizer *fc=(visualizer *)param;
-
-
     XSetLineAttributes(xvc->display, xvc->gc, 1, LineSolid, CapRound, JoinRound);
-
 
     char    msg[256];
 
     if(!fc->ShowImg){
 
         XSetForeground(xvc->display,xvc->gc,0);
-
         XFillRectangle(xvc->display,xvc->pixmap,xvc->gc,0,0,xvc->width,xvc->height);
-
     }
 
-
-
     for(int i=0;i<fc->net_kln;i++){
-
-
 
         int c;
 
@@ -80,9 +71,6 @@ int visualizer::OnPaint(XVideoContext *xvc, void *param){
             XDrawLine(xvc->display, xvc->pixmap, xvc->gc,fc->net_kl[i].qx,fc->net_kl[i].qy\
                       ,fc->net_kl[i].qx+(fc->net_kl[i].extra.flow.x-127.0)/10.0,fc->net_kl[i].qy+(fc->net_kl[i].extra.flow.y-127.0)/10.0);
         }
-
-
-
 
     }
 
@@ -165,8 +153,6 @@ int visualizer::OnPaintDepth(XVideoContext *xvc, void *param){
 
         if(fc->net_kl[i].n_kl>=0 && c>20){
 
-
-
             int nkl=fc->net_kl[i].n_kl;
 
 
@@ -245,10 +231,7 @@ int visualizer::OnPaintDepth(XVideoContext *xvc, void *param){
     XSetForeground(xvc->display,xvc->gc,0xFF00FF);
     XDrawLine(xvc->display, xvc->pixmap, xvc->gc,cuadp.x-1*scale,cuadp.y-max_z*scale,cuadp.x+1*scale,cuadp.y-max_z*scale);
 
-
     XSetForeground(xvc->display,xvc->gc,0xFF00FF);
-
-
     XSetForeground(xvc->display,xvc->gc,0x00FFFF);
     snprintf(msg,sizeof(msg),"Rango = %.1fm KFix = %.2f",fc->depth_show_max,fc->KFix);
     XSetForeground(xvc->display,xvc->gc,0xFFFFFF);
@@ -311,7 +294,7 @@ int visualizer::Run(){
     com_port.setBlock(false);
 
 
-    printf("\nDisplayfrontal: Socket iniciado en %s:%d\n",Host.data(),Port);
+    printf("\nVisualizer: Socket iniciado en %s:%d\n",Host.data(),Port);
 
 
     const int EMSaveNum=EdgeMapSaveNumber<1?1:EdgeMapSaveNumber;
@@ -323,14 +306,14 @@ int visualizer::Run(){
     if(XLibView>0){
 
         if(IniciarVideoOutput(&xvc,frameSize.w,frameSize.h)){
-            printf("\nDisplayfrontal: No puedo iniciar Video\n");
+            printf("\nVisualizer: No puedo iniciar Video\n");
             return 0;
         }
 
     }if(XLibView>1){
 
         if(IniciarVideoOutput(&xvc_d,640,520)){
-            printf("\nDisplayfrontal: No puedo iniciar Video\n");
+            printf("\nVisualizer: No puedo iniciar Video\n");
             return 0;
         }
     }
@@ -453,7 +436,7 @@ recv_frame_err:
             d_filler[0].FillEdgeData(net_kl,net_kln,{0,0},DF_ThreshRelRho,DF_ThreshMatchNum);
             d_filler[0].InitCoarseFine();
             d_filler[0].Integrate(DF_IterNum);
-            d_filler[0].ComputeColor(Zeros);
+            d_filler[0].computeDistance(Zeros);
 
 
             rp.net_kpn=net_hdr->key_num;

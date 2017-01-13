@@ -30,35 +30,29 @@
 
 namespace rebvo {
 
-class df_point{
 
-public:
-    bool fixed;
+class depth_filler;
 
-    double depth;
+struct df_point{
 
-    double rho;
-    double s_rho;
-    double I_rho;
-
-    Point2DF pi;
-
-    bool intersected;
-
-    bool visibility;
-
-    double dist;
+    bool fixed;             //Flag to determine if there are KeyLines passing through
+    double depth;           //Estimated depth
+    double rho;             //Estimated Inv-Depth
+    double s_rho;           //Estimated Inv-Depth Uncertainty
+    double I_rho;           //Information on Inverse Depth 1/s_rho^2
+    bool visibility;        //Visibility on the plot flag
+    double dist;            //Euclidean distance from the point to center of the camera
+    depth_filler* father;   //pointer to the depth_filler calss
 
 };
 
 class depth_filler
 {
 
-
-    cam_model &cam_mod;
-    Size2D im_size;
-    Size2D bl_size;
-    Size2D size;
+    cam_model &cam_mod; //Reference to cam model
+    Size2D im_size;     //Image size
+    Size2D bl_size;     //Block (discretization) size
+    Size2D size;        //Grid Size=im_size/bl_size
 
     double current_min_dist;
 
@@ -75,12 +69,15 @@ public:
 
     void ResetData();
     void FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double v_thresh,int m_num_t);
+    void FillEdgeData(edge_tracker&et, double v_thresh, int m_num_t);
     void Integrate1Step();
     void Integrate(int iter_num, bool init_cf=true);
 
     void InitCoarseFine();
 
-    void ComputeColor(TooN::Vector <3> rel_pos);
+    void computeDistance(TooN::Vector <3> rel_pos);
+
+    void ResetVisibility();
 
     const Size2D & imageSize(){
         return im_size;
@@ -92,26 +89,40 @@ public:
         return size;
     }
 
-    TooN::Vector <3> Get3DPos(int histo_x,int histo_y,bool transform=true){
-        return Get3DPos(histo_x,histo_y,cam_mod,transform);
+    TooN::Vector <3> get3DPos(int histo_x,int histo_y){
+        return get3DPos(histo_x,histo_y,cam_mod);
     }
 
-    TooN::Vector <3> Get3DPos(int histo_x,int histo_y,cam_model &cam,bool transform=true){
+    TooN::Vector <3> get3DPosShiftRho(int histo_x,int histo_y,double s_rho){
+        return get3DPosShiftRho(histo_x,histo_y,s_rho,cam_mod);
+    }
+
+    TooN::Vector <3> get3DPos(int histo_x,int histo_y,cam_model &cam){
         if(histo_x>size.w || histo_y>size.h)
             return TooN::Zeros;
         float x,y;
-        cam.Img2Hom<float>(x,y,histo_x*bl_size.w,histo_y*bl_size.h);
+        cam.Img2Hom<float>(x,y,((float)histo_x+0.5)*bl_size.w,((float)histo_y+0.5)*bl_size.h);    //shift point by 0.5*bl_size and substract principal point
         TooN::Vector <3> P0=TooN::makeVector(x/cam.zfm,y/cam.zfm,1)/data(histo_x,histo_y).rho;
         return P0;
     }
 
-    TooN::Vector <3> GetImg3DPos(float x,float y,bool transform=true){
-        return GetImg3DPos(x,y,cam_mod,transform);
+    TooN::Vector <3> get3DPosShiftRho(int histo_x,int histo_y,double s_rho,cam_model &cam){
+        if(histo_x>size.w || histo_y>size.h)
+            return TooN::Zeros;
+        float x,y;
+        cam.Img2Hom<float>(x,y,((float)histo_x+0.5)*bl_size.w,((float)histo_y+0.5)*bl_size.h);    //shift point by 0.5*bl_size and substract principal point
+        TooN::Vector <3> P0=TooN::makeVector(x/cam.zfm,y/cam.zfm,1)/(data(histo_x,histo_y).rho+s_rho);
+        return P0;
     }
 
-    TooN::Vector <3> GetImg3DPos(float x,float y,cam_model &cam,bool transform=true){
+    TooN::Vector <3> getImg3DPos(float x,float y){
+        return getImg3DPos(x,y,cam_mod);
+    }
 
-        float x_histo=x/(float)bl_size.w-0.5;
+    //Converts image position coordinates to a 3D point in space using bilin interpolation
+    TooN::Vector <3> getImg3DPos(float x,float y,cam_model &cam){
+
+        float x_histo=x/(float)bl_size.w-0.5;   //Points in grid are shifted 0.5*bl_size due to discretization effect
         int xf=std::min(std::max(floor(x_histo),0.0),size.w-1.0);
         int xc=std::min(std::max(ceil(x_histo),0.0),size.w-1.0);
 
@@ -135,6 +146,41 @@ public:
 
         return P0;
     }
+
+    double getImgRho(float x,float y,double *s_rho=nullptr){
+
+        float x_histo=x/(float)bl_size.w-0.5;
+        int xf=std::min(std::max(floor(x_histo),0.0),size.w-1.0);
+        int xc=std::min(std::max(ceil(x_histo),0.0),size.w-1.0);
+
+        float y_histo=y/(float)bl_size.h-0.5;
+        int yf=std::min(std::max(floor(y_histo),0.0),size.h-1.0);
+        int yc=std::min(std::max(ceil(y_histo),0.0),size.h-1.0);
+
+        float dx=x_histo-xf;
+        float dy=y_histo-yf;
+
+        float rho00=data(xf,yf).rho;
+        float rho10=data(xc,yf).rho;
+        float rho01=data(xf,yc).rho;
+        float rho11=data(xc,yc).rho;
+
+        float rho=rho00*(1-dx)*(1-dy)+rho10*dx*(1-dy)+rho01*(1-dx)*dy+rho11*dx*dy;
+
+        if(s_rho){
+
+            float srho00=data(xf,yf).s_rho;
+            float srho10=data(xc,yf).s_rho;
+            float srho01=data(xf,yc).s_rho;
+            float srho11=data(xc,yc).s_rho;
+
+            (*s_rho)=srho00*(1-dx)*(1-dy)+srho10*dx*(1-dy)+srho01*(1-dx)*dy+srho11*dx*dy;
+        }
+
+        return rho;
+    }
+
+
 
     double GetDist(int x,int y){
         return data[y*size.w+x].dist;

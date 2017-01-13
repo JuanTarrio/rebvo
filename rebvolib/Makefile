@@ -75,7 +75,8 @@ SOURCES       = ../src/rebvo/rebvo.cpp \
 		../src/UtilLib/libcrc.cpp \
 		../src/UtilLib/imugrabber.cpp \
 		../src/CommLib/udp_port.cpp \
-		../src/CommLib/net_keypoint.cpp 
+		../src/CommLib/net_keypoint.cpp \
+		../src/visualizer/surface_integrator.cpp 
 OBJECTS       = ../build/rebvolib/rebvo.o \
 		../build/rebvolib/rebvo_first_t.o \
 		../build/rebvolib/rebvo_second_t.o \
@@ -109,7 +110,8 @@ OBJECTS       = ../build/rebvolib/rebvo.o \
 		../build/rebvolib/libcrc.o \
 		../build/rebvolib/imugrabber.o \
 		../build/rebvolib/udp_port.o \
-		../build/rebvolib/net_keypoint.o
+		../build/rebvolib/net_keypoint.o \
+		../build/rebvolib/surface_integrator.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -360,6 +362,9 @@ compiler_clean:
 		../include/mtracklib/global_tracker.h \
 		../include/UtilLib/ne10wrapper.h \
 		../include/mtracklib/keyframe.h \
+		../include/visualizer/depth_filler.h \
+		../include/CommLib/net_keypoint.h \
+		../include/mtracklib/nav_data_defs.h \
 		../include/UtilLib/imugrabber.h \
 		../include/VideoLib/customcam.h \
 		../include/VideoLib/videocam.h \
@@ -388,6 +393,9 @@ compiler_clean:
 		../include/mtracklib/global_tracker.h \
 		../include/UtilLib/ne10wrapper.h \
 		../include/mtracklib/keyframe.h \
+		../include/visualizer/depth_filler.h \
+		../include/CommLib/net_keypoint.h \
+		../include/mtracklib/nav_data_defs.h \
 		../include/UtilLib/imugrabber.h \
 		../include/VideoLib/customcam.h \
 		../include/VideoLib/videocam.h \
@@ -418,6 +426,9 @@ compiler_clean:
 		../include/mtracklib/global_tracker.h \
 		../include/UtilLib/ne10wrapper.h \
 		../include/mtracklib/keyframe.h \
+		../include/visualizer/depth_filler.h \
+		../include/CommLib/net_keypoint.h \
+		../include/mtracklib/nav_data_defs.h \
 		../include/UtilLib/imugrabber.h \
 		../include/VideoLib/customcam.h \
 		../include/VideoLib/videocam.h \
@@ -445,6 +456,9 @@ compiler_clean:
 		../include/mtracklib/global_tracker.h \
 		../include/UtilLib/ne10wrapper.h \
 		../include/mtracklib/keyframe.h \
+		../include/visualizer/depth_filler.h \
+		../include/CommLib/net_keypoint.h \
+		../include/mtracklib/nav_data_defs.h \
 		../include/UtilLib/imugrabber.h \
 		../include/VideoLib/customcam.h \
 		../include/VideoLib/videocam.h \
@@ -454,8 +468,6 @@ compiler_clean:
 		../include/VideoLib/video_mfc.h \
 		../include/VideoLib/video_encoder.h \
 		../include/VideoLib/video_mjpeg.h \
-		../include/CommLib/net_keypoint.h \
-		../include/mtracklib/nav_data_defs.h \
 		../include/CommLib/udp_port.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/rebvo_third_t.o ../src/rebvo/rebvo_third_t.cpp
 
@@ -481,6 +493,7 @@ compiler_clean:
 		../include/mtracklib/global_tracker.h \
 		../include/UtilLib/ne10wrapper.h \
 		../include/mtracklib/keyframe.h \
+		../include/visualizer/depth_filler.h \
 		../include/UtilLib/imugrabber.h \
 		../include/VideoLib/customcam.h \
 		../include/VideoLib/videocam.h \
@@ -488,7 +501,6 @@ compiler_clean:
 		../include/VideoLib/video_encoder.h \
 		../include/VideoLib/videodecoder.h \
 		../include/visualizer/gl_viewer.h \
-		../include/visualizer/depth_filler.h \
 		../include/CommLib/udp_port.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/visualizer.o ../src/visualizer/visualizer.cpp
 
@@ -528,7 +540,10 @@ compiler_clean:
 		../include/mtracklib/nav_data_defs.h \
 		../include/visualizer/depth_filler.h \
 		../include/mtracklib/edge_tracker.h \
-		../include/UtilLib/NormalDistribution.h
+		../include/UtilLib/NormalDistribution.h \
+		../include/mtracklib/keyframe.h \
+		../include/mtracklib/global_tracker.h \
+		../include/UtilLib/ne10wrapper.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/gl_viewer.o ../src/visualizer/gl_viewer.cpp
 
 ../build/rebvolib/video_io.o: ../src/VideoLib/video_io.cpp ../include/VideoLib/video_io.h
@@ -701,7 +716,10 @@ compiler_clean:
 		../include/UtilLib/cam_model.h \
 		../include/UtilLib/NormalDistribution.h \
 		../include/mtracklib/global_tracker.h \
-		../include/UtilLib/ne10wrapper.h
+		../include/UtilLib/ne10wrapper.h \
+		../include/visualizer/depth_filler.h \
+		../include/CommLib/net_keypoint.h \
+		../include/mtracklib/nav_data_defs.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/keyframe.o ../src/mtracklib/keyframe.cpp
 
 ../build/rebvolib/scaleestimator.o: ../src/mtracklib/scaleestimator.cpp ../include/mtracklib/scaleestimator.h \
@@ -756,6 +774,29 @@ compiler_clean:
 		../include/UtilLib/cam_model.h \
 		../include/mtracklib/nav_data_defs.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/net_keypoint.o ../src/CommLib/net_keypoint.cpp
+
+../build/rebvolib/surface_integrator.o: ../src/visualizer/surface_integrator.cpp ../include/visualizer/surface_integrator.h \
+		../include/mtracklib/keyframe.h \
+		../include/mtracklib/edge_tracker.h \
+		../include/mtracklib/edge_finder.h \
+		../include/mtracklib/sspace.h \
+		../include/mtracklib/iigauss.h \
+		../include/mtracklib/iimage.h \
+		../include/UtilLib/util.h \
+		../include/UtilLib/timer.h \
+		../include/UtilLib/fvector.h \
+		../include/VideoLib/image.h \
+		../include/VideoLib/common_types.h \
+		../include/VideoLib/video_io.h \
+		../include/UtilLib/CircList.h \
+		../include/UtilLib/cam_model.h \
+		../include/UtilLib/NormalDistribution.h \
+		../include/mtracklib/global_tracker.h \
+		../include/UtilLib/ne10wrapper.h \
+		../include/visualizer/depth_filler.h \
+		../include/CommLib/net_keypoint.h \
+		../include/mtracklib/nav_data_defs.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/surface_integrator.o ../src/visualizer/surface_integrator.cpp
 
 ####### Install
 

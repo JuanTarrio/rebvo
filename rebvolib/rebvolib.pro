@@ -59,7 +59,8 @@ SOURCES +=  ../src/rebvo/rebvo.cpp\
     ../src/UtilLib/libcrc.cpp \
     ../src/UtilLib/imugrabber.cpp\
     ../src/CommLib/udp_port.cpp \
-    ../src/CommLib/net_keypoint.cpp
+    ../src/CommLib/net_keypoint.cpp \
+    ../src/visualizer/surface_integrator.cpp
 
 HEADERS += ../include/rebvo/rebvo.h\
     ../include/visualizer/visualizer.h\
@@ -102,6 +103,7 @@ HEADERS += ../include/rebvo/rebvo.h\
     ../include/UtilLib/libcrc.h \
     ../include/UtilLib/imugrabber.h\
     ../include/CommLib/net_keypoint.h \
-    ../include/CommLib/udp_port.h
+    ../include/CommLib/udp_port.h \
+    ../include/visualizer/surface_integrator.h
 
 

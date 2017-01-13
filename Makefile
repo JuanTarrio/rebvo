@@ -26,7 +26,8 @@ MOVE          = mv -f
 SUBTARGETS    =  \
 		sub-rebvolib \
 		sub-app-rebvorun \
-		sub-app-visualizer
+		sub-app-visualizer \
+		sub-app-kf_visualizer
 
 
 sub-rebvolib-qmake_all:  FORCE
@@ -158,6 +159,49 @@ sub-app-visualizer-uninstall_subtargets-ordered: sub-app-rebvorun-uninstall_subt
 sub-app-visualizer-uninstall_subtargets: sub-rebvolib-uninstall_subtargets FORCE
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile uninstall
+sub-app-kf_visualizer-qmake_all: sub-app-visualizer-qmake_all FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile
+	cd app/kf_visualizer/ && $(MAKE) -f Makefile qmake_all
+sub-app-kf_visualizer: sub-rebvolib FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile
+sub-app-kf_visualizer-make_first-ordered: sub-app-visualizer-make_first-ordered  FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile 
+sub-app-kf_visualizer-make_first: sub-rebvolib-make_first FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile 
+sub-app-kf_visualizer-all-ordered: sub-app-visualizer-all-ordered  FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile all
+sub-app-kf_visualizer-all: sub-rebvolib-all FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile all
+sub-app-kf_visualizer-clean-ordered: sub-app-visualizer-clean-ordered  FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile clean
+sub-app-kf_visualizer-clean: sub-rebvolib-clean FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile clean
+sub-app-kf_visualizer-distclean-ordered: sub-app-visualizer-distclean-ordered  FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile distclean
+sub-app-kf_visualizer-distclean: sub-rebvolib-distclean FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile distclean
+sub-app-kf_visualizer-install_subtargets-ordered: sub-app-visualizer-install_subtargets-ordered  FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile install
+sub-app-kf_visualizer-install_subtargets: sub-rebvolib-install_subtargets FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile install
+sub-app-kf_visualizer-uninstall_subtargets-ordered: sub-app-visualizer-uninstall_subtargets-ordered  FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile uninstall
+sub-app-kf_visualizer-uninstall_subtargets: sub-rebvolib-uninstall_subtargets FORCE
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile uninstall
 
 Makefile: rebvo.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
@@ -269,15 +313,15 @@ rebvo.pro:
 qmake: FORCE
 	@$(QMAKE) -spec linux-g++ -o Makefile rebvo.pro
 
-qmake_all: sub-rebvolib-qmake_all sub-app-rebvorun-qmake_all sub-app-visualizer-qmake_all FORCE
+qmake_all: sub-rebvolib-qmake_all sub-app-rebvorun-qmake_all sub-app-visualizer-qmake_all sub-app-kf_visualizer-qmake_all FORCE
 
-make_first: sub-rebvolib-make_first-ordered sub-app-rebvorun-make_first-ordered sub-app-visualizer-make_first-ordered FORCE
-all: sub-rebvolib-all-ordered sub-app-rebvorun-all-ordered sub-app-visualizer-all-ordered FORCE
-clean: sub-rebvolib-clean-ordered sub-app-rebvorun-clean-ordered sub-app-visualizer-clean-ordered FORCE
-distclean: sub-rebvolib-distclean-ordered sub-app-rebvorun-distclean-ordered sub-app-visualizer-distclean-ordered FORCE
+make_first: sub-rebvolib-make_first-ordered sub-app-rebvorun-make_first-ordered sub-app-visualizer-make_first-ordered sub-app-kf_visualizer-make_first-ordered FORCE
+all: sub-rebvolib-all-ordered sub-app-rebvorun-all-ordered sub-app-visualizer-all-ordered sub-app-kf_visualizer-all-ordered FORCE
+clean: sub-rebvolib-clean-ordered sub-app-rebvorun-clean-ordered sub-app-visualizer-clean-ordered sub-app-kf_visualizer-clean-ordered FORCE
+distclean: sub-rebvolib-distclean-ordered sub-app-rebvorun-distclean-ordered sub-app-visualizer-distclean-ordered sub-app-kf_visualizer-distclean-ordered FORCE
 	-$(DEL_FILE) Makefile
-install_subtargets: sub-rebvolib-install_subtargets-ordered sub-app-rebvorun-install_subtargets-ordered sub-app-visualizer-install_subtargets-ordered FORCE
-uninstall_subtargets: sub-rebvolib-uninstall_subtargets-ordered sub-app-rebvorun-uninstall_subtargets-ordered sub-app-visualizer-uninstall_subtargets-ordered FORCE
+install_subtargets: sub-rebvolib-install_subtargets-ordered sub-app-rebvorun-install_subtargets-ordered sub-app-visualizer-install_subtargets-ordered sub-app-kf_visualizer-install_subtargets-ordered FORCE
+uninstall_subtargets: sub-rebvolib-uninstall_subtargets-ordered sub-app-rebvorun-uninstall_subtargets-ordered sub-app-visualizer-uninstall_subtargets-ordered sub-app-kf_visualizer-uninstall_subtargets-ordered FORCE
 
 sub-rebvolib-check_ordered:
 	@test -d rebvolib/ || mkdir -p rebvolib/
@@ -288,7 +332,10 @@ sub-app-rebvorun-check_ordered: sub-rebvolib-check_ordered
 sub-app-visualizer-check_ordered: sub-app-rebvorun-check_ordered 
 	@test -d app/visualizer/ || mkdir -p app/visualizer/
 	cd app/visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/visualizer/visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile check
-check: sub-rebvolib-check_ordered sub-app-rebvorun-check_ordered sub-app-visualizer-check_ordered
+sub-app-kf_visualizer-check_ordered: sub-app-visualizer-check_ordered 
+	@test -d app/kf_visualizer/ || mkdir -p app/kf_visualizer/
+	cd app/kf_visualizer/ && ( test -e Makefile || $(QMAKE) /home/juan/git/rebvo/app/kf_visualizer/kf_visualizer.pro -spec linux-g++ -o Makefile ) && $(MAKE) -f Makefile check
+check: sub-rebvolib-check_ordered sub-app-rebvorun-check_ordered sub-app-visualizer-check_ordered sub-app-kf_visualizer-check_ordered
 install: install_subtargets  FORCE
 
 uninstall:  uninstall_subtargets FORCE

@@ -458,11 +458,6 @@ void  REBVO::SecondThread(REBVO *cf){
 
         cf->pushNav(old_buf.nav);
 
-      /*  if((old_buf.p_id%25)==0){
-            cf->kf_list.push_back(keyframe(*old_buf.ef,*old_buf.gt,old_buf.t,old_buf.Rot,old_buf.RotLie,old_buf.Vel,old_buf.Pose,old_buf.PoseLie,old_buf.Pos));
-
-            std::cout <<"\nadded keyframe\n";
-        }*/
 
         if(cf->system_reset){   //Do a depth reset to the New Edgemap
             for (auto &kl: (*new_buf.ef)) {

@@ -25,10 +25,10 @@
 
 #include "mtracklib/keyframe.h"
 namespace  rebvo{
-keyframe::keyframe(edge_tracker& edges,const global_tracker &gtracker,double frame_t
+keyframe::keyframe(edge_tracker& edges,const global_tracker &gtracker,double frame_t,double scale
                    ,TooN::Matrix <3,3> _Rot,TooN::Vector <3> _RotLie,TooN::Vector <3> _Vel,
                    TooN::Matrix <3,3> _Pose,TooN::Vector <3> _PoseLie,TooN::Vector <3> _Pos)
-    :et(new edge_tracker(edges)),gt(new global_tracker(gtracker)),t(frame_t),camera(edges.GetCam())
+    :et(new edge_tracker(edges)),gt(new global_tracker(gtracker)),df(nullptr),t(frame_t),K(scale),camera(edges.GetCam())
 {
 
     gt->SetEdgeTracker(et.get());
@@ -43,13 +43,14 @@ keyframe::keyframe(edge_tracker& edges,const global_tracker &gtracker,double fra
 }
 
 keyframe::keyframe()
-    :et(nullptr),gt(nullptr)
+    :et(nullptr),gt(nullptr),df(nullptr)
 {
 }
 
 
 keyframe::~keyframe(){
 }
+
 
 inline void dumpMatrix(std::ofstream &file,const TooN::Matrix <3,3> &M){
 
@@ -88,7 +89,7 @@ inline void readVector(std::ifstream &file,TooN::Vector <3> &V){
     for(int i=0;i<3;i++){
             double d;
             file.read((char*)&d,sizeof(d));
-            d=V[i];
+            V[i]=d;
     }
 
 }
@@ -98,6 +99,7 @@ inline void readVector(std::ifstream &file,TooN::Vector <3> &V){
 void keyframe::dumpToBinaryFile(std::ofstream &file){
 
     file.write((const char*)&t,sizeof(t));
+    file.write((const char*)&K,sizeof(K));
 
     dumpMatrix(file,Rot);
     dumpVector(file,RotLie);
@@ -113,21 +115,15 @@ void keyframe::dumpToBinaryFile(std::ofstream &file){
 
     et->dumpToBinaryFile(file);
 
+
+    //std::cout <<"\nDump"<<Pose<<"\n"<<Pos<<"\n";
+
 }
 
 void keyframe::loadFromBinaryFile(std::ifstream &file){
 
-    double t;
     file.read((char*)&t,sizeof(t));
-
-    TooN::Matrix <3,3> Rot;
-    TooN::Vector <3> RotLie;
-    TooN::Vector <3> Vel;
-
-
-    TooN::Matrix <3,3> Pose;
-    TooN::Vector <3> PoseLie;
-    TooN::Vector <3> Pos;
+    file.read((char*)&K,sizeof(K));
 
     readMatrix(file,Rot);
     readVector(file,RotLie);
@@ -136,8 +132,12 @@ void keyframe::loadFromBinaryFile(std::ifstream &file){
     readVector(file,PoseLie);
     readVector(file,Pos);
 
+
+
     double max_r;
     file.read((char*)&max_r,sizeof(max_r));
+
+    //std::cout <<"\nRead"<<Pose<<"\n"<<Pos<<"\n"<<max_r;
 
     file.read((char*)&camera,sizeof(camera));
 
@@ -193,4 +193,20 @@ bool keyframe::loadKeyframesFromFile(const char *name,std::vector<keyframe> &kf_
     return true;
 
 }
+
+void keyframe::initDepthFiller(Size2D blockSize, int iter_num, double error_thresh, double m_num_thresh)
+{
+    df=std::shared_ptr<depth_filler>(new depth_filler(camera,blockSize));
+
+    if(iter_num>0){
+
+        (*df).ResetData();
+        (*df).FillEdgeData(*et,error_thresh,m_num_thresh);
+        (*df).InitCoarseFine();
+        (*df).Integrate(iter_num);
+        (*df).computeDistance(TooN::Zeros);
+    }
+}
+
+
 }

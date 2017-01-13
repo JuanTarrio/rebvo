@@ -337,6 +337,9 @@ class REBVO
     NavData nav;
 
 
+    std::atomic_bool saveKeyframes;
+
+
     //Pipeline and multithead
 
     std::atomic_bool    quit;
@@ -408,6 +411,19 @@ public:
 
     bool Running(){return !quit;}
 
+    void startKeyFrames(){
+
+        saveKeyframes=true;
+    }
+
+    void endKeyFrames(){
+
+        saveKeyframes=false;
+    }
+    bool toggleKeyFrames(){
+
+        return saveKeyframes=!saveKeyframes;
+    }
 
     //Keyframe list
 

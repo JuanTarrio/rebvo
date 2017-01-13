@@ -270,6 +270,7 @@ bool REBVO::Init(){
     start_record=false;
     system_reset=false;
     quit=false;
+    saveKeyframes=false;
     Thr0=std::thread (FirstThr,this);
 
     return true;
