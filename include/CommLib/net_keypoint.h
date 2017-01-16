@@ -71,7 +71,7 @@ struct upk_net_keypoint{
 
 
 
-int copy_net_keyline(edge_finder &from, net_keyline *to, int kl_size, double k_prof);
+int copy_net_keyline(edge_finder &from, edge_finder *from_pair, net_keyline *to, int kl_size, double k_prof);
 int copy_net_keyline_nextid(edge_finder &from, net_keyline *to, int kl_size);
 }
 #endif // NET_KEYPOINT_H

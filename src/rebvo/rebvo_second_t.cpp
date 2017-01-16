@@ -40,9 +40,17 @@ using namespace std;
 
 namespace  rebvo{
 
+
 void  REBVO::SecondThread(REBVO *cf){
 
     using namespace TooN;
+
+
+    Matrix <3,3> RCam2Pair=Data( 1.0000, 0.0023,0.0004,
+                                -0.0023, 0.9999,0.0141,
+                                -0.0003,-0.0141,0.9999);
+    Vector <3> TCam2Pair=makeVector(-0.1101,0.0004,-0.0009);
+
 
     double dt_frame;
 
@@ -123,7 +131,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
         bool EstimationOk=true;
 
-        COND_TIME_DEBUG(dtp=t_loop.stostd::cout << "1st exit" << std::endl;p();)
+        COND_TIME_DEBUG(dtp=t_loop.stop();std::cout << "1st exit" << std::endl;)
 
         // 2 pipeline buffers are used in this thread
         PipeBuffer &new_buf=cf->pipe.RequestBuffer(1);  //This represent the newest edge-map
@@ -372,6 +380,14 @@ void  REBVO::SecondThread(REBVO *cf){
                 new_buf.ef->UpdateInverseDepthKalman(V,P_V,P_W,cf->params.ReshapeQAbsolute,cf->params.ReshapeQRelative,cf->params.LocationUncertainty); //1e-5
 
 
+                //****** If stereo information, use it ****
+
+                if(cf->params.StereoAvaiable){
+
+                    std::cout << "\nStereo M:"<<new_buf.ef->directed_matching_stereo(TCam2Pair/K,RCam2Pair,new_buf.ef_pair,cf->params.MatchThreshModule,cf->params.MatchThreshAngle,100,cf->params.LocationUncertaintyMatch);
+
+
+                }
 
                 COND_TIME_DEBUG(tlist.push_new();)
 

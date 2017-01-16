@@ -203,7 +203,7 @@ void REBVO::ThirdThread(REBVO *cf){
             net_hdr= (net_packet_hdr*)net_pak [net_buf_inx-1];
             net_hdr->key_num=0;
 
-            net_hdr->kline_num=copy_net_keyline(*pbuf.ef,\
+            net_hdr->kline_num=copy_net_keyline(*pbuf.ef,cf->params.StereoAvaiable?pbuf.ef_pair:nullptr,\
                                     (net_keyline*)&net_pak [net_buf_inx-1][sizeof(net_packet_hdr)],KEYLINE_MAX,pbuf.K);
 
 
@@ -339,7 +339,7 @@ void REBVO::ThirdThread(REBVO *cf){
         //******** Push KEYFRAME ***************************//
 
 
-          if(cf->saveKeyframes && (pbuf.p_id%10)==0){
+          if(cf->saveKeyframes && (pbuf.p_id%20)==0){
               cf->kf_list.push_back(keyframe(*pbuf.ef,*pbuf.gt,pbuf.t,pbuf.K,pbuf.nav.Rot,pbuf.nav.RotLie,pbuf.nav.Vel,pbuf.nav.Pose,pbuf.nav.PoseLie,pbuf.nav.Pos));
 
               std::cout <<"\nadded keyframe\n";

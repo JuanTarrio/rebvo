@@ -89,12 +89,15 @@ struct REBVOParameters{
     std::string LogFile;                //Log file in .m format
     std::string TrayFile;               //Trayectory in TUM dataset format [t pos quat]
 
+    bool StereoAvaiable;                //Flag to determine if stereo data is avaiable
 
 
     //DataSetCam param
 
     std::string DataSetFile;            //The directory of the dataset
     std::string DataSetDir;             //The file of the dataset
+    std::string DataSetFileStereo;      //The directory of the dataset
+    std::string DataSetDirStereo;       //The file of the dataset
     double CamTimeScale;                //Timescale multiplier for the dataset file
 
     //Camara parameters
@@ -297,6 +300,13 @@ struct PipeBuffer{
     edge_tracker *ef;
     Image<RGB24Pixel> *imgc;
     Image<float> *img;
+
+
+    sspace * ss_pair;
+    edge_tracker *ef_pair;
+    Image<RGB24Pixel> *imgc_pair;
+    Image<float> *img_pair;
+
     double t;
     double dt;
 
@@ -354,6 +364,7 @@ class REBVO
 
     //Custom cam pipeline
     Pipeline <customCam::CustomCamPipeBuffer> cam_pipe;
+    Pipeline <customCam::CustomCamPipeBuffer> cam_pipe_stereo;
 
     //camera model
     cam_model cam;
@@ -382,6 +393,7 @@ class REBVO
     void construct();
 
     VideoCam * initCamera();
+    VideoCam *initPairCamera();
 
     static bool setAffinity(int cpu){
         cpu_set_t cpusetp;
@@ -478,6 +490,24 @@ public:
         cam_pipe.ReleaseBuffer(0);
     }
 
+    //request a ptr to an Image object to push image on the pipeline of the custom camera
+    bool requestStereoCustomCamBuffer(std::shared_ptr<Image <RGB24Pixel> > &ptr,double time_stamp,double timeout_secs=0){
+
+        customCam::CustomCamPipeBuffer *ccpb=cam_pipe_stereo.RequestBufferTimeoutable(0,timeout_secs);
+        if(ccpb==nullptr)
+            return false;
+        ptr=(*ccpb).img;
+        (*ccpb).timestamp=time_stamp;
+        return true;
+    }
+
+
+    //release the pointer for image loading on the customcam buffer
+    void releaseStereoCustomCamBuffer(){
+
+        cam_pipe_stereo.ReleaseBuffer(0);
+    }
+
     //set a callback funtion to be called on the third thread with a reference to the pipebuffer containing all the algorithm output
     //call with nullptr to release callback
     template <typename T>
@@ -493,7 +523,7 @@ public:
 
 	bool isInitOk() const {
 		return InitOK;
-	}
+    }
 };
 
 }

@@ -69,7 +69,7 @@ int visualizer::OnPaint(XVideoContext *xvc, void *param){
         if(fc->ShowTrails){
             XSetForeground(xvc->display,xvc->gc,0x00ff00);
             XDrawLine(xvc->display, xvc->pixmap, xvc->gc,fc->net_kl[i].qx,fc->net_kl[i].qy\
-                      ,fc->net_kl[i].qx+(fc->net_kl[i].extra.flow.x-127.0)/10.0,fc->net_kl[i].qy+(fc->net_kl[i].extra.flow.y-127.0)/10.0);
+                      ,fc->net_kl[i].qx+(fc->net_kl[i].extra.flow.x-127.0)/10.0*10,fc->net_kl[i].qy+(fc->net_kl[i].extra.flow.y-127.0)/10.0*10);
         }
 
     }

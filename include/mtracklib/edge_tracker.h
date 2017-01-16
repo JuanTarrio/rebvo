@@ -23,6 +23,11 @@ public:
 
     int search_match(KeyLine &k,TooN::Vector <3> Vel,TooN::Matrix <3,3> RVel,TooN::Matrix <3,3> BackRot,double min_thr_mod,double min_thr_ang,double max_radius, double loc_uncertainty);
 
+    int directed_matching_stereo(TooN::Vector <3> Vel, TooN::Matrix <3,3> Rot, edge_tracker *et_pair, double min_thr_mod, double min_thr_ang, double max_radius, double loc_uncertainty);
+
+    int search_match_stereo(KeyLine &k, TooN::Vector <3> Vel, TooN::Matrix <3,3> Rot, double min_thr_mod, double min_thr_ang, double max_radius, double loc_uncertainty);
+
+
     int FordwardMatch(edge_tracker *et, bool clear=false);
 
 

@@ -396,6 +396,174 @@ int edge_tracker::FordwardMatch(edge_tracker *et    //Edgemap to match to
 
 }
 
+
+
+/**
+ * @brief edge_tracker::search_match_stereo search for a match in the stereo frame. The tranformation is of the form
+ * p(et)= R p(k)+Vel
+ * @param k
+ * @param Vel
+ * @param Rot
+ * @param min_thr_mod
+ * @param min_thr_ang
+ * @param max_radius
+ * @param loc_uncertainty
+ * @return
+ */
+
+int edge_tracker::search_match_stereo(
+        KeyLine &k,                     //KeyLine to search for
+        TooN::Vector <3> Vel,           //Camera-camera translation
+        TooN::Matrix <3,3> Rot,         //Camera-camera Rotation
+        double min_thr_mod,             //Gradient matching threshold on the module
+        double min_thr_ang,             //Gradient matching threshold on the angle (degrees)
+        double max_radius,              //Max Pixel Distance to search for
+        double loc_uncertainty          //Location Uncertainty
+        )
+{
+
+
+
+    const double cang_min_edge=cos(min_thr_ang*M_PI/180.0);
+
+    double dq_min=0,dq_max=0,t_x=0,t_y=0;
+
+
+    Vector <3> p_m3=Rot*makeVector(k.p_m.x,k.p_m.y,cam_mod.zfm);    //Rotate the Keypoint
+                                                                    //to look on the pair EdgeMap's mask
+
+    Point2DF p_m={(float)(p_m3[0]*cam_mod.zfm/p_m3[2]),(float)(p_m3[1]*cam_mod.zfm/p_m3[2])};
+    double k_rho=k.rho*cam_mod.zfm/p_m3[2];
+    double k_s_rho=k.s_rho*cam_mod.zfm/p_m3[2];
+
+    Point2DF pi0=cam_mod.Hom2Img(p_m);                               //Transform to image coordinates
+
+    k_rho=1/(1/k_rho+Vel[2]);                                        //tranform to this reference frame
+
+    t_x=(Vel[0]*cam_mod.zfm-Vel[2]*p_m.x);                          //Displacement vector t such that
+    t_y=(Vel[1]*cam_mod.zfm-Vel[2]*p_m.y);                          //t*rho=pixel_displacement
+
+    double norm_t=util::norm(t_x,t_y);
+
+
+    if(norm_t>1e-6){            //If displacement (|Vel|>0)
+        t_x/=norm_t;            //Normalize t, keep the mod in norm_t
+        t_y/=norm_t;
+
+
+        dq_min=std::max(0.0,norm_t*(k_rho-k_s_rho))-loc_uncertainty;         //Minimun distance to seach for, constrained by -ERR_DQ
+        dq_max=std::min(max_radius,norm_t*(k_rho+k_s_rho))+loc_uncertainty;  //Maximun distance to seach for, constrained by max_radius+ERR_DQ
+
+
+    }else{  //If no displacemt (not common) search in perpendicular direction of the edge
+        t_x=k.m_m.x;
+        t_y=k.m_m.y;
+        norm_t=k.n_m;
+        t_x/=norm_t;
+        t_y/=norm_t;
+        norm_t=1;
+        dq_min=-max_radius-loc_uncertainty;
+        dq_max=max_radius+loc_uncertainty;
+
+
+
+    }
+
+
+    const double& norm_m=k.n_m;
+
+    int match=-1;
+
+    for(int t=dq_min;t<dq_max;t++){
+
+
+
+        int inx,j;
+
+        if((inx=img_mask_kl.GetIndexRC(t_x*(float)t+pi0.x,t_y*(float)t+pi0.y))<0)  //Image position to seach for,
+            continue;                                               // -1 means out of border
+
+
+        if((j=img_mask_kl[inx])>=0){        //If there is an edge at this position
+
+            const double &norm_m0=kl[j].n_m;
+
+            double cang=(kl[j].m_m.x*k.m_m.x+kl[j].m_m.y*k.m_m.y)/(norm_m0*norm_m);
+
+            if(cang<cang_min_edge || fabs(norm_m0/norm_m-1)>min_thr_mod)    //check angle and modulus thresholds
+                continue;                                                   //if no match keep searching
+
+
+
+            double v_rho_dr=(                           //Estimated uncertainty on the displacement
+                             loc_uncertainty*loc_uncertainty //Edge location error
+                             +k_s_rho*k_s_rho*norm_t*norm_t      //rho uncertainty error
+                             );
+
+            if(util::square(t-norm_t*k_rho)>v_rho_dr)     //test of model consistency
+                continue;
+
+            //return j;
+            //Al test passed
+            if(match>=0){   //more than one match, return no match
+                return -1;
+            }
+            match=j;
+
+
+        }
+
+    }
+
+
+
+    return match;
+
+
+}
+
+//***********************************************************************
+// directed_matching() match the KeyLines of this object in the direction
+// of the stereo lines, using the ImgMask of et0
+//***********************************************************************
+
+int edge_tracker::directed_matching_stereo(
+        TooN::Vector <3> Vel,           //Estimated velocity
+        TooN::Matrix <3,3> Rot,     //Estimated back-rotation
+        edge_tracker *et_pair,              //EdgeMap were to look for matches
+        double min_thr_mod,             //Threshold on the module
+        double min_thr_ang,             //Threshold on the angle
+        double max_radius,              //Maximun search distance
+        double loc_uncertainty          //Location Uncertainty
+        )
+{
+
+
+    int nmatch=0;
+
+
+
+    for(int i_kn=0;i_kn<kn;i_kn++){
+
+
+        //Search for a match
+
+        if((kl[i_kn].stereo_m_id=et_pair->search_match_stereo(kl[i_kn],Vel,Rot,min_thr_mod,min_thr_ang,max_radius,loc_uncertainty))<0)
+            continue;
+
+
+        //If a match is found... count
+
+        nmatch++;
+
+
+    }
+
+
+    return nmatch;
+
+}
+
 //***********************************************************************
 // UpdateInverseDepthKalman() use EKF to update for depth estimates
 //***********************************************************************

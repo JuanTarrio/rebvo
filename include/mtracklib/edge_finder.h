@@ -76,6 +76,11 @@ struct KeyLine{
         short int n_id;     //Id of next consecutive KeyLine
         short int net_id;   //Network ID of the KeyLine
 
+
+        int stereo_m_id;
+        double stereo_rho;         //Estimated Inverse Depth from stereo
+        double stereo_s_rho;       //Estimated Inverse Depth Uncertainty from stereo
+
 };
 
 

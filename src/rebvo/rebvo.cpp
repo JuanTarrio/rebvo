@@ -43,7 +43,7 @@ namespace  rebvo{
 
 
 REBVO::REBVO(const char *configFile)
-    :quit(true),pipe(CBUFSIZE,4),cam_pipe(CCAMBUFSIZE,2),outputFunc(nullptr)
+    :quit(true),pipe(CBUFSIZE,4),cam_pipe(CCAMBUFSIZE,2),cam_pipe_stereo(CCAMBUFSIZE,2),outputFunc(nullptr)
 {
 
 
@@ -181,6 +181,14 @@ REBVO::REBVO(const char *configFile)
         params.ImuTimeScale=1;
     }
 
+    if(!config.GetConfigByName("REBVO","StereoAvaiable",params.StereoAvaiable,true)){
+        params.StereoAvaiable=false;
+    }else{
+
+        InitOK&=config.GetConfigByName("DataSetCamera","DataSetDirStereo",params.DataSetDirStereo,true);
+        InitOK&=config.GetConfigByName("DataSetCamera","DataSetFileStereo",params.DataSetFileStereo,true);
+    }
+
     cam=cam_model({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize);
 
 
@@ -189,7 +197,8 @@ REBVO::REBVO(const char *configFile)
 
 REBVO::REBVO(const REBVOParameters &parameters)
     :params(parameters),quit(true),pipe(CBUFSIZE,4),
-      cam_pipe(CCAMBUFSIZE,2),cam({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize),
+      cam_pipe(CCAMBUFSIZE,2),cam_pipe_stereo(CCAMBUFSIZE,2),
+      cam({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize),
       outputFunc(nullptr)
 {
     construct();
@@ -242,6 +251,10 @@ void REBVO::construct(){
     for(customCam::CustomCamPipeBuffer &pb:cam_pipe)
         pb.img=std::shared_ptr<Image<RGB24Pixel> >(new Image<RGB24Pixel>(params.ImageSize));
 
+    if(params.StereoAvaiable)
+        for(customCam::CustomCamPipeBuffer &pb:cam_pipe)
+            pb.img=std::shared_ptr<Image<RGB24Pixel> >(new Image<RGB24Pixel>(params.ImageSize));
+
 
     //***** PipeLine init ******
 
@@ -256,6 +269,13 @@ void REBVO::construct(){
         pbuf.img=new Image<float>(cam.sz);
         pbuf.imgc=new Image<RGB24Pixel>(cam.sz);
         pbuf.t=0;
+
+        if(params.StereoAvaiable){
+            pbuf.ss_pair=new sspace(params.Sigma0,params.KSigma,cam.sz,3);
+            pbuf.ef_pair=new edge_tracker(cam,255*3);
+            pbuf.img_pair=new Image<float>(cam.sz);
+            pbuf.imgc_pair=new Image<RGB24Pixel>(cam.sz);
+        }
     }
     return;
 }

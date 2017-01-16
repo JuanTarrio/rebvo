@@ -185,6 +185,10 @@ void edge_finder::build_mask(sspace *ss,        //State space containing image d
 
             kl[kn].m_id=-1;
 
+            kl[kn].stereo_m_id=-1;
+            kl[kn].stereo_rho=RhoInit;
+            kl[kn].stereo_s_rho=RHO_MAX;
+
 
             img_mask_kl[img_inx]=kn;    //Set the index of the keyline in the mask
 

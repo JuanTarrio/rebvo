@@ -26,7 +26,7 @@
 namespace  rebvo{
 
 
-int copy_net_keyline(edge_finder &from, net_keyline *to, int kl_size,double k_prof){
+int copy_net_keyline(edge_finder &from,edge_finder *from_pair, net_keyline *to, int kl_size,double k_prof){
 
     uint j=0;
     for(auto &kl:from){
@@ -38,9 +38,20 @@ int copy_net_keyline(edge_finder &from, net_keyline *to, int kl_size,double k_pr
         to[j].qx=round(kl.c_p.x);
         to[j].qy=round(kl.c_p.y);
 
-        to[j].extra.flow.x=util::clamp_uchar(round((kl.p_m.x-kl.p_m_0.x)*10+127.0));
-        to[j].extra.flow.y=util::clamp_uchar(round((kl.p_m.y-kl.p_m_0.y)*10+127.0));
+        if(from_pair){
+            if(kl.stereo_m_id>=0){
 
+                to[j].extra.flow.x=util::clamp_uchar(round((-kl.p_m.x+(*from_pair)[kl.stereo_m_id].p_m.x)+127.0));
+                to[j].extra.flow.y=util::clamp_uchar(round((-kl.p_m.y+(*from_pair)[kl.stereo_m_id].p_m.y)+127.0));
+            }else{
+
+                to[j].extra.flow.x=127;
+                to[j].extra.flow.y=127;
+            }
+        }else{
+            to[j].extra.flow.x=util::clamp_uchar(round((kl.p_m.x-kl.p_m_0.x)*10+127.0));
+            to[j].extra.flow.y=util::clamp_uchar(round((kl.p_m.y-kl.p_m_0.y)*10+127.0));
+        }
         to[j].rho=std::max(util::clamp_ushort(NET_RHO_SCALING*kl.rho/k_prof),(u_short)1);
         to[j].s_rho=std::max(util::clamp_ushort(NET_RHO_SCALING*kl.s_rho/k_prof),(u_short)1);
 

@@ -63,6 +63,26 @@ VideoCam * REBVO::initCamera(){
     }
 }
 
+VideoCam * REBVO::initPairCamera(){
+    switch (params.CameraType) {
+    case 3:
+        return new customCam(cam_pipe_stereo, cam.sz, params.SimFile.data());
+        break;
+    case 2:
+        return new DataSetCam(params.DataSetDirStereo.data(),
+                params.DataSetFileStereo.data(), cam.sz, params.CamTimeScale,
+                params.SimFile.data());
+        break;
+    case 1:
+        return nullptr;
+        break;
+    case 0:
+    default:
+        return nullptr;
+        break;
+    }
+}
+
 
 void REBVO::FirstThr(REBVO *cf) {
 
@@ -77,10 +97,11 @@ void REBVO::FirstThr(REBVO *cf) {
 
 	cam_model cam(cf->cam);    //Start a fresh copy for tread safe use
 
-	RGB24Pixel *data;
+    RGB24Pixel *data=nullptr,*data_pair=nullptr;
 
 	image_undistort undistorter(cam);
 	Image<RGB24Pixel> img_dist(cam.sz);
+    Image<RGB24Pixel> img_dist_pair(cam.sz);
 
 	//***** Cam init *****
 
@@ -92,6 +113,13 @@ void REBVO::FirstThr(REBVO *cf) {
 		return;
 	}
 
+    VideoCam *camara_pair=cf->initPairCamera();
+
+    if (!camara_pair || camara->Error()) {
+        cout << "REBVO: Failed to initialize the stereo camera " << endl;
+        cf->quit = true;
+        return;
+    }
 	//***** Call thread 1 & set cpu afiinity ******
 
 	std::thread Thr1(SecondThread, cf);
@@ -122,6 +150,28 @@ void REBVO::FirstThr(REBVO *cf) {
 			}
 		}
 
+
+        //********* Grab and sync stereo frame *****************//
+
+        if(cf->params.StereoAvaiable){
+
+            double t_stereo;
+            while ((data_pair = camara_pair->GrabBuffer(t_stereo, false)) == nullptr) {
+                if (cf->quit || camara_pair->Error()) {
+                    pbuf.quit = true; //If no more frames, release the pipeline buffer
+                    cf->pipe.ReleaseBuffer(0);               //with the quit flag on
+                    std::cout << "bye bye cruel world on stereo" << std::endl;
+                    goto exit_while;
+                }
+            }
+
+            if(fabs(t-t_stereo)>(0.5/cf->params.config_fps))
+                std::cout<<"REBVO Warning: cameras are unsync: "<<t-t_stereo<<"\n";
+
+        }
+
+        //********* Grab IMU datas *****************//
+
 		if (cf->imu) {
             while(!cf->quit){
                 pbuf.imu = cf->imu->GrabAndIntegrate(t0 + cf->params.TimeDesinc,
@@ -146,27 +196,52 @@ void REBVO::FirstThr(REBVO *cf) {
 
 		if (cf->params.useUndistort) {
 
-			if (cf->params.rotatedCam)
+            if (cf->params.rotatedCam){
 				img_dist.copyFromRotate180(data); //copy buffer for fast release and rotate 180 deg
-			else
+
+                if(cf->params.StereoAvaiable)
+                    img_dist_pair.copyFromRotate180(data_pair);
+            }else{
 				img_dist = data;              //copy buffer for fast release
 
+                if(cf->params.StereoAvaiable)
+                    img_dist_pair=data_pair;
+            }
+
 			camara->ReleaseBuffer();
+
+
+            if(cf->params.StereoAvaiable)
+                camara_pair->ReleaseBuffer();
 
 			undistorter.undistort<true>((*pbuf.imgc), img_dist); //Use radial-tangencial with bilin interp for undistortion
 
+            if(cf->params.StereoAvaiable)
+                undistorter.undistort<true>((*pbuf.imgc_pair), img_dist_pair); //Use radial-tangencial with bilin interp for undistortion
+
 		} else {
 
-			if (cf->params.rotatedCam)
+            if (cf->params.rotatedCam){
 				(*pbuf.imgc).copyFromRotate180(data); //copy buffer for fast release and rotate 180 deg
-			else
+
+
+                if(cf->params.StereoAvaiable)
+                    (*pbuf.imgc_pair).copyFromRotate180(data_pair);
+
+            }else{
 				(*pbuf.imgc) = data;              //copy buffer for fast release
 
+                if(cf->params.StereoAvaiable)
+                    (*pbuf.imgc_pair)=data_pair;
+            }
+
 			camara->ReleaseBuffer();
+            camara_pair->ReleaseBuffer();
 		}
 
 		//Simple color conversion
 		Image<float>::ConvertRGB2BW((*pbuf.img), *pbuf.imgc);
+
 
 		//Build the scales and the DoG for edge detection
 		pbuf.ss->build(*pbuf.img);
@@ -178,8 +253,26 @@ void REBVO::FirstThr(REBVO *cf) {
 				cf->params.ReferencePoints, cf->params.DetectorAutoGain,
 				cf->params.DetectorMaxThresh, cf->params.DetectorMinThresh);
 
+
+        if(cf->params.StereoAvaiable){
+            Image<float>::ConvertRGB2BW((*pbuf.img_pair), *pbuf.imgc_pair);
+
+
+            //Build the scales and the DoG for edge detection on pair img
+            pbuf.ss_pair->build(*pbuf.img_pair);
+
+            //Detect Edges on pair
+            pbuf.ef_pair->detect(pbuf.ss_pair, cf->params.DetectorPlaneFitSize,
+                    cf->params.DetectorPosNegThresh, cf->params.DetectorDoGThresh,
+                    cf->params.MaxPoints, tresh, l_kl_num,
+                    cf->params.ReferencePoints, cf->params.DetectorAutoGain,
+                    cf->params.DetectorMaxThresh, cf->params.DetectorMinThresh);
+        }
+
+
 		//Build auxiliary image on the GT
 		pbuf.gt->build_field(*pbuf.ef, cf->params.SearchRange);
+
 
 		dtp = tproc.stop();
 
