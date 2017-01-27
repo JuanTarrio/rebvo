@@ -73,7 +73,7 @@ private:
     net_keyline *net_kl;
     int net_kln=0;
 
-    bool ShowImg=true;
+    int ShowImg=1;
 
 
     double time2impact;

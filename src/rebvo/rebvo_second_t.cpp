@@ -46,10 +46,10 @@ void  REBVO::SecondThread(REBVO *cf){
     using namespace TooN;
 
 
-    Matrix <3,3> RCam2Pair=Data( 1.0000, 0.0023,0.0004,
-                                -0.0023, 0.9999,0.0141,
-                                -0.0003,-0.0141,0.9999);
-    Vector <3> TCam2Pair=makeVector(-0.1101,0.0004,-0.0009);
+    Matrix <3,3> RCam2Pair=Data(  0.999997256477450,   0.002312067192420,   0.000376008102351,
+                                 -0.002317135723285,   0.999898048506528,   0.014089835846697,
+                                 -0.000343393120589,  -0.014090668452670,   0.999900662638179);
+    Vector <3> TCam2Pair=makeVector(-0.110073808127139,0.000399121547014,-0.000853702503351);
 
 
     double dt_frame;
@@ -349,7 +349,7 @@ void  REBVO::SecondThread(REBVO *cf){
             //***** Match from the new EdgeMap to the old one searching on the stereo line *****
 
             //Because the old edge map mask is used, New keylines and Translation are back rotated
-            klm_num=new_buf.ef->directed_matching(V,P_V,R,old_buf.ef,cf->params.MatchThreshModule,cf->params.MatchThreshAngle,cf->params.SearchRange,cf->params.LocationUncertaintyMatch);
+            klm_num=new_buf.ef->directed_matching(V,P_V,R,old_buf.ef,cf->params.MatchThreshModule,cf->params.MatchThreshAngle,cf->params.SearchRange,cf->params.LocationUncertaintyMatch,cf->params.StereoAvaiable);
 
             if(klm_num<cf->params.MatchThreshold){     //If matching keylines are below a certain threshold, reestart the estimation
 
@@ -384,8 +384,55 @@ void  REBVO::SecondThread(REBVO *cf){
 
                 if(cf->params.StereoAvaiable){
 
-                    std::cout << "\nStereo M:"<<new_buf.ef->directed_matching_stereo(TCam2Pair/K,RCam2Pair,new_buf.ef_pair,cf->params.MatchThreshModule,cf->params.MatchThreshAngle,100,cf->params.LocationUncertaintyMatch);
+                    new_buf.stereo_match_num=new_buf.ef->directed_matching_stereo(TCam2Pair,RCam2Pair,new_buf.ef_pair,
+                                                                                  cf->params.MatchThreshModule,cf->params.MatchThreshAngle,100,
+                                                                                  cf->params.LocationUncertaintyMatch,cf->params.ReshapeQAbsolute,
+                                                                                  cf->params.ReshapeQRelative,cf->params.LocationUncertainty);
 
+                    //std::cout << "\nStereo M:"<<new_buf.stereo_match_num;
+
+
+
+                    (*new_buf.imgc).Reset({0,0,0});
+
+                    for(KeyLine &kl: *new_buf.ef_pair){
+                        (*new_buf.imgc)[kl.p_inx].pix.r=0;
+                        (*new_buf.imgc)[kl.p_inx].pix.g=255;
+                        (*new_buf.imgc)[kl.p_inx].pix.b=0;
+                    }
+
+                    for(KeyLine &kl: *new_buf.ef){
+
+                        Vector<3> p=makeVector(kl.p_m.x,kl.p_m.y,cf->cam.zfm)/(cf->cam.zfm*(kl.rho+kl.s_rho));
+                        Vector<3> pr=RCam2Pair*p+TCam2Pair/K;
+
+                        Point3D<float> pim=new_buf.ef_pair->GetCam().projectImgCord(Point3D<float>(pr[0],pr[1],pr[2]));
+
+
+                        p=makeVector(kl.p_m.x,kl.p_m.y,cf->cam.zfm)/(cf->cam.zfm*(kl.rho-kl.s_rho));
+                        pr=RCam2Pair*p+TCam2Pair/K;
+
+                        Point3D<float> pim2=new_buf.ef_pair->GetCam().projectImgCord(Point3D<float>(pr[0],pr[1],pr[2]));
+
+                        if(util::norm(pim.x-pim2.x,pim.y-pim2.y)>20)
+                            continue;
+
+                        int inx=(*new_buf.imgc).GetIndexRC(pim.x,pim.y);
+
+                        if(inx<0)
+                            continue;
+                        (*new_buf.imgc)[inx].pix.r=0;
+                        (*new_buf.imgc)[inx].pix.g=255;
+                        (*new_buf.imgc)[inx].pix.b=255;
+
+                        inx=(*new_buf.imgc).GetIndexRC(pim2.x,pim2.y);
+
+                        if(inx<0)
+                            continue;
+                        (*new_buf.imgc)[inx].pix.r=255;
+                        (*new_buf.imgc)[inx].pix.g=255;
+                        (*new_buf.imgc)[inx].pix.b=0;
+                    }
 
                 }
 
@@ -393,7 +440,12 @@ void  REBVO::SecondThread(REBVO *cf){
 
 
                 //****** Optionally reescale the EdgeMap's Depth
-                Kp=new_buf.ef->EstimateReScaling(P_Kp,RHO_MAX,1,cf->params.DoReScaling>0);
+                if(cf->params.StereoAvaiable){
+                    new_buf.ef->fuseStereoDepth();
+                    Kp=1;
+                }else{
+                    Kp=new_buf.ef->EstimateReScaling(P_Kp,RHO_MAX,1,cf->params.DoReScaling>0);
+                }
                // cout << P_Kp<<"\n";
 
 

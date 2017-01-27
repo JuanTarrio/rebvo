@@ -96,10 +96,12 @@ void REBVO::FirstThr(REBVO *cf) {
 	//Simple camera model
 
 	cam_model cam(cf->cam);    //Start a fresh copy for tread safe use
+    cam_model cam_stereo(cf->cam_stereo);    //Start a fresh copy for tread safe use
 
     RGB24Pixel *data=nullptr,*data_pair=nullptr;
 
 	image_undistort undistorter(cam);
+    image_undistort undistorter_pair(cam_stereo);
 	Image<RGB24Pixel> img_dist(cam.sz);
     Image<RGB24Pixel> img_dist_pair(cam.sz);
 
@@ -113,13 +115,18 @@ void REBVO::FirstThr(REBVO *cf) {
 		return;
 	}
 
-    VideoCam *camara_pair=cf->initPairCamera();
+    VideoCam *camara_pair=nullptr;
 
-    if (!camara_pair || camara->Error()) {
-        cout << "REBVO: Failed to initialize the stereo camera " << endl;
-        cf->quit = true;
-        return;
+    if(cf->params.StereoAvaiable){
+
+        camara_pair=cf->initPairCamera();
+        if (!camara_pair || camara->Error()) {
+            cout << "REBVO: Failed to initialize the stereo camera " << endl;
+            cf->quit = true;
+            return;
+        }
     }
+
 	//***** Call thread 1 & set cpu afiinity ******
 
 	std::thread Thr1(SecondThread, cf);
@@ -217,7 +224,7 @@ void REBVO::FirstThr(REBVO *cf) {
 			undistorter.undistort<true>((*pbuf.imgc), img_dist); //Use radial-tangencial with bilin interp for undistortion
 
             if(cf->params.StereoAvaiable)
-                undistorter.undistort<true>((*pbuf.imgc_pair), img_dist_pair); //Use radial-tangencial with bilin interp for undistortion
+                undistorter_pair.undistort<true>((*pbuf.imgc_pair), img_dist_pair); //Use radial-tangencial with bilin interp for undistortion
 
 		} else {
 
@@ -236,7 +243,9 @@ void REBVO::FirstThr(REBVO *cf) {
             }
 
 			camara->ReleaseBuffer();
-            camara_pair->ReleaseBuffer();
+
+            if(cf->params.StereoAvaiable)
+                camara_pair->ReleaseBuffer();
 		}
 
 		//Simple color conversion

@@ -68,8 +68,8 @@
     ImageWidth=320									//Image size
     ImageHeight=240
     FPS=50										//Frames per second
-    UseUndistort=1
-    Rotate180=1
+    UseUndistort=0
+    Rotate180=0
 
 &REBVO
 
@@ -92,6 +92,8 @@
     LogFile=rebvo_log.m                                                                 //Log file in .m format
     TrayFile=rebvo_tray.txt                                                             //Trayectory in TUM dataset format [t pos quat]
 
+    StereoAvaiable=0
+
 
 &DataSetCamera
 
@@ -100,7 +102,7 @@
     TimeScale=1e-9
 
 &IMU
-    ImuMode=1                                                                            //1= use the archquitecture specific class, 2=load full data from ImuFile
+    ImuMode=0                                                                            //1= use the archquitecture specific class, 2=load full data from ImuFile
     ImuFile=/home/odroid/Datasets/MH_03_medium/mav0/imu0/data.csv                        //
     CamImuSE3File=se3.csv                                                                //File containing the SE3 transformation from IMU to Camera
     TimeScale=1                                                     //TimeScale of the IMU file

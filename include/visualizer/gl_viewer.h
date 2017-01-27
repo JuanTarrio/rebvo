@@ -129,7 +129,7 @@ public:
     bool glDrawLoop(RenderParams &rp, bool ReRender, KeySym *key=nullptr);
 
     void drawKeyLines(net_keyline **net_kl, int *net_kln, int net_klistn, float zf, Point2DF &pp, bool tresh,bool DrawSigma);
-    void drawFiller(depth_filler &df, Image<RGB24Pixel> *img_data=nullptr,double scale=1);
+    void drawFiller(depth_filler &df, Image<RGB24Pixel> *img_data=nullptr, double scale=1, bool use_depth=false);
     void drawFillerUnc(depth_filler &df, cam_model &cam, double scale, bool is_uper, float alpha);
 
 

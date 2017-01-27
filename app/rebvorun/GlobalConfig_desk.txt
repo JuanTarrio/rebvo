@@ -5,9 +5,8 @@
 
 
 &Detector                               //The detection is based on zero crossing of the DoG
-
     Sigma0=1.7818                       //The 2 scales used for DoG calculation
-    Sigma1=2.30029
+    KSigma=1.2599                       //1.7818 2.30029 2.72174 3.56359
 
     ReferencePoints=15000               //Reference to the number of points when autothreshold
     MaxPoints=25000                     //Absolute maximun number of points
@@ -59,12 +58,18 @@
     ZfY=525.0
     PPx=320 //319.5									//Camera principal point
     PPy=240 //239.5
-    KcR2=0                  								//Distortion parameters (Not used in REBVO)
-    KcR4=0                  								//Set to 0
     ImageWidth=640									//Image size
     ImageHeight=480
     FPS=50										//Frames per second
     
+
+    KcR2=0                  							//Distortion parameters (Not used in REBVO)
+    KcR4=0                  							//
+    KcR6=0                  								//
+    KcP1=0                                                                     //
+    KcP2=0                            						//
+    UseUndistort=0
+    Rotate180=0
 
 &REBVO
 
@@ -72,6 +77,7 @@
 
     VideoNetHost=10.73.32.54								//Remote host to send the data
     VideoNetPort=2708									//Remote port
+    BlockingUDP=0                                                                       //Use blocking sokets? turn on if lossing packests on transmition, may slow down the system
     VideoNetEnabled=1
 
     VideoSave=0										//Optionally save video after running
@@ -87,14 +93,16 @@
     TrayFile=rebvo_tray.txt                                                             //Trayectory in TUM dataset format [t pos quat]
 
 
+
 &DataSetCamera
 
-    DataSetDir=/home/juan/Datasets/MH_02_easy/mav0/cam0/data/                           //The directory of the dataset
-    DataSetFile=/home/juan/Datasets/MH_02_easy/mav0/cam0/data.csv                       //The file of the dataset (relative to the directory)
-    CamTimeScale=1e-9
+    DataSetDir=/home/juan/Datasets/rgbd_dataset_freiburg2_desk/                  //The directory of the dataset
+    DataSetFile=/home/juan/Datasets/rgbd_dataset_freiburg2_desk/rgb.txt          //The file of the dataset (relative to the directory)
+    TimeScale=1
+
 
 &IMU
-    ImuMode=2
+    ImuMode=0
     ImuFile=/home/juan/Datasets/MH_02_easy/mav0/imu0/data.csv
     ImuTimeScale=1e-9
 

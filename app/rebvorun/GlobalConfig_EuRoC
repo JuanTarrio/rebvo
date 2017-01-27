@@ -93,25 +93,25 @@
     LogFile=rebvo_log.m                                                                 //Log file in .m format
     TrayFile=rebvo_tray.txt                                                             //Trayectory in TUM dataset format [t pos quat]
 
-    StereoAvaiable=1
+    StereoAvaiable=0
 
 &DataSetCamera
 
-    DataSetDir=/home/juan/Datasets/MH_03_medium/mav0/cam0/data/                           //The directory of the dataset
-    DataSetFile=/home/juan/Datasets/MH_03_medium/mav0/cam0/data.csv                       //The file of the dataset
-    DataSetDirStereo=/home/juan/Datasets/MH_03_medium/mav0/cam1/data/                           //The directory of the dataset
-    DataSetFileStereo=/home/juan/Datasets/MH_03_medium/mav0/cam1/data.csv                       //The file of the dataset
+    DataSetDir=/home/juan/Datasets/V1_01_easy/mav0/cam0/data/                           //The directory of the dataset
+    DataSetFile=/home/juan/Datasets/V1_01_easy/mav0/cam0/data.csv                       //The file of the dataset
+    DataSetDirStereo=/home/juan/Datasets/V1_01_easy/mav0/cam1/data/                           //The directory of the dataset
+    DataSetFileStereo=/home/juan/Datasets/V1_01_easy/mav0/cam1/data.csv                       //The file of the dataset
     TimeScale=1e-9
 
 &IMU
     ImuMode=2                                                          //1= use the archquitecture specific class, 2=load full data from ImuFile
-    ImuFile=/home/juan/Datasets/MH_03_medium/mav0/imu0/data.csv         //File containing the SE3 transformation from IMU to Camera
+    ImuFile=/home/juan/Datasets/V1_01_easy/mav0/imu0/data.csv         //File containing the SE3 transformation from IMU to Camera
     CamImuSE3File=se3_EuRoC.csv                                         //TimeScale of the IMU file
     TimeScale=1e-9
 
     TimeDesinc=0                                                        //Time desincrozitation IMU2Cam (sec)
 
-    InitBias=0                                                          //0=Use initial guess, 1=use InitBiasFrameNum frames to estimate bias
+    InitBias=1                                                          //0=Use initial guess, 1=use InitBiasFrameNum frames to estimate bias
     InitBiasFrameNum=10;
     BiasHintX=0.0188
     BiasHintY=0.0037
@@ -135,7 +135,17 @@
     SampleTime=0.001250                                                 //Sample time for archIMU
     DeviceName=/dev/ttySAC2                                             //device name for archIMU
 
+&Stereo
+    ZfX=457.587										//Camera XY focal length
+    ZfY=456.134
+    PPx=379.999         								//Camera principal point
+    PPy=255.238
 
+    KcR2=-0.28368365                 				//Distortion parameters (Not used in REBVO)
+    KcR4= 0.07451284                  				//
+    KcR6= 0                  					//
+    KcP1=-0.00010473                                            //
+    KcP2=-3.55590700e-05                  			//
 
 &SimuCamera
 

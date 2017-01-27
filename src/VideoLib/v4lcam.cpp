@@ -36,6 +36,7 @@ int v4lCam::GrabFrame(RGB24Pixel *data, double &tstamp,bool drop_frames)
 
     tstamp=(double)tv.tv_sec+(double)tv.tv_usec*1.0e-6;
 
+    paknum++;
 
     return r;
 }
@@ -49,6 +50,7 @@ RGB24Pixel* v4lCam::GrabBuffer(double &tstamp, bool drop_frames)
 
     RGB24Pixel* data=CamaraGrabBuffer(this,&tv);
 
+    paknum++;
 
     tstamp=(double)tv.tv_sec+(double)tv.tv_usec*1.0e-6;
     return data;

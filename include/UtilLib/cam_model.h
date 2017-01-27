@@ -131,12 +131,49 @@ public:
         float &&z=1.0/pIm.z;
         return {x,y,z};
     }
+
+
     template <typename PointType>
     inline PointType unprojectImgCord(const PointType &pIm){
         float &&x=(pIm.x-pp.x)/pIm.z/zfm;
         float &&y=(pIm.y-pp.y)/pIm.z/zfm;
         float &&z=1.0/pIm.z;
         return {x,y,z};
+    }
+
+
+    template <typename VectorType>
+    inline VectorType projectHomCordVec(const VectorType &p3d){
+        VectorType out;
+        out[0]=p3d[0]/p3d[2]*zfm;
+        out[1]=p3d[1]/p3d[2]*zfm;
+        out[2]=1/p3d[2];
+        return out;
+    }
+    template <typename VectorType>
+    inline VectorType projectImgCordVec(const VectorType &p3d){
+        VectorType out;
+        out[0]=p3d[0]/p3d[2]*zfm+pp.x;
+        out[1]=p3d[1]/p3d[2]*zfm+pp.y;
+        out[2]=1/p3d[2];
+        return out;
+    }
+
+    template <typename VectorType>
+    inline VectorType unprojectHomCordVec(const VectorType &pIm){
+        VectorType out;
+        out[0]=pIm[0]/pIm[2]/zfm;
+        out[1]=pIm[1]/pIm[2]/zfm;
+        out[2]=1.0/pIm[2];
+        return out;
+    }
+    template <typename VectorType>
+    inline VectorType unprojectImgCordVec(const VectorType &pIm){
+        VectorType out;
+        out[0]=(pIm[0]-pp.x)/pIm[2]/zfm;
+        out[1]=(pIm[1]-pp.y)/pIm[2]/zfm;
+        out[2]=1.0/pIm[2];
+        return out;
     }
 
 };

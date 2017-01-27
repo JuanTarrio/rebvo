@@ -295,6 +295,9 @@ compiler_clean:
 		../../include/mtracklib/global_tracker.h \
 		../../include/UtilLib/ne10wrapper.h \
 		../../include/mtracklib/keyframe.h \
+		../../include/visualizer/depth_filler.h \
+		../../include/CommLib/net_keypoint.h \
+		../../include/mtracklib/nav_data_defs.h \
 		../../include/UtilLib/imugrabber.h \
 		../../include/VideoLib/customcam.h \
 		../../include/VideoLib/videocam.h \
@@ -324,6 +327,9 @@ compiler_clean:
 		../../include/mtracklib/global_tracker.h \
 		../../include/UtilLib/ne10wrapper.h \
 		../../include/mtracklib/keyframe.h \
+		../../include/visualizer/depth_filler.h \
+		../../include/CommLib/net_keypoint.h \
+		../../include/mtracklib/nav_data_defs.h \
 		../../include/VideoLib/customcam.h \
 		../../include/VideoLib/videocam.h \
 		../../include/UtilLib/ttimer.h \

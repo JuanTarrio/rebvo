@@ -176,6 +176,8 @@ void edge_finder::build_mask(sspace *ss,        //State space containing image d
 
             kl[kn].rho=RhoInit;                     //Rho & srho init point
             kl[kn].s_rho=RHO_MAX;
+            kl[kn].rho0=RhoInit;                     //Rho & srho init point
+            kl[kn].s_rho0=RHO_MAX;
 
 
             kl[kn].m_num=0;

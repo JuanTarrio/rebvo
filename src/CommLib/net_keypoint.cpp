@@ -38,11 +38,19 @@ int copy_net_keyline(edge_finder &from,edge_finder *from_pair, net_keyline *to, 
         to[j].qx=round(kl.c_p.x);
         to[j].qy=round(kl.c_p.y);
 
-        if(from_pair){
-            if(kl.stereo_m_id>=0){
+        to[j].rho=std::max(util::clamp_ushort(NET_RHO_SCALING*kl.rho/k_prof),(u_short)1);
+        to[j].s_rho=std::max(util::clamp_ushort(NET_RHO_SCALING*kl.s_rho/k_prof),(u_short)1);
 
-                to[j].extra.flow.x=util::clamp_uchar(round((-kl.p_m.x+(*from_pair)[kl.stereo_m_id].p_m.x)+127.0));
-                to[j].extra.flow.y=util::clamp_uchar(round((-kl.p_m.y+(*from_pair)[kl.stereo_m_id].p_m.y)+127.0));
+        if(from_pair){
+            if(kl.stereo_m_id>=0 && fabs(round(-kl.c_p.x+(*from_pair)[kl.stereo_m_id].c_p.x))<127 && fabs(round(-kl.c_p.y+(*from_pair)[kl.stereo_m_id].c_p.y))<127){
+
+                to[j].extra.flow.x=util::clamp_uchar(round((-kl.c_p.x+(*from_pair)[kl.stereo_m_id].c_p.x)+127.0));
+                to[j].extra.flow.y=util::clamp_uchar(round((-kl.c_p.y+(*from_pair)[kl.stereo_m_id].c_p.y)+127.0));
+
+
+        //        to[j].rho=std::max(util::clamp_ushort(NET_RHO_SCALING*kl.stereo_rho/k_prof),(u_short)1);
+        //        to[j].s_rho=std::max(util::clamp_ushort(NET_RHO_SCALING*kl.stereo_s_rho/k_prof),(u_short)1);
+
             }else{
 
                 to[j].extra.flow.x=127;
@@ -52,8 +60,6 @@ int copy_net_keyline(edge_finder &from,edge_finder *from_pair, net_keyline *to, 
             to[j].extra.flow.x=util::clamp_uchar(round((kl.p_m.x-kl.p_m_0.x)*10+127.0));
             to[j].extra.flow.y=util::clamp_uchar(round((kl.p_m.y-kl.p_m_0.y)*10+127.0));
         }
-        to[j].rho=std::max(util::clamp_ushort(NET_RHO_SCALING*kl.rho/k_prof),(u_short)1);
-        to[j].s_rho=std::max(util::clamp_ushort(NET_RHO_SCALING*kl.s_rho/k_prof),(u_short)1);
 
         to[j].n_kl=-1;
 

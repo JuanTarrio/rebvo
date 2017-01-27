@@ -296,6 +296,7 @@ compiler_clean:
 		../../include/mtracklib/global_tracker.h \
 		../../include/UtilLib/ne10wrapper.h \
 		../../include/mtracklib/keyframe.h \
+		../../include/visualizer/depth_filler.h \
 		../../include/UtilLib/imugrabber.h \
 		../../include/VideoLib/customcam.h \
 		../../include/VideoLib/videocam.h \

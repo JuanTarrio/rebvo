@@ -294,6 +294,7 @@ int edge_tracker::directed_matching(
         double min_thr_ang,             //Threshold on the angle
         double max_radius,              //Maximun search distance
         double loc_uncertainty,         //Location Uncertainty
+        bool stereo_mode,
         bool clear)                     //Clear the matches? default false
 {
 
@@ -322,8 +323,14 @@ int edge_tracker::directed_matching(
 
         //If a match is found clone data from et0
 
-        kl[i_kn].rho=et0->kl[i_mch].rho;
-        kl[i_kn].s_rho=et0->kl[i_mch].s_rho;
+        if(stereo_mode){
+            kl[i_kn].rho=et0->kl[i_mch].rho0;
+            kl[i_kn].s_rho=et0->kl[i_mch].s_rho0;
+        }else{
+            kl[i_kn].rho=et0->kl[i_mch].rho;
+            kl[i_kn].s_rho=et0->kl[i_mch].s_rho;
+        }
+
 
         kl[i_kn].m_id=i_mch;
         kl[i_kn].m_num=et0->kl[i_mch].m_num+1;
@@ -413,12 +420,16 @@ int edge_tracker::FordwardMatch(edge_tracker *et    //Edgemap to match to
 
 int edge_tracker::search_match_stereo(
         KeyLine &k,                     //KeyLine to search for
-        TooN::Vector <3> Vel,           //Camera-camera translation
-        TooN::Matrix <3,3> Rot,         //Camera-camera Rotation
+        TooN::Vector <3> &tCam0toCam1,           //Camera-camera translation
+        TooN::Matrix <3,3> &RCam0toCam1,         //Camera-camera Rotation
+        cam_model &cam0,
         double min_thr_mod,             //Gradient matching threshold on the module
         double min_thr_ang,             //Gradient matching threshold on the angle (degrees)
         double max_radius,              //Max Pixel Distance to search for
-        double loc_uncertainty          //Location Uncertainty
+        double loc_uncertainty,          //Location Uncertainty
+        double ReshapeQAbsolute,
+        double ReshapeQRelative,
+        double LocationUncertaintyModel
         )
 {
 
@@ -426,33 +437,36 @@ int edge_tracker::search_match_stereo(
 
     const double cang_min_edge=cos(min_thr_ang*M_PI/180.0);
 
-    double dq_min=0,dq_max=0,t_x=0,t_y=0;
+    double t_x=0,t_y=0,dq_min,dq_max;
+
+    double min_rho=std::max(k.rho-k.s_rho,RHO_MIN);
+    double max_rho=std::min(k.rho+k.s_rho,RHO_MAX);
+
+    Vector <3> p0min=cam0.unprojectHomCordVec(makeVector(k.p_m.x,k.p_m.y,min_rho));    //Unproject the Keypoint using min rho
+    Vector <3> p0max=cam0.unprojectHomCordVec(makeVector(k.p_m.x,k.p_m.y,max_rho));    //Unproject the Keypoint using max rho
 
 
-    Vector <3> p_m3=Rot*makeVector(k.p_m.x,k.p_m.y,cam_mod.zfm);    //Rotate the Keypoint
-                                                                    //to look on the pair EdgeMap's mask
+    Vector <3> q1min=cam_mod.projectHomCordVec(RCam0toCam1*p0min+tCam0toCam1);
+    Vector <3> q1max=cam_mod.projectHomCordVec(RCam0toCam1*p0max+tCam0toCam1);
 
-    Point2DF p_m={(float)(p_m3[0]*cam_mod.zfm/p_m3[2]),(float)(p_m3[1]*cam_mod.zfm/p_m3[2])};
-    double k_rho=k.rho*cam_mod.zfm/p_m3[2];
-    double k_s_rho=k.s_rho*cam_mod.zfm/p_m3[2];
+    if(q1min[2]<RHO_MIN/2.0 || q1max[2]<RHO_MIN/2.0){
+        std::cout << "q1 neg "<< q1min[2]<<" "<<q1max[2]<<"\n";
+    }
 
-    Point2DF pi0=cam_mod.Hom2Img(p_m);                               //Transform to image coordinates
+    Vector <2> dq=q1max.slice<0,2>()-q1min.slice<0,2>();
 
-    k_rho=1/(1/k_rho+Vel[2]);                                        //tranform to this reference frame
+    Point2D<double> pi0=cam_mod.Hom2Img<Point2D<double> >({q1min[0],q1min[1]});                               //Transform to image coordinates
 
-    t_x=(Vel[0]*cam_mod.zfm-Vel[2]*p_m.x);                          //Displacement vector t such that
-    t_y=(Vel[1]*cam_mod.zfm-Vel[2]*p_m.y);                          //t*rho=pixel_displacement
 
-    double norm_t=util::norm(t_x,t_y);
-
+    double norm_t=norm(dq);
 
     if(norm_t>1e-6){            //If displacement (|Vel|>0)
-        t_x/=norm_t;            //Normalize t, keep the mod in norm_t
-        t_y/=norm_t;
+        t_x=dq[0]/norm_t;            //Normalize t, keep the mod in norm_t
+        t_y=dq[1]/norm_t;
 
 
-        dq_min=std::max(0.0,norm_t*(k_rho-k_s_rho))-loc_uncertainty;         //Minimun distance to seach for, constrained by -ERR_DQ
-        dq_max=std::min(max_radius,norm_t*(k_rho+k_s_rho))+loc_uncertainty;  //Maximun distance to seach for, constrained by max_radius+ERR_DQ
+        dq_min=-loc_uncertainty;         //Minimun distance to seach for, constrained by -ERR_DQ
+        dq_max=std::min(max_radius,norm_t+loc_uncertainty);  //Maximun distance to seach for, constrained by max_radius+ERR_DQ
 
 
     }else{  //If no displacemt (not common) search in perpendicular direction of the edge
@@ -462,10 +476,10 @@ int edge_tracker::search_match_stereo(
         t_x/=norm_t;
         t_y/=norm_t;
         norm_t=1;
-        dq_min=-max_radius-loc_uncertainty;
-        dq_max=max_radius+loc_uncertainty;
+        dq_min=-max_radius/2-loc_uncertainty;
+        dq_max=max_radius/2+loc_uncertainty;
 
-
+        std::cout << "\nSeach Match Stereo: No move!\n";
 
     }
 
@@ -495,28 +509,32 @@ int edge_tracker::search_match_stereo(
 
 
 
-            double v_rho_dr=(                           //Estimated uncertainty on the displacement
-                             loc_uncertainty*loc_uncertainty //Edge location error
-                             +k_s_rho*k_s_rho*norm_t*norm_t      //rho uncertainty error
-                             );
-
-            if(util::square(t-norm_t*k_rho)>v_rho_dr)     //test of model consistency
-                continue;
-
             //return j;
             //Al test passed
             if(match>=0){   //more than one match, return no match
-                return -1;
+
+                if(util::norm2(kl[j].p_m.x-kl[match].p_m.x,kl[j].p_m.y-kl[match].p_m.y)>loc_uncertainty*loc_uncertainty)
+                    return -1;
             }
             match=j;
-
 
         }
 
     }
 
+    if(match>=0){
+        double I_rho;
+        k.stereo_rho=getDepthFromStereo(k,kl[match],cam0,cam_mod,tCam0toCam1,RCam0toCam1,ReshapeQAbsolute,ReshapeQRelative,LocationUncertaintyModel,I_rho);
 
+        k.stereo_s_rho=1/sqrt(I_rho);
+        if(k.stereo_rho<0){
+            //std::cout <<"\n"<<q1max <<" "<<q1min<< " t:"<<t_match;
+            k.stereo_s_rho=1e3;
+            k.stereo_rho=RhoInit;
+            match=-1;
+        }
 
+    }
     return match;
 
 
@@ -528,13 +546,16 @@ int edge_tracker::search_match_stereo(
 //***********************************************************************
 
 int edge_tracker::directed_matching_stereo(
-        TooN::Vector <3> Vel,           //Estimated velocity
-        TooN::Matrix <3,3> Rot,     //Estimated back-rotation
+        TooN::Vector <3> &tCam0toCam1,           //Estimated velocity
+        TooN::Matrix <3,3> &RCam0toCam1,     //Estimated back-rotation
         edge_tracker *et_pair,              //EdgeMap were to look for matches
         double min_thr_mod,             //Threshold on the module
         double min_thr_ang,             //Threshold on the angle
         double max_radius,              //Maximun search distance
-        double loc_uncertainty          //Location Uncertainty
+        double loc_uncertainty,          //Location Uncertainty
+        double ReshapeQAbsolute,
+        double ReshapeQRelative,
+        double LocationUncertaintyModel
         )
 {
 
@@ -548,7 +569,9 @@ int edge_tracker::directed_matching_stereo(
 
         //Search for a match
 
-        if((kl[i_kn].stereo_m_id=et_pair->search_match_stereo(kl[i_kn],Vel,Rot,min_thr_mod,min_thr_ang,max_radius,loc_uncertainty))<0)
+        if((kl[i_kn].stereo_m_id=et_pair->search_match_stereo(kl[i_kn],tCam0toCam1,RCam0toCam1,cam_mod,
+                                                              min_thr_mod,min_thr_ang,max_radius,loc_uncertainty,
+                                                              ReshapeQAbsolute,ReshapeQRelative,LocationUncertaintyModel))<0)
             continue;
 
 
@@ -559,8 +582,76 @@ int edge_tracker::directed_matching_stereo(
 
     }
 
-
     return nmatch;
+
+}
+
+
+
+double edge_tracker::getDepthFromStereo(KeyLine &kl,KeyLine &kl_pair,cam_model &cam0,cam_model &cam1,
+                                              TooN::Vector <3> &tCam0toCam1,
+                                              TooN::Matrix <3,3> &RCam0toCam1,
+                                              double ReshapeQAbsolute,
+                                              double ReshapeQRelative,
+                                              double LocationUncertainty,double &I_rho){
+
+
+
+    Vector <3> qh0=makeVector(kl.p_m.x/cam0.zfm,kl.p_m.y/cam0.zfm,1);
+    Vector <3> qh1=RCam0toCam1*qh0;
+
+    auto &qm1=kl_pair.p_m;
+    auto &u=kl_pair.u_m;
+    auto &zf1=cam1.zfm;
+
+    double div=u.x*(zf1*tCam0toCam1[0]-qm1.x*tCam0toCam1[2])+u.y*(zf1*tCam0toCam1[1]-qm1.y*tCam0toCam1[2]);
+    double mul=-u.x*(zf1*qh1[0]-qm1.x*qh1[2])-u.y*(zf1*qh1[1]-qm1.y*qh1[2]);
+    double rho=mul/div;
+
+    double df_drho=u.x*zf1*(tCam0toCam1[0]*(qh1[2]+tCam0toCam1[2]*rho)-tCam0toCam1[2]*(qh1[0]+tCam0toCam1[0]*rho))/util::square((qh1[2]+tCam0toCam1[2]*rho))+
+            u.y*zf1*(tCam0toCam1[1]*(qh1[2]+tCam0toCam1[2]*rho)-tCam0toCam1[2]*(qh1[1]+tCam0toCam1[1]*rho))/util::square((qh1[2]+tCam0toCam1[2]*rho));
+
+    I_rho=util::square(df_drho/LocationUncertainty);
+
+
+    if(std::isnan(rho) || std::isnan(df_drho)){
+        std::cout <<"\nNan Stereo:"<< div<<" "<<mul<<" "<<qm1.x << " " << qm1.y<< " "<<u.x<<" "<<u.y;
+        rho=1;
+        I_rho=1e-10;
+    }
+
+    /*if(rho<0){
+        std::cout <<"\nNeg Stereo:"<< div<<" "<<mul<<" Qm1: "<<qm1.x << " " << qm1.y<<" Pm0: "<< kl.p_m.x<<" " << kl.p_m.y<< " U: "<<u.x<<" "<<u.y<<" Qh1:"
+                 <<qh1 <<" X: "<<(zf1*tCam0toCam1[0]-qm1.x*tCam0toCam1[2])<< " "<<(qm1.x*qh1[2]-zf1*qh1[0])
+                << " Y: "<<(zf1*tCam0toCam1[1]-qm1.y*tCam0toCam1[2])<<" "<< (qm1.y*qh1[2]-zf1*qh1[1]);
+  //      rho=1;
+  //      I_rho=1e-10;
+
+         std::cout <<"\nNeg Stereo:" <<rho <<" "<<1/sqrt(I_rho);
+    }*/
+
+    //std::cout << rho<<"\n";
+    return rho;
+
+}
+
+void edge_tracker::fuseStereoDepth(){
+
+    for(int i=0;i<kn;i++){
+
+        KeyLine &ikl=kl[i];
+
+
+        ikl.rho0=ikl.rho;
+        ikl.s_rho0=ikl.s_rho;
+
+        if(ikl.stereo_m_id<0)
+            continue;
+        ikl.s_rho=sqrt(1.0/(1.0/util::square(ikl.s_rho0)+1.0/util::square(ikl.stereo_s_rho)));
+        ikl.rho=(ikl.rho0/util::square(ikl.s_rho0)+ikl.stereo_rho/util::square(ikl.stereo_s_rho))*util::square(ikl.s_rho);
+        //ikl.s_rho=ikl.s_rho0;
+
+    }
 
 }
 

@@ -311,6 +311,9 @@ void REBVO::ThirdThread(REBVO *cf){
 
             a_log<<"Posgv_cv("<<a_log_inx<<",:)=["<<pbuf.imustate.Posgv[0]<<","<<pbuf.imustate.Posgv[1]<<","<<pbuf.imustate.Posgv[2]<<"];\n";
 
+
+            a_log<<"SMM_cv("<<a_log_inx<<",:)="<<pbuf.stereo_match_num<<";\n";
+
             a_log.flush();
 
             //******* Save trayectory ************//
@@ -338,8 +341,7 @@ void REBVO::ThirdThread(REBVO *cf){
 
         //******** Push KEYFRAME ***************************//
 
-
-          if(cf->saveKeyframes && (pbuf.p_id%20)==0){
+          if(cf->saveKeyframes && (pbuf.p_id%25)==0){
               cf->kf_list.push_back(keyframe(*pbuf.ef,*pbuf.gt,pbuf.t,pbuf.K,pbuf.nav.Rot,pbuf.nav.RotLie,pbuf.nav.Vel,pbuf.nav.Pose,pbuf.nav.PoseLie,pbuf.nav.Pos));
 
               std::cout <<"\nadded keyframe\n";

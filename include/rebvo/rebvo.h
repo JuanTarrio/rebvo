@@ -118,6 +118,13 @@ struct REBVOParameters{
 
     std::string CameraDevice;           //V4L Camera device
 
+
+    float z_f_x_stereo;                        //Camera XY focal length
+    float z_f_y_stereo;
+    float pp_y_stereo;                         //Camera principal point
+    float pp_x_stereo;
+    cam_model::rad_tan_distortion kc_stereo;   //Distortion parameters
+
     //simcam and simulation parameters
     std::string SimFile;                    //SimCam video file
     double sim_save_nframes;                //Number of frames to save for simulation (uncompressed video)
@@ -327,6 +334,8 @@ struct PipeBuffer{
 
     bool quit;
 
+    int stereo_match_num;
+
     IntegratedImuData imu;
 
 };
@@ -368,6 +377,9 @@ class REBVO
 
     //camera model
     cam_model cam;
+
+
+    cam_model cam_stereo;
     //Imu grabber
 
     ImuGrabber *imu=nullptr;

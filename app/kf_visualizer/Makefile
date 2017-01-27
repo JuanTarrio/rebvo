@@ -293,14 +293,15 @@ compiler_clean:
 		../../include/mtracklib/global_tracker.h \
 		../../include/UtilLib/ne10wrapper.h \
 		../../include/mtracklib/keyframe.h \
+		../../include/visualizer/depth_filler.h \
+		../../include/CommLib/net_keypoint.h \
+		../../include/mtracklib/nav_data_defs.h \
 		../../include/UtilLib/imugrabber.h \
 		../../include/VideoLib/customcam.h \
 		../../include/VideoLib/videocam.h \
 		../../include/visualizer/gl_viewer.h \
-		../../include/CommLib/net_keypoint.h \
-		../../include/mtracklib/nav_data_defs.h \
-		../../include/visualizer/depth_filler.h \
-		../../include/UtilLib/configurator.h
+		../../include/UtilLib/configurator.h \
+		../../include/visualizer/surface_integrator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../../build/app/kf_visualizer/main.o main.cpp
 
 ####### Install

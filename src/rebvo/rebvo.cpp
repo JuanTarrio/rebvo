@@ -183,10 +183,25 @@ REBVO::REBVO(const char *configFile)
 
     if(!config.GetConfigByName("REBVO","StereoAvaiable",params.StereoAvaiable,true)){
         params.StereoAvaiable=false;
-    }else{
+    }else if(params.StereoAvaiable){
 
         InitOK&=config.GetConfigByName("DataSetCamera","DataSetDirStereo",params.DataSetDirStereo,true);
         InitOK&=config.GetConfigByName("DataSetCamera","DataSetFileStereo",params.DataSetFileStereo,true);
+
+
+
+        InitOK&=config.GetConfigByName("Stereo","ZfX",params.z_f_x_stereo,true);
+        InitOK&=config.GetConfigByName("Stereo","ZfY",params.z_f_y_stereo,true);
+
+        InitOK&=config.GetConfigByName("Stereo","PPx",params.pp_x_stereo,true);
+        InitOK&=config.GetConfigByName("Stereo","PPy",params.pp_y_stereo,true);
+
+        InitOK&=config.GetConfigByName("Stereo","KcR2",params.kc_stereo.Kc2,true);
+        InitOK&=config.GetConfigByName("Stereo","KcR4",params.kc_stereo.Kc4,true);
+        InitOK&=config.GetConfigByName("Stereo","KcR6",params.kc_stereo.Kc6,true);
+        InitOK&=config.GetConfigByName("Stereo","KcP1",params.kc_stereo.P1,true);
+        InitOK&=config.GetConfigByName("Stereo","KcP2",params.kc_stereo.P2,true);
+        cam_stereo=cam_model({params.pp_x_stereo,params.pp_y_stereo},{params.z_f_x_stereo,params.z_f_y_stereo},params.kc_stereo,params.ImageSize);
     }
 
     cam=cam_model({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize);
@@ -199,6 +214,7 @@ REBVO::REBVO(const REBVOParameters &parameters)
     :params(parameters),quit(true),pipe(CBUFSIZE,4),
       cam_pipe(CCAMBUFSIZE,2),cam_pipe_stereo(CCAMBUFSIZE,2),
       cam({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize),
+      cam_stereo({params.pp_x_stereo,params.pp_y_stereo},{params.z_f_x_stereo,params.z_f_y_stereo},params.kc_stereo,params.ImageSize),
       outputFunc(nullptr)
 {
     construct();
@@ -272,7 +288,7 @@ void REBVO::construct(){
 
         if(params.StereoAvaiable){
             pbuf.ss_pair=new sspace(params.Sigma0,params.KSigma,cam.sz,3);
-            pbuf.ef_pair=new edge_tracker(cam,255*3);
+            pbuf.ef_pair=new edge_tracker(cam_stereo,255*3);
             pbuf.img_pair=new Image<float>(cam.sz);
             pbuf.imgc_pair=new Image<RGB24Pixel>(cam.sz);
         }

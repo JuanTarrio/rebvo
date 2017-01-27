@@ -48,13 +48,13 @@ int visualizer::OnPaint(XVideoContext *xvc, void *param){
 
     char    msg[256];
 
-    if(!fc->ShowImg){
+    if(fc->ShowImg<1){
 
         XSetForeground(xvc->display,xvc->gc,0);
         XFillRectangle(xvc->display,xvc->pixmap,xvc->gc,0,0,xvc->width,xvc->height);
     }
 
-    for(int i=0;i<fc->net_kln;i++){
+    for(int i=0;i<fc->net_kln && fc->ShowImg<2;i++){
 
         int c;
 
@@ -73,6 +73,7 @@ int visualizer::OnPaint(XVideoContext *xvc, void *param){
         }
 
     }
+
 
 
 
@@ -490,7 +491,7 @@ recv_frame_err:
                 break;
 
             case 'i':
-                ShowImg=!ShowImg;
+                ShowImg=(ShowImg+1)%3;
                 break;
 
             case 't':

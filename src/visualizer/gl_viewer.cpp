@@ -340,7 +340,7 @@ void gl_viewer::LoadTexture(Image <RGB24Pixel> &img_data){
 }
 
 
-void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, double scale){
+void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, double scale,bool use_depth){
 
 
     glPushMatrix();
@@ -351,12 +351,12 @@ void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, doubl
         LoadTexture(*img_data);
     }
 
-    glBegin(GL_QUADS);
+    glBegin(GL_TRIANGLES);
 
-    for(int y=0;y<=df.imageSize().h-df.blockSize().h;y+=df.blockSize().h){
-        for(int x=0;x<=df.imageSize().w-df.blockSize().w;x+=df.blockSize().w){
+    for(float y=df.blockSize().h/2.0;y<=df.imageSize().h-df.blockSize().h;y+=df.blockSize().h){
+        for(float x=df.blockSize().w/2.0;x<=df.imageSize().w-df.blockSize().w;x+=df.blockSize().w){
 
-            if(!df.IsImgVisible(x,y))
+            if(!df.IsImgVisibleSimple(x,y))
                 continue;
 
             TooN::Vector <3> P00=df.getImg3DPos(x,y);
@@ -376,8 +376,13 @@ void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, doubl
                 glVertex3f(P01[0], P01[1], P01[2]);
                 glTexCoord2f((float)(x+df.blockSize().w)/(float)img_data->Size().w,(float)(y+df.blockSize().h)/(float)img_data->Size().h);
                 glVertex3f(P11[0], P11[1], P11[2]);
+
+                glTexCoord2f((float)x/(float)img_data->Size().w,(float)y/(float)img_data->Size().h);
+                glVertex3f(P00[0], P00[1], P00[2]);
                 glTexCoord2f((float)x/(float)img_data->Size().w,(float)(y+df.blockSize().h)/(float)img_data->Size().h);
                 glVertex3f(P10[0], P10[1], P10[2]);
+                glTexCoord2f((float)(x+df.blockSize().w)/(float)img_data->Size().w,(float)(y+df.blockSize().h)/(float)img_data->Size().h);
+                glVertex3f(P11[0], P11[1], P11[2]);
 
 
             }else{
@@ -390,7 +395,9 @@ void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, doubl
                 glVertex3f(P00[0], P00[1], P00[2]);
                 glVertex3f(P01[0], P01[1], P01[2]);
                 glVertex3f(P11[0], P11[1], P11[2]);
+                glVertex3f(P00[0], P00[1], P00[2]);
                 glVertex3f(P10[0], P10[1], P10[2]);
+                glVertex3f(P11[0], P11[1], P11[2]);
 
             }
 
@@ -446,10 +453,10 @@ void gl_viewer::drawFillerUnc(depth_filler &df, cam_model &cam, double scale, bo
                     rho11-=srho11;
                 }
 
-                util::Constrain(rho00,RHO_MIN,RHO_MAX);
-                util::Constrain(rho01,RHO_MIN,RHO_MAX);
-                util::Constrain(rho10,RHO_MIN,RHO_MAX);
-                util::Constrain(rho11,RHO_MIN,RHO_MAX);
+                rho00=util::Constrain(rho00,RHO_MIN,RHO_MAX);
+                rho01=util::Constrain(rho01,RHO_MIN,RHO_MAX);
+                rho10=util::Constrain(rho10,RHO_MIN,RHO_MAX);
+                rho11=util::Constrain(rho11,RHO_MIN,RHO_MAX);
 
                 Point3D<float> P00=cam.unprojectImgCord(Point3D<float>((double)x,(double)y,rho00));
                 Point3D<float> P10=cam.unprojectImgCord(Point3D<float>((double)x,(double)(y+df.blockSize().h),rho10));

@@ -19,13 +19,13 @@ public:
     void rotate_keylines(TooN::Matrix <3,3> RotF);
 
 
-    int directed_matching(TooN::Vector <3> Vel, TooN::Matrix <3,3> RVel, TooN::Matrix <3,3> BackRot, edge_tracker *et0, double min_thr_mod, double min_thr_ang, double max_radius, double loc_uncertainty, bool clear=false);
+    int directed_matching(TooN::Vector <3> Vel, TooN::Matrix <3,3> RVel, TooN::Matrix <3,3> BackRot, edge_tracker *et0, double min_thr_mod, double min_thr_ang, double max_radius, double loc_uncertainty, bool stereo_mode, bool clear=false);
 
     int search_match(KeyLine &k,TooN::Vector <3> Vel,TooN::Matrix <3,3> RVel,TooN::Matrix <3,3> BackRot,double min_thr_mod,double min_thr_ang,double max_radius, double loc_uncertainty);
 
-    int directed_matching_stereo(TooN::Vector <3> Vel, TooN::Matrix <3,3> Rot, edge_tracker *et_pair, double min_thr_mod, double min_thr_ang, double max_radius, double loc_uncertainty);
+    int directed_matching_stereo(TooN::Vector <3> &tCam0toCam1, TooN::Matrix <3,3> &RCam0toCam1, edge_tracker *et_pair, double min_thr_mod, double min_thr_ang, double max_radius, double loc_uncertainty, double ReshapeQAbsolute, double ReshapeQRelative, double LocationUncertaintyModel);
 
-    int search_match_stereo(KeyLine &k, TooN::Vector <3> Vel, TooN::Matrix <3,3> Rot, double min_thr_mod, double min_thr_ang, double max_radius, double loc_uncertainty);
+    int search_match_stereo(KeyLine &k, TooN::Vector<3> &tCam0toCam1, TooN::Matrix<3, 3> &RCam0toCam1, cam_model &cam0, double min_thr_mod, double min_thr_ang, double max_radius, double loc_uncertainty, double ReshapeQAbsolute, double ReshapeQRelative, double LocationUncertaintyModel);
 
 
     int FordwardMatch(edge_tracker *et, bool clear=false);
@@ -51,6 +51,8 @@ public:
     bool ExtRotVel(const TooN::Vector<3> &vel, TooN::Matrix<6, 6> &Wx, TooN::Matrix<6, 6> &Rx, TooN::Vector <6> &X, const double &LocUncert, double HubReweigth);
     static void BiasCorrect(TooN::Vector <6> &X,TooN::Matrix<6,6> &Wx,TooN::Vector <3> &Gb,TooN::Matrix<3,3> &Wb,const TooN::Matrix<3,3> &Rg,const TooN::Matrix<3,3> &Rb);
 
+    double getDepthFromStereo(KeyLine &kl, KeyLine &kl_pair, cam_model &cam0, cam_model &cam1, TooN::Vector<3> &tCam0toCam1, TooN::Matrix<3, 3> &RCam0toCam1, double ReshapeQAbsolute, double ReshapeQRelative, double LocationUncertainty, double &I_rho);
+    void fuseStereoDepth();
 };
 
 }
