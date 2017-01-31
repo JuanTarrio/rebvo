@@ -290,6 +290,8 @@ void  REBVO::SecondThread(REBVO *cf){
                 istate.Vgva=istate.Vgv;
             }
 
+            //K=1;
+
 
             COND_TIME_DEBUG(tlist.push_new();)
 

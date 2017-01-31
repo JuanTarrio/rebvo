@@ -161,12 +161,16 @@ public:
         float dx=x_histo-xf;
         float dy=y_histo-yf;
 
-        float rho00=data(xf,yf).rho;
-        float rho10=data(xc,yf).rho;
-        float rho01=data(xf,yc).rho;
-        float rho11=data(xc,yc).rho;
+        float rho00=data(xf,yf).rho; //(0,0)
+        float rho10=data(xc,yf).rho; //(1,0)
+        float rho01=data(xf,yc).rho; //(0,1)
+        float rho11=data(xc,yc).rho; //(1,1)
 
-        float rho=rho00*(1-dx)*(1-dy)+rho10*dx*(1-dy)+rho01*(1-dx)*dy+rho11*dx*dy;
+        float rho;
+        if(dx>dy)
+            rho=rho00+dx*(rho10-rho00)+dy*(rho11-rho10);
+        else
+            rho=rho00+dy*(rho01-rho00)+dx*(rho11-rho01);
 
 
         cam.Img2Hom<float>(x,y,x,y);
@@ -179,6 +183,49 @@ public:
         int x_histo=util::Constrain<int>(x/bl_size.w,0,size.w-1);   //Points in grid are shifted 0.5*bl_size due to discretization effec
         int y_histo=util::Constrain<int>(y/bl_size.h,0,size.h-1);
         return data(x_histo,y_histo);
+    }
+
+    double getImgRhoTriInterp(float x,float y,double *s_rho=nullptr){
+
+        float x_histo=x/(float)bl_size.w-0.5;
+        int xf=std::min(std::max(floor(x_histo),0.0),size.w-1.0);
+        int xc=std::min(std::max(ceil(x_histo),0.0),size.w-1.0);
+
+        float y_histo=y/(float)bl_size.h-0.5;
+        int yf=std::min(std::max(floor(y_histo),0.0),size.h-1.0);
+        int yc=std::min(std::max(ceil(y_histo),0.0),size.h-1.0);
+
+        float dx=x_histo-xf;
+        float dy=y_histo-yf;
+
+
+        float rho00=data(xf,yf).rho; //(0,0)
+        float rho10=data(xc,yf).rho; //(1,0)
+        float rho01=data(xf,yc).rho; //(0,1)
+        float rho11=data(xc,yc).rho; //(1,1)
+
+        float rho;
+        if(dx>dy)
+            rho=rho00+dx*(rho10-rho00)+dy*(rho11-rho10);
+        else
+            rho=rho00+dy*(rho01-rho00)+dx*(rho11-rho01);
+
+        if(s_rho){
+
+            float srho00=data(xf,yf).s_rho;
+            float srho10=data(xc,yf).s_rho;
+            float srho01=data(xf,yc).s_rho;
+            float srho11=data(xc,yc).s_rho;
+
+
+            if(dx>dy)
+                (*s_rho)=srho00+dx*(srho10-srho11)+dy*(srho11-srho10);
+            else
+                (*s_rho)=srho00+dy*(srho01-srho11)+dx*(srho11-srho01);
+
+        }
+
+        return rho;
     }
 
     double getImgRho(float x,float y,double *s_rho=nullptr){

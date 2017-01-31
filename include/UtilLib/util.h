@@ -174,6 +174,24 @@ namespace util{
     }
 
 
+    inline TooN::Matrix<3,3> Quaternion2RotMat(TooN::Vector<4>q){
+
+        normalize(q);
+
+        return TooN::Data( 1 - 2* util::square(q[2]) - 2* util::square(q[3]),
+            2*q[1]*q[2] - 2*q[0]*q[3],
+            2*q[3]*q[1] + 2*q[0]*q[2],
+
+            2*q[1]*q[2] + 2*q[0]*q[3],
+            1 - 2* util::square(q[1]) - 2* util::square(q[3]),
+            2*q[2]*q[3] - 2*q[0]*q[1],
+
+            2*q[3]*q[1] - 2*q[0]*q[2],
+            2*q[2]*q[3] + 2*q[0]*q[1],
+            1 - 2* util::square(q[1]) - 2* util::square(q[2]));
+    }
+
+
 
 
 }
