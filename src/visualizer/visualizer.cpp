@@ -300,7 +300,7 @@ int visualizer::Run(){
 
     const int EMSaveNum=EdgeMapSaveNumber<1?1:EdgeMapSaveNumber;
 
-    std::vector<depth_filler> d_filler(EdgeMapSaveNumber,depth_filler(cam,{10,10}));
+    std::vector<depth_filler> d_filler(EdgeMapSaveNumber,depth_filler(cam,{10,10},depth_filler::BOUND_NONE));
 
     int NextEMIndex=0;
 

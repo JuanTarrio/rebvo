@@ -9,6 +9,7 @@ struct compressed_nav_pkg{
     fvector<3,float> Rot;
     fvector<3,float> Vel;
     fvector<3,float> G;
+    float K;
     float dt;
     //fvector<4,float> ref_err;
 };

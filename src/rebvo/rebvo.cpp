@@ -95,6 +95,9 @@ REBVO::REBVO(const char *configFile)
     InitOK&=config.GetConfigByName("Camera","Rotate180",params.rotatedCam,true);
 
     InitOK&=config.GetConfigByName("Camera","FPS",params.config_fps,true);
+    if(!config.GetConfigByName("Camera","SoftFPS",params.soft_fps,true))
+        params.soft_fps=params.config_fps;
+
     InitOK&=config.GetConfigByName("ProcesorConfig","SetAffinity",params.cpuSetAffinity,true);
     InitOK&=config.GetConfigByName("ProcesorConfig","CamaraT1",params.cpu0,true);
     InitOK&=config.GetConfigByName("ProcesorConfig","CamaraT2",params.cpu1,true);
@@ -181,8 +184,11 @@ REBVO::REBVO(const char *configFile)
         params.ImuTimeScale=1;
     }
 
+    cam=cam_model({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize);
+
     if(!config.GetConfigByName("REBVO","StereoAvaiable",params.StereoAvaiable,true)){
         params.StereoAvaiable=false;
+        cam_stereo=cam;
     }else if(params.StereoAvaiable){
 
         InitOK&=config.GetConfigByName("DataSetCamera","DataSetDirStereo",params.DataSetDirStereo,true);
@@ -202,9 +208,10 @@ REBVO::REBVO(const char *configFile)
         InitOK&=config.GetConfigByName("Stereo","KcP1",params.kc_stereo.P1,true);
         InitOK&=config.GetConfigByName("Stereo","KcP2",params.kc_stereo.P2,true);
         cam_stereo=cam_model({params.pp_x_stereo,params.pp_y_stereo},{params.z_f_x_stereo,params.z_f_y_stereo},params.kc_stereo,params.ImageSize);
+    }else{
+        cam_stereo=cam;
     }
 
-    cam=cam_model({params.pp_x,params.pp_y},{params.z_f_x,params.z_f_y},params.kc,params.ImageSize);
 
 
     construct();
@@ -254,6 +261,7 @@ void REBVO::construct(){
             return;
         }
     }
+
         if(params.UseCamIMUSE3File && !imu->LoadCamImuSE3(params.SE3File.data())){
             cout << "Failed to load cam-imu transformation \n" <<endl;
             InitOK=false;
@@ -263,6 +271,7 @@ void REBVO::construct(){
         break;
 
     }
+
 
     for(customCam::CustomCamPipeBuffer &pb:cam_pipe)
         pb.img=std::shared_ptr<Image<RGB24Pixel> >(new Image<RGB24Pixel>(params.ImageSize));
@@ -293,6 +302,8 @@ void REBVO::construct(){
             pbuf.imgc_pair=new Image<RGB24Pixel>(cam.sz);
         }
     }
+
+
     return;
 }
 

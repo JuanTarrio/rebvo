@@ -103,7 +103,7 @@ int main(int argn,char ** argv)
 
     for(int i=0;i<kf_list.size();i++){
         kfshow.push_back(false);
-        kf_list[i].initDepthFiller({param.DF_BlockSize,param.DF_BlockSize},param.DF_IterNum,param.DF_ThreshRelRho,param.DF_ThreshMatchNum);
+        kf_list[i].initDepthFiller({param.DF_BlockSize,param.DF_BlockSize},param.DF_IterNum,param.DF_ThreshRelRho,param.DF_ThreshMatchNum,depth_filler::BOUND_NONE);
     }
 
     TooN::Vector <3> oGridSize,oGridOrig;

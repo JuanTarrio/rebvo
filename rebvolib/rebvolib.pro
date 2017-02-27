@@ -18,11 +18,12 @@ LIBS += -L/usr/local/lib \
     -lv4l2 \
     -lm \
     -lgd\
-    -llapack #-lNE10
+    -llapack \
+    $(REBVOLIBS) #-lNE10
 
 QMAKE_CXXFLAGS += -std=c++11 -Wno-unused-parameter -Wno-sign-compare $(REBVOFLAGS)# -mcpu=cortex-a15 -mtune=cortex-a15 -mfpu=neon -O2
 QMAKE_CFLAGS += -std=c++11 -Wno-unused-parameter -Wno-sign-compare $(REBVOFLAGS) # -mcpu=cortex-a15 -mtune=cortex-a15 -mfpu=neon -O2
-QMAKE_LFLAGS += -std=c++11 $$(REBVOFLAGS)
+QMAKE_LFLAGS += -std=c++11 $(REBVOFLAGS)
 
 
 
@@ -58,8 +59,10 @@ SOURCES +=  ../src/rebvo/rebvo.cpp\
     ../src/UtilLib/minimizer.cpp \
     ../src/UtilLib/libcrc.cpp \
     ../src/UtilLib/imugrabber.cpp\
+    ../src/UtilLib/linefitting.cpp\
     ../src/CommLib/udp_port.cpp \
     ../src/CommLib/net_keypoint.cpp \
+    ../src/CommLib/edgemap_com.cpp \
     ../src/visualizer/surface_integrator.cpp
 
 HEADERS += ../include/rebvo/rebvo.h\
@@ -102,8 +105,10 @@ HEADERS += ../include/rebvo/rebvo.h\
     ../include/UtilLib/minimizer.h \
     ../include/UtilLib/libcrc.h \
     ../include/UtilLib/imugrabber.h\
+    ../include/UtilLib/linefitting.h\
     ../include/CommLib/net_keypoint.h \
     ../include/CommLib/udp_port.h \
+    ../include/CommLib/edgemap_com.h \
     ../include/visualizer/surface_integrator.h
 
 

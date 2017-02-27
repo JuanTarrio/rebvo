@@ -39,6 +39,11 @@ public:
              TooN::Matrix <3,3> _Rot, TooN::Vector <3> _RotLie, TooN::Vector <3> _Vel,
              TooN::Matrix <3,3> _Pose, TooN::Vector <3> _PoseLie, TooN::Vector <3> _Pos);
 
+    keyframe(edge_tracker& edges, double frame_t,double scale,
+             TooN::Matrix <3,3> _Rot, TooN::Vector <3> _RotLie, TooN::Vector <3> _Vel,
+             TooN::Matrix <3,3> _Pose, TooN::Vector <3> _PoseLie, TooN::Vector <3> _Pos);
+
+
     keyframe();
     ~keyframe();
 
@@ -52,7 +57,7 @@ public:
     edge_tracker & edges(){return *et;}
     global_tracker & tracker(){return *gt;}
 
-    void initDepthFiller(Size2D blockSize,int iter_num,double error_thresh,double m_num_thresh);
+    void initDepthFiller(Size2D blockSize, int iter_num, double error_thresh, double m_num_thresh, depth_filler::bound_modes bound_mode);
     bool depthFillerAval(){
         return df!=nullptr;
     }

@@ -131,7 +131,7 @@ public:
 
     cam_model & GetCam(){return cam_mod;}
 
-    int KNum(){return kn;}
+    int KNum()const {return kn;}
 
     KeyLine & operator [](uint inx){return kl[inx];}    //Index operator to access keylines directly
 

@@ -34,6 +34,7 @@ public:
     RGB24Pixel* GrabBuffer(double &tstamp,bool drop_frames=true) override;
     int ReleaseBuffer() override ;
     const bool & Error() override{return error;}
+    bool SearchFrame(RGB24Pixel *data, const double &tstamp);
 };
 
 }

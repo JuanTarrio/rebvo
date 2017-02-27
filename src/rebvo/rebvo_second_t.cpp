@@ -127,6 +127,9 @@ void  REBVO::SecondThread(REBVO *cf){
 	}
     //****** Main loop *******
 
+
+    util::timer tproc;
+
     while(!cf->quit){
 
         bool EstimationOk=true;
@@ -149,6 +152,7 @@ void  REBVO::SecondThread(REBVO *cf){
         if(dt_frame<0.001)
             dt_frame=1/cf->params.config_fps;
 
+        tproc.start();
         COND_TIME_DEBUG(t_loop.start();)
         COND_TIME_DEBUG(tlist.clear();)
 
@@ -161,7 +165,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
         COND_TIME_DEBUG(tlist.push_new();)
 
-        //new_buf.gt->build_field(*new_buf.ef,cf->params.SearchRange);
+        new_buf.gt->build_field(*new_buf.ef,cf->params.SearchRange);
 
 
         P_V=Identity*1e50;
@@ -202,8 +206,11 @@ void  REBVO::SecondThread(REBVO *cf){
 
             COND_TIME_DEBUG(tlist.push_new();)
 
+            #ifdef USE_NE10
+            new_buf.gt->Minimizer_V<float>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,s_rho_q,cf->params.MatchNumThresh,cf->params.ReweigthDistance);   //Estimate translation only
+            #else
             new_buf.gt->Minimizer_V<double>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,s_rho_q,cf->params.MatchNumThresh,cf->params.ReweigthDistance);   //Estimate translation only
-
+            #endif
 
             COND_TIME_DEBUG(tlist.push_new();)
 
@@ -228,8 +235,8 @@ void  REBVO::SecondThread(REBVO *cf){
             W_Xgv=W_Xv;
 
 
-            istate.RGBias=Identity*cf->params.GiroBiasStdDev*cf->params.GiroBiasStdDev/400;//*dt_frame*dt_frame;
-            istate.RGiro=Identity*cf->params.GiroMeasStdDev*cf->params.GiroMeasStdDev/400;//*dt_frame*dt_frame;
+            istate.RGBias=Identity*cf->params.GiroBiasStdDev*cf->params.GiroBiasStdDev*dt_frame*dt_frame;
+            istate.RGiro=Identity*cf->params.GiroMeasStdDev*cf->params.GiroMeasStdDev*dt_frame*dt_frame;
 
             Vector <3> dgbias=Zeros;
             edge_tracker::BiasCorrect(Xgv,W_Xgv,dgbias,istate.W_Bg,istate.RGiro,istate.RGBias);
@@ -304,8 +311,11 @@ void  REBVO::SecondThread(REBVO *cf){
         }else{                  //Regular procesing
             COND_TIME_DEBUG(tlist.push_new();)
 
+            #ifdef USE_NE10
+            new_buf.gt->Minimizer_RV<float>(V,W,P_V,P_W,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,cf->params.TrackerInitType,cf->params.ReweigthDistance,error_vel,error_score,s_rho_q,cf->params.MatchNumThresh,cf->params.TrackerInitIterNum);
+            #else
             new_buf.gt->Minimizer_RV<double>(V,W,P_V,P_W,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,cf->params.TrackerInitType,cf->params.ReweigthDistance,error_vel,error_score,s_rho_q,cf->params.MatchNumThresh,cf->params.TrackerInitIterNum);
-
+            #endif
 
             COND_TIME_DEBUG(tlist.push_new();)
 
@@ -497,6 +507,9 @@ void  REBVO::SecondThread(REBVO *cf){
             Pos+=-Pose*V*K;
         }
 
+
+
+
         P_V/=dt_frame*dt_frame;
 
         //Pass the buffer to the next thread
@@ -517,12 +530,16 @@ void  REBVO::SecondThread(REBVO *cf){
         old_buf.nav.Pose=Pose;
         old_buf.nav.PoseLie=SO3<>(Pose).ln();
         old_buf.nav.Pos=Pos;
+        old_buf.nav.g=istate.g_est;
+        old_buf.nav.scale=K;
 
         old_buf.s_rho_p=s_rho_q;
 
         old_buf.EstimationOK=EstimationOk;
 
         old_buf.imustate=istate;
+
+        old_buf.dtp1=tproc.stop();
 
         //Pus the nav data in the REBVO class (thread safe)
 

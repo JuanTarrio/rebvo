@@ -41,11 +41,12 @@ edge_finder::edge_finder(cam_model &cam, float max_i_value, int kl_num_max)		//v
 
 edge_finder::edge_finder(const edge_finder &ef)
     :cam_mod(ef.cam_mod),fsz(ef.cam_mod.sz),max_img_value(ef.max_img_value),
-     img_mask_kl(fsz),kl_size(ef.kn),kl(new KeyLine[kl_size]),kn(kl_size)
+     img_mask_kl(fsz),kl_size(ef.KNum()),kl(new KeyLine[kl_size]),kn(kl_size)
 {
     img_mask_kl=ef.img_mask_kl;
-    for(int i=0;i<kn;i++)
-        kl[i]=ef.kl[i];
+//    for(int i=0;i<kn;i++)
+  //      kl[i]=ef.kl[i];
+    memcpy(kl,ef.kl,kn*sizeof(KeyLine));
 
 
 }

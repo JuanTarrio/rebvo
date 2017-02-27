@@ -145,43 +145,29 @@ void REBVO::ThirdThread(REBVO *cf){
 
     /****** Init log file if needed ******/
 
-    ofstream a_log,t_log;
+    ostringstream a_log,t_log;
     int a_log_inx=0;
 
-    if(cf->params.SaveLog){
-
-        a_log.open(cf->params.LogFile.data());
-        if(!a_log.is_open()){
-            cout <<"\nREBVO: Cannot open log file\n";
-            cf->quit=true;
-            return;
-        }
-
-        a_log<< std::scientific<<std::setprecision(16);
+    a_log<< std::scientific<<std::setprecision(16);
 
 
-        t_log.open(cf->params.TrayFile.data());
-        if(!t_log.is_open()){
-            cout <<"\nREBVO: Cannot open trayectory file\n";
-            cf->quit=true;
-            return;
-        }
 
-    }
-
-
+/*
     ofstream h_log;
     h_log.open("histo_log.txt");
     const uint h_num=500;
-    uint histo[h_num];
+    uint histo[h_num];*/
 
-    COND_TIME_DEBUG(util::timer t_proc;)
+    util::timer t_proc;
+    double t_proc_last=0;
 
     /****** Main Loop does three optional things:
      * Encodes video and sends over UDP
      * Saves encoded video
      * Saves LOG in .m format
      * *******************************************/
+
+
 
     while(!cf->quit && !quit){
 
@@ -192,7 +178,7 @@ void REBVO::ThirdThread(REBVO *cf){
             break;
         }
 
-        COND_TIME_DEBUG(t_proc.start();)
+        t_proc.start();
 
 
         if(cf->params.VideoNetEnabled>0){
@@ -314,24 +300,28 @@ void REBVO::ThirdThread(REBVO *cf){
 
             a_log<<"SMM_cv("<<a_log_inx<<",:)="<<pbuf.stereo_match_num<<";\n";
 
-            a_log.flush();
+            a_log<<"TProc0_cv("<<a_log_inx<<",:)="<<pbuf.dtp0<<";\n";
+            a_log<<"TProc1_cv("<<a_log_inx<<",:)="<<pbuf.dtp1<<";\n";
+            a_log<<"TProc2_cv("<<a_log_inx<<",:)="<<t_proc_last<<";\n";
+
+            //a_log.flush();
 
             //******* Save trayectory ************//
 
             t_log << std::scientific<<std::setprecision(18)<< pbuf.t/cf->params.ImuTimeScale << " " <<pbuf.nav.Pos << " "<<util::LieRot2Quaternion(pbuf.nav.PoseLie)<<"\n";
-            t_log.flush();
+            //t_log.flush();
 
         }
 
 
-        COND_TIME_DEBUG(printf("\nCamara TT Dtp=%f\n",t_proc.stop());)
-
+        COND_TIME_DEBUG(printf("\nCamara TT Dtp=%f\n",t_proc_last);)
+/*
 
         pbuf.ef->DebugMatchHisto(500,h_num,histo);
         for(int i=0;i<h_num-1;i++)
             h_log<<histo[i]<<",";
         h_log<<histo[h_num-1]<<"\n";
-        h_log.flush();
+        h_log.flush();*/
 
 
         //******** Call callback if present *****************//
@@ -347,6 +337,8 @@ void REBVO::ThirdThread(REBVO *cf){
               std::cout <<"\nadded keyframe\n";
           }
 
+
+          t_proc_last=t_proc.stop();
         //******** The system can optionaly take a snapshot (use for debuging purposes) ******//
 
         if(cf->saveImg){
@@ -383,13 +375,39 @@ void REBVO::ThirdThread(REBVO *cf){
     if(encoder)
         delete encoder;
 
-    if(a_log.is_open())
-        a_log.close();
+    ofstream fa_log,ft_log;
 
-    if(t_log.is_open())
-        t_log.close();
+    if(cf->params.SaveLog){
 
-    h_log.close();
+        fa_log.open(cf->params.LogFile.data());
+        if(!fa_log.is_open()){
+            cout <<"\nREBVO: Cannot open log file\n";
+            cf->quit=true;
+            return;
+        }else{
+
+
+            cout <<"\nREBVO: Saving log file\n";
+            fa_log.write(a_log.str().data(),a_log.str().size());
+
+            fa_log.close();
+
+        }
+
+        ft_log.open(cf->params.TrayFile.data());
+        if(!ft_log.is_open()){
+            cout <<"\nREBVO: Cannot open trayectory file\n";
+            cf->quit=true;
+            return;
+        }else{
+
+            ft_log.write(t_log.str().data(),t_log.str().size());
+            ft_log.close();
+        }
+
+    }
+
+    //h_log.close();
 
     cf->quit=true;
 

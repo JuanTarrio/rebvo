@@ -74,8 +74,10 @@ SOURCES       = ../src/rebvo/rebvo.cpp \
 		../src/UtilLib/minimizer.cpp \
 		../src/UtilLib/libcrc.cpp \
 		../src/UtilLib/imugrabber.cpp \
+		../src/UtilLib/linefitting.cpp \
 		../src/CommLib/udp_port.cpp \
 		../src/CommLib/net_keypoint.cpp \
+		../src/CommLib/edgemap_com.cpp \
 		../src/visualizer/surface_integrator.cpp 
 OBJECTS       = ../build/rebvolib/rebvo.o \
 		../build/rebvolib/rebvo_first_t.o \
@@ -109,8 +111,10 @@ OBJECTS       = ../build/rebvolib/rebvo.o \
 		../build/rebvolib/minimizer.o \
 		../build/rebvolib/libcrc.o \
 		../build/rebvolib/imugrabber.o \
+		../build/rebvolib/linefitting.o \
 		../build/rebvolib/udp_port.o \
 		../build/rebvolib/net_keypoint.o \
+		../build/rebvolib/edgemap_com.o \
 		../build/rebvolib/surface_integrator.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
@@ -753,6 +757,15 @@ compiler_clean:
 		../include/UtilLib/configurator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/imugrabber.o ../src/UtilLib/imugrabber.cpp
 
+../build/rebvolib/linefitting.o: ../src/UtilLib/linefitting.cpp ../include/UtilLib/linefitting.h \
+		../include/UtilLib/cam_model.h \
+		../include/VideoLib/video_io.h \
+		../include/VideoLib/common_types.h \
+		../include/UtilLib/util.h \
+		../include/UtilLib/timer.h \
+		../include/UtilLib/fvector.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/linefitting.o ../src/UtilLib/linefitting.cpp
+
 ../build/rebvolib/udp_port.o: ../src/CommLib/udp_port.cpp ../include/CommLib/udp_port.h \
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
@@ -774,6 +787,23 @@ compiler_clean:
 		../include/UtilLib/cam_model.h \
 		../include/mtracklib/nav_data_defs.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/net_keypoint.o ../src/CommLib/net_keypoint.cpp
+
+../build/rebvolib/edgemap_com.o: ../src/CommLib/edgemap_com.cpp ../include/CommLib/edgemap_com.h \
+		../include/mtracklib/edge_finder.h \
+		../include/mtracklib/sspace.h \
+		../include/mtracklib/iigauss.h \
+		../include/mtracklib/iimage.h \
+		../include/UtilLib/util.h \
+		../include/UtilLib/timer.h \
+		../include/UtilLib/fvector.h \
+		../include/VideoLib/image.h \
+		../include/VideoLib/common_types.h \
+		../include/VideoLib/video_io.h \
+		../include/UtilLib/CircList.h \
+		../include/UtilLib/cam_model.h \
+		../include/UtilLib/linefitting.h \
+		../include/UtilLib/libcrc.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/edgemap_com.o ../src/CommLib/edgemap_com.cpp
 
 ../build/rebvolib/surface_integrator.o: ../src/visualizer/surface_integrator.cpp ../include/visualizer/surface_integrator.h \
 		../include/mtracklib/keyframe.h \

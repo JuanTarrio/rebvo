@@ -127,6 +127,8 @@ void REBVO::FirstThr(REBVO *cf) {
         }
     }
 
+
+
 	//***** Call thread 1 & set cpu afiinity ******
 
 	std::thread Thr1(SecondThread, cf);
@@ -141,21 +143,32 @@ void REBVO::FirstThr(REBVO *cf) {
 	//******* Main loop ******
 
 	util::timer tproc;
+    double min_frame_dt=1.0/cf->params.soft_fps-0.5/cf->params.config_fps;
 
-	while (!cf->quit) {
+    while (!cf->quit) {
 
 		//Request free buffer on the pipeline
 		PipeBuffer &pbuf = cf->pipe.RequestBuffer(0);
 
-		//Grab frame
-		while ((data = camara->GrabBuffer(t, false)) == nullptr) {
-            if (cf->quit || camara->Error()) {
-				pbuf.quit = true; //If no more frames, release the pipeline buffer
-				cf->pipe.ReleaseBuffer(0);               //with the quit flag on
-				std::cout << "bye bye cruel world" << std::endl;
-				goto exit_while;
-			}
-		}
+        while(1){
+
+            //Grab frame
+            while ((data = camara->GrabBuffer(t, false)) == nullptr) {
+                if (cf->quit || camara->Error()) {
+                    pbuf.quit = true; //If no more frames, release the pipeline buffer
+                    cf->pipe.ReleaseBuffer(0);               //with the quit flag on
+                    std::cout << "bye bye cruel world" << std::endl;
+                    goto exit_while;
+                }
+            }
+
+            //break;
+            if(t-t0<min_frame_dt)
+                camara->ReleaseBuffer();
+            else
+                break;
+
+        }
 
 
         //********* Grab and sync stereo frame *****************//
@@ -177,22 +190,7 @@ void REBVO::FirstThr(REBVO *cf) {
 
         }
 
-        //********* Grab IMU datas *****************//
 
-		if (cf->imu) {
-            while(!cf->quit){
-                pbuf.imu = cf->imu->GrabAndIntegrate(t0 + cf->params.TimeDesinc,
-                                                     t + cf->params.TimeDesinc);
-                if(pbuf.imu.n>0)
-                    break;
-
-                std::this_thread::sleep_for(std::chrono::duration<double>(cf->params.SampleTime));  //Sleep for IMU sampl time to wait for more data
-            }
-		}
-
-		COND_TIME_DEBUG(dt=t-t0;)
-
-		t0 = t;
 
 		int p_num = camara->PakNum();
 
@@ -278,9 +276,26 @@ void REBVO::FirstThr(REBVO *cf) {
                     cf->params.DetectorMaxThresh, cf->params.DetectorMinThresh);
         }
 
+        //********* Grab IMU data after processing *****************//
+
+        if (cf->imu) {
+            while(!cf->quit){
+                pbuf.imu = cf->imu->GrabAndIntegrate(t0 + cf->params.TimeDesinc,
+                                                     t + cf->params.TimeDesinc);
+                if(pbuf.imu.n>0)
+                    break;
+
+                std::this_thread::sleep_for(std::chrono::duration<double>(cf->params.SampleTime));  //Sleep for IMU sampl time to wait for more data
+            }
+        }
+
+        COND_TIME_DEBUG(dt=t-t0;)
+
+        t0 = t;
+
 
 		//Build auxiliary image on the GT
-		pbuf.gt->build_field(*pbuf.ef, cf->params.SearchRange);
+        //pbuf.gt->build_field(*pbuf.ef, cf->params.SearchRange);
 
 
 		dtp = tproc.stop();

@@ -19,6 +19,15 @@
 #include "mtracklib/keyframe.h"
 
 namespace rebvo {
+
+struct RenderParams;
+class gl_viewer;
+class callbackFunc{
+
+public:
+    virtual void rederFunc(gl_viewer *gl,RenderParams*rp){}
+};
+
 struct RenderParams{
     net_keyline **net_kl=nullptr;
     int *net_kln=nullptr;
@@ -38,6 +47,7 @@ struct RenderParams{
 
     std::vector <keyframe> *kflist=nullptr;
     std::vector <bool> *kf_show_mask=nullptr;
+    std::vector <callbackFunc*> renderCallbacks;
     bool render_match;
 };
 
@@ -93,6 +103,12 @@ class gl_viewer
 
     CCam                    *cam;
 
+    GLuint                  ImgTexture[2];
+
+    RGB24Pixel              ColorGrad[512];
+
+public:
+
     int                     RenderSurface;
     int                     RenderCuad;
     int                     RenderLines;
@@ -104,7 +120,8 @@ class gl_viewer
     double                  ColorZmin;
     double                  ColorZmax;
 
-    GLuint                  ImgTexture;
+    bool                    RenderOcto;
+
 
 public:
     gl_viewer(int width, int height, const char *title,float fov);
@@ -129,11 +146,11 @@ public:
     bool glDrawLoop(RenderParams &rp, bool ReRender, KeySym *key=nullptr);
 
     void drawKeyLines(net_keyline **net_kl, int *net_kln, int net_klistn, float zf, Point2DF &pp, bool tresh,bool DrawSigma);
-    void drawFiller(depth_filler &df, Image<RGB24Pixel> *img_data=nullptr, double scale=1, bool use_depth=false);
+    void drawFiller(depth_filler &df, Image<RGB24Pixel> *img_data=nullptr, double scale=1, bool use_optim_pnt=false);
     void drawFillerUnc(depth_filler &df, cam_model &cam, double scale, bool is_uper, float alpha);
 
 
-    void drawKeyFrame(keyframe & kf, int render_mode, keyframe * kf_match, bool draw_unc, bool draw_filler);
+    void drawKeyFrame(keyframe & kf, int render_mode, keyframe * kf_match, bool draw_unc, int draw_filler);
 
     void resetView();
     void translateView(float x,float y,float z);
@@ -158,6 +175,9 @@ public:
 
     void ToggleFixView(int fv){FixView=fv%3;}
     void ToggleCameraView(int cv){RenderCuad=cv%3;}
+private:
+    void LoadTextureGradient();
+    float Depth2Texture(float z);
 };
 }
 #endif // GL_VIEWER_H

@@ -68,7 +68,7 @@ class udp_port
 
 public:
     udp_port(const char *remote_host, int port, bool bind_port=false\
-            , int max_pak_size=65535, int pak_pipe_size=10, int max_fragment_size =65535);
+            , int max_pak_size=1e6, int pak_pipe_size=10, int max_fragment_size =65535);
     ~udp_port();
 
     const bool & Error(){return error;}

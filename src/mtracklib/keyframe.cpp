@@ -42,6 +42,23 @@ keyframe::keyframe(edge_tracker& edges,const global_tracker &gtracker,double fra
     Pos=_Pos;
 }
 
+keyframe::keyframe(edge_tracker& edges,double frame_t,double scale
+                   ,TooN::Matrix <3,3> _Rot,TooN::Vector <3> _RotLie,TooN::Vector <3> _Vel,
+                   TooN::Matrix <3,3> _Pose,TooN::Vector <3> _PoseLie,TooN::Vector <3> _Pos)
+    :et(new edge_tracker(edges)),gt(nullptr),df(nullptr),t(frame_t),K(scale),camera(edges.GetCam())
+{
+
+    //gt->SetEdgeTracker(et.get());
+
+
+    Rot=_Rot;
+    RotLie=_RotLie;
+    Vel=_Vel;
+    Pose=_Pose;
+    PoseLie=_PoseLie;
+    Pos=_Pos;
+}
+
 keyframe::keyframe()
     :et(nullptr),gt(nullptr),df(nullptr)
 {
@@ -194,9 +211,9 @@ bool keyframe::loadKeyframesFromFile(const char *name,std::vector<keyframe> &kf_
 
 }
 
-void keyframe::initDepthFiller(Size2D blockSize, int iter_num, double error_thresh, double m_num_thresh)
+void keyframe::initDepthFiller(Size2D blockSize, int iter_num, double error_thresh, double m_num_thresh,depth_filler::bound_modes bound_mode)
 {
-    df=std::shared_ptr<depth_filler>(new depth_filler(camera,blockSize));
+    df=std::shared_ptr<depth_filler>(new depth_filler(camera,blockSize,bound_mode));
 
     if(iter_num>0){
 
@@ -205,6 +222,7 @@ void keyframe::initDepthFiller(Size2D blockSize, int iter_num, double error_thre
         (*df).InitCoarseFine();
         (*df).Integrate(iter_num);
         (*df).computeDistance(TooN::Zeros);
+        (*df).kf_ptr=this;
     }
 }
 

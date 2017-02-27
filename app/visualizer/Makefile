@@ -17,8 +17,8 @@ CFLAGS        = -pipe -std=c++11 -Wno-unused-parameter -Wno-sign-compare $(REBVO
 CXXFLAGS      = -pipe -std=c++11 -Wno-unused-parameter -Wno-sign-compare $(REBVOFLAGS) -O2 -Wall -W -fPIE $(DEFINES)
 INCPATH       = -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I. -I../../include
 LINK          = g++
-LFLAGS        = -std=c++11 -Wl,-O1
-LIBS          = $(SUBLIBS) ../../rebvolib/librebvolib.a -L/usr/local/lib -lX11 -lv4l2 -lm -llapack -lpthread -lGL -lGLU -lglut -lgd -lavcodec -lavutil 
+LFLAGS        = -std=c++11 $(REBVOFLAGS) -Wl,-O1
+LIBS          = $(SUBLIBS) ../../rebvolib/librebvolib.a -L/usr/local/lib -lX11 -lv4l2 -lm -llapack -lpthread -lGL -lGLU -lglut -lgd -lavcodec -lavutil $(REBVOLIBS) 
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /usr/lib/x86_64-linux-gnu/qt5/bin/qmake

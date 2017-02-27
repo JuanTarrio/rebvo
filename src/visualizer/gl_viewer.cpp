@@ -289,9 +289,29 @@ void gl_viewer::initGL(){
 
     glEnable(GL_TEXTURE_2D);       /* Enable Texture Mapping */
     glShadeModel(GL_SMOOTH);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     glClearDepth(1.0f);
     glEnable(GL_DEPTH_TEST);
+
+
+    GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat ligth_specular[] = { 0.0, 0.0, 0.0, 0.0};
+    GLfloat ligth_diffuse[] = { 0.2, 0.2, 0.2, 0.0};
+    GLfloat ligth_ambient[] = { 0.8, 0.8, 0.8, 1.0};
+    GLfloat mat_shininess[] = {10.0 };
+
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+
+    glLightfv(GL_LIGHT0, GL_SPECULAR, ligth_specular);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, ligth_diffuse);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, ligth_ambient);
+    glEnable(GL_COLOR_MATERIAL);
+
+    //glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -320,15 +340,32 @@ void gl_viewer::resizeGL(int width, int height){
 
 void gl_viewer::InitTexture(){
 
-    glGenTextures(1, &ImgTexture);   /* create the texture */
-    glBindTexture(GL_TEXTURE_2D, ImgTexture);
+//    glGenTextures(2, ImgTexture);   /* create the texture */
+//    glBindTexture(GL_TEXTURE_2D, ImgTexture[0]);
+//    glBindTexture(GL_TEXTURE_1D, ImgTexture[1]);
+
+    for(int i=0;i<256;i++){
+        ColorGrad[i].pix.r=255-i;
+        ColorGrad[i].pix.g=i;
+        ColorGrad[i].pix.b=0;
+    }
+    for(int i=256;i<512;i++){
+        ColorGrad[i].pix.r=0;
+        ColorGrad[i].pix.g=511-i;
+        ColorGrad[i].pix.b=i-256;
+    }
+    glTexImage1D(GL_TEXTURE_1D, 0, 3, 512, 0,GL_RGB, GL_UNSIGNED_BYTE, ColorGrad);
+    /* enable linear filtering */
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 
 }
 
 void gl_viewer::LoadTexture(Image <RGB24Pixel> &img_data){
 
 
-    glBindTexture(GL_TEXTURE_2D, ImgTexture);
+   // glBindTexture(GL_TEXTURE_2D, ImgTexture[0]);
     /* actually generate the texture */
     glTexImage2D(GL_TEXTURE_2D, 0, 3, img_data.Size().w, img_data.Size().h, 0,
                  GL_RGB, GL_UNSIGNED_BYTE, img_data.Data());
@@ -339,8 +376,23 @@ void gl_viewer::LoadTexture(Image <RGB24Pixel> &img_data){
 
 }
 
+void gl_viewer::LoadTextureGradient(){
 
-void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, double scale,bool use_depth){
+
+    //glBindTexture(GL_TEXTURE_1D, ImgTexture[1]);
+    /* actually generate the texture */
+
+
+}
+
+float gl_viewer::Depth2Texture(float z){
+
+    return util::Constrain((ColorZmax-z)/(ColorZmax-ColorZmin),0.0,1.0);
+
+}
+
+
+void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, double scale,bool use_optim_pnt){
 
 
     glPushMatrix();
@@ -349,21 +401,46 @@ void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, doubl
     if(img_data){
         glEnable(GL_TEXTURE_2D);
         LoadTexture(*img_data);
+    }else{
+        glEnable(GL_TEXTURE_1D);
+        LoadTextureGradient();
     }
 
     glBegin(GL_TRIANGLES);
 
-    for(float y=df.blockSize().h/2.0;y<=df.imageSize().h-df.blockSize().h;y+=df.blockSize().h){
-        for(float x=df.blockSize().w/2.0;x<=df.imageSize().w-df.blockSize().w;x+=df.blockSize().w){
+    for(float y=df.blockSize().h/2.0;y<df.imageSize().h-df.blockSize().h;y+=df.blockSize().h){
+        for(float x=df.blockSize().w/2.0;x<df.imageSize().w-df.blockSize().w;x+=df.blockSize().w){
 
             if(!df.IsImgVisibleSimple(x,y))
                 continue;
 
-            TooN::Vector <3> P00=df.getImg3DPos(x,y);
-            TooN::Vector <3> P10=df.getImg3DPos(x,y+df.blockSize().h);
-            TooN::Vector <3> P01=df.getImg3DPos(x+df.blockSize().w,y);
-            TooN::Vector <3> P11=df.getImg3DPos(x+df.blockSize().w,y+df.blockSize().h);
+            TooN::Vector <3> P00,P10,P01,P11;
+            TooN::Vector <3> N00,N10,N01,N11;
+            if(use_optim_pnt){
+                P00=df.getImgPoint(x,y).optim_point;
+                P10=df.getImgPoint(x,y+df.blockSize().h).optim_point;
+                P01=df.getImgPoint(x+df.blockSize().w,y).optim_point;
+                P11=df.getImgPoint(x+df.blockSize().w,y+df.blockSize().h).optim_point;
 
+
+                N00=df.getImgPoint(x,y).normal;
+                N10=df.getImgPoint(x,y+df.blockSize().h).normal;
+                N01=df.getImgPoint(x+df.blockSize().w,y).normal;
+                N11=df.getImgPoint(x+df.blockSize().w,y+df.blockSize().h).normal;
+
+
+            }else{
+                P00=df.getImg3DPos(x,y);
+                P10=df.getImg3DPos(x,y+df.blockSize().h);
+                P01=df.getImg3DPos(x+df.blockSize().w,y);
+                P11=df.getImg3DPos(x+df.blockSize().w,y+df.blockSize().h);
+
+
+                N00=df.getImgPoint(x,y).normal;
+                N10=df.getImgPoint(x,y+df.blockSize().h).normal;
+                N01=df.getImgPoint(x+df.blockSize().w,y).normal;
+                N11=df.getImgPoint(x+df.blockSize().w,y+df.blockSize().h).normal;
+            }
 
             if(img_data){
 
@@ -387,16 +464,40 @@ void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, doubl
 
             }else{
 
-                float color[3];
+                glColor3f(1.0, 1.0, 1.0);
 
-                Depth2Color(std::min(std::min(df.GetImgDist(x,y),df.GetImgDist(x+1,y)),std::min(df.GetImgDist(x,y+1),df.GetImgDist(x+1,y+1)))*scale,color);
-
+            /*    Depth2Color(df.getImgPoint(x,y).dist*scale,color);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
                 glColor3f(color[0], color[1], color[2]);
+*/
+
+                glTexCoord1f(Depth2Texture(df.getImgPoint(x,y).dist*scale));
+                glNormal3f(N00[0], N00[1], N00[2]);
                 glVertex3f(P00[0], P00[1], P00[2]);
+
+
+                glTexCoord1f(Depth2Texture(df.getImgPoint(x+df.blockSize().w,y).dist*scale));
+                glNormal3f(N01[0], N01[1], N01[2]);
                 glVertex3f(P01[0], P01[1], P01[2]);
+
+
+                glTexCoord1f(Depth2Texture(df.getImgPoint(x+df.blockSize().w,y+df.blockSize().h).dist*scale));
+                glNormal3f(N11[0], N11[1], N11[2]);
                 glVertex3f(P11[0], P11[1], P11[2]);
+
+
+                glTexCoord1f(Depth2Texture(df.getImgPoint(x,y).dist*scale));
+                glNormal3f(N00[0], N00[1], N00[2]);
                 glVertex3f(P00[0], P00[1], P00[2]);
+
+
+                glTexCoord1f(Depth2Texture(df.getImgPoint(x,y+df.blockSize().h).dist*scale));
+                glNormal3f(N10[0], N10[1], N10[2]);
                 glVertex3f(P10[0], P10[1], P10[2]);
+
+
+                glTexCoord1f(Depth2Texture(df.getImgPoint(x+df.blockSize().w,y+df.blockSize().h).dist*scale));
+                glNormal3f(N11[0], N11[1], N11[2]);
                 glVertex3f(P11[0], P11[1], P11[2]);
 
             }
@@ -414,7 +515,9 @@ void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, doubl
 
     if(img_data){
         glDisable(GL_TEXTURE_2D);
-        LoadTexture(*img_data);
+
+    }else{
+        glDisable(GL_TEXTURE_1D);
     }
     glPopMatrix();
     
@@ -469,7 +572,12 @@ void gl_viewer::drawFillerUnc(depth_filler &df, cam_model &cam, double scale, bo
 
                 Depth2Color(std::min(std::min(df.GetImgDist(x,y),df.GetImgDist(x+1,y)),std::min(df.GetImgDist(x,y+1),df.GetImgDist(x+1,y+1)))*scale,color);
 
-                glColor4f(color[0], is_uper?1:0, color[2],alpha);
+                if(!is_uper){
+                    glColor4f(130.0/255.0, 235.0/255.0, 255.0/255.0,alpha);
+                }else{
+                    glColor4f(184.0/255.0, 0, 198.0/255.0,alpha);
+                }
+
                 glVertex3f(P00.x, P00.y, P00.z);
                 glVertex3f(P01.x, P01.y, P01.z);
                 glVertex3f(P01.x, P01.y, P01.z);
@@ -612,7 +720,7 @@ void gl_viewer::drawKeyLines(net_keyline **net_kl, int *net_kln, int net_klistn,
 
 
 
-void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,bool draw_unc,bool draw_filler)
+void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,bool draw_unc,int draw_filler)
 {
 
 
@@ -694,7 +802,7 @@ void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,
             glVertex3f(x1, y1, z1);
             glVertex3f(x2, y2, z2);
 
-            if(draw_unc){
+            /*if(draw_unc){
                 glColor3f(1, 1, 0);
                 double sigma_z;
 
@@ -707,7 +815,7 @@ void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,
                 glVertex3f(x1*k, y1*k, z1*k);
                 k=(z1-sigma_z)/z1;
                 glVertex3f(x1*k, y1*k, z1*k);
-            }
+            }*/
             /*
         if(kf_match && kl.kf_id>=0){
 
@@ -733,8 +841,8 @@ void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,
 
     glDepthFunc(GL_LEQUAL);
 
-    if(draw_filler && kf.depthFillerAval()){
-        drawFiller(kf.depthFill(),nullptr,kf.K);
+    if(draw_filler>0 && kf.depthFillerAval()){
+        drawFiller(kf.depthFill(),draw_filler>1?kf.depthFill().getImgc():nullptr,kf.K,true);
 
         if(draw_unc){
 
@@ -753,6 +861,8 @@ void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,
 
 void gl_viewer::Depth2Color(float z,float c[3]){
 
+
+    /*
     float ColorZmed=(ColorZmax+ColorZmin)/2;
 
     if(z>ColorZmed){
@@ -770,7 +880,27 @@ void gl_viewer::Depth2Color(float z,float c[3]){
         c[2]=0;
         c[1]=ct;
         c[0]=1-ct;
+    }*/
+
+    float ColorZmed=(ColorZmax+ColorZmin)/2;
+
+    if(z>ColorZmed){
+
+        float ct=(z-ColorZmed)/(ColorZmax-ColorZmed);
+        util::keep_min(ct,1.0);
+        c[0]=ct;
+        c[1]=1-ct;
+        c[2]=0;
+
+    }else{
+
+        float ct=(z-ColorZmin)/(ColorZmed-ColorZmin);
+        util::keep_max(ct,0.0);
+        c[0]=0;
+        c[1]=ct;
+        c[2]=1-ct;
     }
+
 
 
 }
@@ -1043,13 +1173,17 @@ void gl_viewer::renderGL(RenderParams &rp)
         fixViewG(rp.nav.G);
     }
 
+
+    GLfloat light_position[] = { 0.0, 0.0, 3.0, 0.0 };
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
      if(RenderSurface>0 && rp.d_filler)
          for(int i=0;i<(*rp.d_filler).size();i++){
              drawFiller((*rp.d_filler)[i],RenderSurface==2?(nullptr):(rp.img_data));
          }
 
 
-    if(RenderLines>0)
+    if(RenderLines>0 && rp.net_kl && rp.net_kln)
         drawKeyLines(rp.net_kl,rp.net_kln,rp.net_klistn,rp.zf,rp.pp,RenderLines==2,RenderSigma);
 
 
@@ -1057,9 +1191,9 @@ void gl_viewer::renderGL(RenderParams &rp)
         for(int i=0;i<rp.kflist->size();i++)
             if((*rp.kf_show_mask)[i]){
                 if(rp.render_match && i>0 && (*rp.kf_show_mask)[i-1]){
-                    drawKeyFrame((*rp.kflist)[i],RenderLines,&(*rp.kflist)[i-1],RenderSigma,RenderSurface>0);
+                    drawKeyFrame((*rp.kflist)[i],RenderLines,&(*rp.kflist)[i-1],RenderSigma,RenderSurface);
                 }else{
-                    drawKeyFrame((*rp.kflist)[i],RenderLines,nullptr,RenderSigma,RenderSurface>0);
+                    drawKeyFrame((*rp.kflist)[i],RenderLines,nullptr,RenderSigma,RenderSurface);
 
                 }
             }
@@ -1083,6 +1217,10 @@ void gl_viewer::renderGL(RenderParams &rp)
     if(RenderTray)
         drawTrayectory(*rp.pos_tray,*rp.Pose);
 
+
+    for(callbackFunc* &rf:rp.renderCallbacks){
+        rf->rederFunc(this,&rp);
+    }
 
 
     glPopMatrix();

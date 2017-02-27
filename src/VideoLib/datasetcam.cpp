@@ -200,4 +200,23 @@ RGB24Pixel* DataSetCam::GrabBuffer(double &tstamp, bool drop_frames){
 int DataSetCam::ReleaseBuffer(){
     return 0;
 }
+
+bool DataSetCam::SearchFrame(RGB24Pixel *data, const double &tstamp)
+{
+    int i;
+    for(i=0;i<img_time.size()-1;i++){
+
+        if(fabs(tstamp-img_time[i])<fabs(img_time[i+1]-img_time[i])/2.0)
+            break;
+    }
+    if(i==img_time.size()-1 && fabs(tstamp-img_time[i])>fabs(img_time[i]-img_time[i-1])/2.0)
+        return false;
+
+    if(LoadImage(img_list[i])<0)
+        return false;
+
+
+    buffer.copyTo(data);
+    return true;
+}
 }

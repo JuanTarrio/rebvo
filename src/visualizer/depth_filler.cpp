@@ -25,9 +25,11 @@
 #include <TooN/so3.h>
 
 namespace rebvo {
-depth_filler::depth_filler(cam_model &cam,const Size2D &blockSize)
+
+
+depth_filler::depth_filler(cam_model &cam,const Size2D &blockSize,const bound_modes &bound_mode)
     :cam_mod(cam),im_size(cam.sz),bl_size(blockSize),size{im_size.w/bl_size.w,im_size.h/bl_size.h},
-      current_min_dist(1e20),pos_data_d(size),pos_data_v(size),data(size)
+      current_min_dist(1e20),pos_data_d(size),pos_data_v(size),imgc(nullptr),bound_m(bound_mode),data(size)
 {
 
     ResetData();
@@ -43,13 +45,14 @@ void depth_filler::ResetData(){
 
         data[i].depth=1;
         data[i].rho=1;
-        data[i].I_rho=0;
-        data[i].s_rho=1e10;
+        data[i].I_rho=1.0/util::square(RHO_MAX*2);
+        data[i].s_rho=RHO_MAX*2;
         data[i].visibility=true;
         data[i].father=this;
     }
 
 }
+
 
 
 //Fill edge data using net_keyline structure
@@ -216,27 +219,33 @@ void depth_filler::InitCoarseFine(){
 
                 double mean_rho=0;
                 double mean_srho=0;
-                int n=0;
+                int n=0,nr=0;
 
                 for(int dx=0;dx<size_x;dx++)
                     for(int dy=0;dy<size_y;dy++){
                         int inx=(y+dy)*size.w+x+dx;
                         if(data[inx].fixed){
                             mean_rho+=data[inx].rho;
-                            //mean_srho+=data[inx].s_rho;
-                            util::keep_max(mean_srho,data[inx].s_rho);
+                            mean_srho+=data[inx].s_rho;
+                            //util::keep_max(mean_srho,data[inx].s_rho);
                             n++;
+                            nr++;
+                        }else if(inboundary(x+dx,y+dy)){
+                            //util::keep_max(mean_srho,data[inx].s_rho);
+                            mean_srho+=data[inx].s_rho;
+                            nr++;
                         }
                     }
                 if(n>0){
                     mean_rho/=n;
-                    //mean_srho/=n;
+                    mean_srho/=nr;
                     for(int dx=0;dx<size_x;dx++)
                         for(int dy=0;dy<size_y;dy++){
                             int inx=(y+dy)*size.w+x+dx;
                             if(!data[inx].fixed){
                                 data[inx].rho=mean_rho;
-                                data[inx].s_rho=mean_srho;
+                                if(!inboundary(x+dx,y+dy))
+                                    data[inx].s_rho=mean_srho;
                             }
                         }
                 }
@@ -245,6 +254,21 @@ void depth_filler::InitCoarseFine(){
     }
 
 
+}
+
+bool depth_filler::inboundary(int x,int y){
+
+    switch(bound_m){
+    case BOUND_NONE:
+        return false;
+    case BOUND_CORNERS:
+        return (x==0 && (y==0 || y==size.h-1)) || (x==size.w-1 && (y==0 || y==size.h-1)) ;
+    case BOUND_FULL:
+        return x==0 || x==size.w-1 || y==0 || y==size.h-1;
+    }
+
+
+    return false;
 }
 
 
@@ -268,7 +292,7 @@ void depth_filler::Integrate1Step(){
 
             }else{
 
-                double r=0,sr=0,isr=0;
+                double r=0,sr=0;
                 int n=0;
 
 
@@ -286,14 +310,14 @@ void depth_filler::Integrate1Step(){
 
                         r+=data(p_x,p_y).rho;//data[p_y*s.w+p_x].s_rho;
                         sr+=data(p_x,p_y).s_rho;
-                        isr+=1/data(p_x,p_y).s_rho;
                         n++;
 
                     }
                 }
 
                 data[inx].rho=(1-w)*data[inx].rho+w*r/n;
-                data[inx].s_rho=sr/n;
+                if(!inboundary(x,y))
+                    data[inx].s_rho=sr/n;
 
 
 
@@ -303,6 +327,49 @@ void depth_filler::Integrate1Step(){
 
 
 
+}
+
+
+void depth_filler::calcSurfNormals(){
+
+    for(int x=0;x<size.w-1;x++)
+        for(int y=0;y<size.h-1;y++){
+
+            TooN::Vector <3> P00=get3DPos(x,y);
+            TooN::Vector <3> P01=get3DPos(x+1,y);
+            TooN::Vector <3> P10=get3DPos(x,y+1);
+            TooN::Vector <3> P11=get3DPos(x+1,y+1);
+
+
+            data(x,y).normal=(-TooN::unit((P01-P00)^(P10-P00))+TooN::unit((P01-P11)^(P10-P11)))/2;
+            data(x+1,y+1).normal=data(x,y).normal;
+        }
+
+}
+
+void depth_filler::calcSurfArea(){
+
+    for(int x=0;x<size.w-1;x++)
+        for(int y=0;y<size.h-1;y++){
+
+            TooN::Vector <3> P00=get3DPos(x,y);
+            TooN::Vector <3> P01=get3DPos(x+1,y);
+            TooN::Vector <3> P10=get3DPos(x,y+1);
+            TooN::Vector <3> P11=get3DPos(x+1,y+1);
+
+            data(x,y).area=(TooN::norm((P01-P00)^(P10-P00))+TooN::norm((P01-P11)^(P10-P11)))/2;
+        }
+
+}
+
+Image<RGB24Pixel> *depth_filler::getImgc() const
+{
+    return imgc;
+}
+
+void depth_filler::setImgc(Image<RGB24Pixel> *value)
+{
+    imgc = value;
 }
 
 }

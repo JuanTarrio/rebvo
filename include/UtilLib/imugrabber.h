@@ -78,6 +78,8 @@ class ImuGrabber
 
     std::mutex rw_mut;
 
+public:
+
     TooN::Matrix<3,3> RDataSetCam2IMU=TooN::Identity;   //SE3 transformation Camera to Imu, Pimu=RCam2Imu*Pcam+TCam2Imu
     TooN::Vector<3> TDataSetCam2IMU=TooN::Zeros;
 

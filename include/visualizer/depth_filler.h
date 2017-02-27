@@ -30,6 +30,7 @@
 
 namespace rebvo {
 
+class keyframe;
 
 class depth_filler;
 
@@ -43,12 +44,19 @@ struct df_point{
     bool visibility;        //Visibility on the plot flag
     double dist;            //Euclidean distance from the point to center of the camera
     depth_filler* father;   //pointer to the depth_filler calss
+    TooN::Vector <3> normal;
+    float area;
+    bool visil_opt;
+    TooN::Vector <3> optim_point;
 
 };
 
 class depth_filler
 {
+public:
 
+    enum bound_modes{BOUND_NONE, BOUND_CORNERS,BOUND_FULL} ;
+private:
     cam_model &cam_mod; //Reference to cam model
     Size2D im_size;     //Image size
     Size2D bl_size;     //Block (discretization) size
@@ -58,14 +66,17 @@ class depth_filler
 
     Image <double> pos_data_d;
     Image <double> pos_data_v;
+    Image <RGB24Pixel> *imgc;
 
+    bound_modes bound_m;
 
 public:
 
+    keyframe *kf_ptr=nullptr;
 
     Image <df_point> data;
 
-    depth_filler(cam_model &cam,const Size2D &blockSize);
+    depth_filler(cam_model &cam, const Size2D &blockSize, const bound_modes &bound_mode);
 
     void ResetData();
     void FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double v_thresh,int m_num_t);
@@ -284,6 +295,8 @@ public:
         return rho/scale;
     }
 
+    void calcSurfNormals();
+
 
 
     double GetDist(int x,int y){
@@ -340,6 +353,12 @@ public:
     }
 
     double GetMinDist(){return current_min_dist;}
+
+    Image<RGB24Pixel> *getImgc() const;
+    void setImgc(Image<RGB24Pixel> *value);
+    void calcSurfArea();
+private:
+    bool inboundary(int x, int y);
 };
 }
 #endif // DEPTH_FILLER_H

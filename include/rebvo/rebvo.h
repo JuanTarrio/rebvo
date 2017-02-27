@@ -22,8 +22,8 @@
  *******************************************************************************/
 
 
-#ifndef CAMARAFRONTAL_H
-#define CAMARAFRONTAL_H
+#ifndef REBVO_H
+#define REBVO_H
 
 
 #include <string>
@@ -112,6 +112,7 @@ struct REBVOParameters{
 
 
     double config_fps;                  //Frames per second
+    double soft_fps;                    //Forced frames per second
     int useUndistort;                   //Use undistortion
     bool rotatedCam;                    //Rotate camera 180deg
 
@@ -286,12 +287,15 @@ struct IMUState{
 struct NavData{
     double t;
     double dt;
+    double scale;
 
     TooN::Matrix <3,3> Rot=TooN::Identity;
     TooN::Vector <3> RotLie=TooN::Zeros;
     TooN::Vector <3> RotGiro=TooN::Zeros;
     TooN::Vector <3> Vel=TooN::Zeros;
 
+
+    TooN::Vector <3> g=TooN::Zeros;
 
     TooN::Matrix <3,3> Pose=TooN::Identity;
     TooN::Vector <3> PoseLie=TooN::Zeros;
@@ -323,6 +327,7 @@ struct PipeBuffer{
     IMUState imustate;
 
     double dtp0;
+    double dtp1;
 
     double K;
     double Kp;
@@ -536,8 +541,21 @@ public:
 	bool isInitOk() const {
 		return InitOK;
     }
+
+    TooN::Matrix <3,3> getCam2ImuRot(){
+        if(imu)
+            return imu->RDataSetCam2IMU;
+        else
+            return TooN::Identity;
+    }
+    TooN::Vector <3> getCam2ImuPos(){
+        if(imu)
+            return imu->TDataSetCam2IMU;
+        else
+            return TooN::Zeros;
+    }
 };
 
 }
 
-#endif // CAMARAFRONTAL_H
+#endif // REBVO_H
