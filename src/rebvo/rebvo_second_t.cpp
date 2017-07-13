@@ -91,6 +91,8 @@ void  REBVO::SecondThread(REBVO *cf){
 
     int n_giro_init=0;
     Vector <3> giro_init=Zeros;
+    Vector <3> g_init=Zeros;
+
 
     //**** Set cpu Afinity for this thread *****
 
@@ -181,11 +183,13 @@ void  REBVO::SecondThread(REBVO *cf){
 
                 if(cf->params.InitBias>0){
                     giro_init+=new_buf.imu.giro*new_buf.imu.dt;
+                    g_init-=new_buf.imu.cacel;
                     //giro_init+=istate.dWv;
                     if(++n_giro_init>cf->params.InitBiasFrameNum){
                         istate.Bg=giro_init/n_giro_init;
                         istate.init=true;
                         istate.W_Bg=util::Matrix3x3Inv(istate.RGBias*1e2);
+                        istate.X.slice<1,3>()=g_init/n_giro_init;
                     }
                 }else{
                     istate.init=true;
@@ -469,10 +473,27 @@ void  REBVO::SecondThread(REBVO *cf){
         }
 
 
-
+      /* 0:Quantile
+       * 1:Build Field + Rotation
+       * 2:Minimizer V
+       * 3:Forward Match
+       * 4:Ext RotVel
+       * 5:Bias Correct
+       * 6:Scale Filter
+       * 7:Rotate KL
+       * 8:Direc MAtch
+       * 9:Regularize
+       * 10:EKF
+       * 11:Re Scalling
+       * */
+/*
         COND_TIME_DEBUG(printf("\nQ %f R0 %f M0 %f FM %f M2 %f BC %f BF %f R1 %f DM %f KR %f KM %f SR %f TT %f DTP %f \n",tlist[0],tlist[1],tlist[2],tlist[3],\
                tlist[4],tlist[5],tlist[6],tlist[7],tlist[8],tlist[9],tlist[10],tlist[11],tlist.total(),dtp);)
+*/
 
+
+
+        COND_TIME_DEBUG(printf("\n V %f RV %f Fl %f MP %f TT %f DTP %f KN %d\n",tlist(3,0),tlist(6,3),tlist(7,6),tlist(12,7),tlist.total(),dtp,new_buf.ef->KNum());)
 
 
         //Estimate position and pose incrementally

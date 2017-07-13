@@ -91,9 +91,9 @@ class edge_finder
 
 protected:
 
-    cam_model &cam_mod;             //Pinhole Model of the Camera
+    cam_model cam_mod;             //Pinhole Model of the Camera
 
-    const Size2D &fsz;              //Wrapper for image size
+    const Size2D fsz;              //Wrapper for image size
 
     int max_img_value;              //Valor maximo de intensidad en las imagenes
 

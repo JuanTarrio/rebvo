@@ -197,7 +197,7 @@ void REBVO::FirstThr(REBVO *cf) {
 		//Push frame for record (if necesary)
 		camara->PushFrame(data);
 
-		tproc.start();
+        tproc.start();
 
 		if (cf->params.useUndistort) {
 
@@ -298,7 +298,7 @@ void REBVO::FirstThr(REBVO *cf) {
         //pbuf.gt->build_field(*pbuf.ef, cf->params.SearchRange);
 
 
-		dtp = tproc.stop();
+        dtp = tproc.stop();
 
 		COND_TIME_DEBUG(printf("\nCamaraFrontal: dtp0 = %f, kln=%d thresh=%f dt=%f\n",dtp,l_kl_num,tresh,dt);)
 

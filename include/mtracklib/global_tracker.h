@@ -16,7 +16,7 @@ class global_tracker
 {
 
     Image<gt_field_data> field;     //Auxilary match image
-    cam_model &cam_mod;             //Camera model
+    cam_model cam_mod;             //Camera model
 
     double max_r;                   //Max search radius
 
@@ -57,6 +57,12 @@ public:
     double TryVel_vect(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel,  edge_tracker &klist, T match_thresh, double s_rho_min,uint MatchNumThresh,double reweigth_distance);
     template <class T>
     double Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,T match_thresh, int iter_max, T s_rho_min,uint MatchNumThresh,double reweigth_distance);
+
+
+    template <class T,bool UsePriors=false>
+    double Minimizer_RV_KF(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,  TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0,edge_tracker &klist,double match_thresh,
+                                        int iter_max,double reweigth_distance,const double &max_s_rho,const uint& MatchNumThresh,TooN::Vector<6,T> &X,TooN::Matrix<6> &RRV);
+
 };
 
 

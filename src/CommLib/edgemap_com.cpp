@@ -90,16 +90,16 @@ uncompressed_kl edgemap_com::TransformPos(const uncompressed_kl & iP0, cam_model
     cam.Img2Hom(x,y,iP0.x,iP0.y);
     Vector <3> P0=makeVector(x/cam.zfm,y/cam.zfm,1)/iP0.rho;
 
-    Vector <3> P1=DPose*P0+DPos;
+    Vector <3> P1=DPose*P0*em_pos.K+DPos;
 
     iP1.rho=1/P1[2];
     iP1.x=P1[0]*iP1.rho*cam.zfm;
     iP1.y=P1[1]*iP1.rho*cam.zfm;
 
-    iP1.rho/=new_pos.K;
+    iP1.rho*=new_pos.K;
 
     cam.Hom2Img(iP1.x,iP1.y,iP1.x,iP1.y);
-    iP1.s_rho=iP0.s_rho/new_pos.K;
+    iP1.s_rho=iP0.s_rho*new_pos.K;
     return iP1;
 }
 
@@ -112,7 +112,7 @@ TooN::Vector<3> edgemap_com::UnProjectPos(const uncompressed_kl & iP0, cam_model
     cam.Img2Hom(x,y,iP0.x,iP0.y);
     Vector <3> P0=makeVector(x/cam.zfm,y/cam.zfm,1)/iP0.rho;
 
-    return  (DPose*P0+DPos)*DK;  //K!!!!
+    return  (DPose*P0*DK+DPos);  //K!!!!
 }
 
 
@@ -448,6 +448,110 @@ int edgemap_com_decoder::HideVisible(const em_compressed_nav_pkg &pos, cam_model
 
 
 }
+
+void edgemap_com_decoder::fillDepthMap(depth_filler &df,cam_model &cam,double v_thresh,double a_thresh)
+{
+    dfill=&df;
+
+
+    using namespace TooN;
+    beginUncompress();
+    uncompressed_kl kl0,kl1;
+    while(getPair(kl0,kl1)){
+
+        if(kl0.s_rho*COMPRESSED_SRHO_SCALING>254.0 || kl1.s_rho*COMPRESSED_SRHO_SCALING>254.0 || kl0.s_rho+kl1.s_rho>kl0.rho+kl1.rho)
+            continue;
+
+        if(kl0.rho/kl0.s_rho<v_thresh || kl1.rho/kl1.s_rho<v_thresh )
+            continue;
+
+
+        TooN::Vector <3> p0=cam.unprojectImgCordVec(TooN::makeVector(kl0.x,kl0.y,kl0.rho));
+        TooN::Vector <3> p1=cam.unprojectImgCordVec(TooN::makeVector(kl1.x,kl1.y,kl0.rho));
+        double cangle= (fabs((p0-p1)*p0)/TooN::norm(p0)/TooN::norm(p0-p1));
+        if(cangle>cos(a_thresh*M_PI/180.0))
+            continue;
+
+        Vector <2> t=makeVector(kl1.x-kl0.x,kl1.y-kl0.y);
+        Vector <2> q0=makeVector(kl0.x,kl0.y);
+
+        double nt=norm(t);
+        t/=nt;
+
+        for(int i=0;i<nt;i++){
+            Vector <2> q=q0+t*i;
+
+            double r1=(kl1.rho-kl0.rho)/nt;
+            double rho=r1*i+kl0.rho;
+            double s_rho=(kl0.s_rho+kl1.s_rho)/2;
+
+            df_point &data=df.getImgPoint(q[0],q[1]);
+
+            double i_rho=data.I_rho*data.rho;
+            double kl_I_rho=1/(s_rho*s_rho);
+            i_rho+=rho*kl_I_rho;
+            data.I_rho+=kl_I_rho;
+            double v_rho=data.I_rho>0?1.0/data.I_rho:1e20;
+            data.rho=i_rho*v_rho;
+            data.s_rho=sqrt(v_rho);
+            data.fixed=true;
+
+
+        }
+
+
+    }
+
+}
+
+
+void edgemap_com_decoder::dfillerHideVisible(const em_compressed_nav_pkg &pos, cam_model &cam,depth_filler *stitch_to){
+
+    using namespace TooN;
+
+    if(!dfill)
+        return;
+
+    em_compressed_nav_pkg bk_pos=new_pos;
+
+    UpdatePos(pos);
+
+
+    for(int y=0;y<dfill->gridSize().h;y++)
+        for(int x=0;x<dfill->gridSize().w;x++){
+
+            df_point &data=dfill->data(x,y);
+
+            if(!data.visibility)
+                continue;
+
+
+            Vector <3> P1=DPose*dfill->get3DPos(x,y)*em_pos.K+DPos;
+
+            Vector <3> P1u=cam.projectImgCordVec(P1);
+
+            if((P1u[0]>=0 && P1u[1] >=0 && P1u[0]<cam.sz.w && P1u[1]<cam.sz.h && P1u[2]>0)){
+                data.visibility=false;
+
+                if(stitch_to){
+                    Vector <3> Pn=stitch_to->getImg3DPos(P1u[0],P1u[1])*new_pos.K;
+                    Vector <3> P0=DPose.T()*(Pn-DPos)/em_pos.K;
+                    data.rho=1.0/P0[2];
+                    data.depth=P0[2];
+                }
+
+            }
+
+
+
+    }
+
+
+    UpdatePos(bk_pos);
+
+
+}
+
 
 
 

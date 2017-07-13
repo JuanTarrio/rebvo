@@ -239,7 +239,7 @@ public:
         return rho;
     }
 
-    double getImgRho(float x,float y,double *s_rho=nullptr){
+    double getImgRho(float x,float y,double *s_rho=nullptr,bool *fixed=nullptr){
 
         float x_histo=x/(float)bl_size.w-0.5;
         int xf=std::min(std::max(floor(x_histo),0.0),size.w-1.0);
@@ -268,6 +268,9 @@ public:
 
             (*s_rho)=srho00*(1-dx)*(1-dy)+srho10*dx*(1-dy)+srho01*(1-dx)*dy+srho11*dx*dy;
         }
+
+        if(fixed)
+            *fixed=data(xf,yf).fixed;
 
         return rho;
     }

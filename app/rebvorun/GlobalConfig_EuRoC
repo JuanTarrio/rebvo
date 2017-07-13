@@ -97,15 +97,15 @@
 
 &DataSetCamera
 
-    DataSetDir=/home/juan/Datasets/V2_02_medium/mav0/cam0/data/                           //The directory of the dataset
-    DataSetFile=/home/juan/Datasets/V2_02_medium/mav0/cam0/data.csv                       //The file of the dataset
-    DataSetDirStereo=/home/juan/Datasets/V2_02_medium/mav0/cam1/data/                           //The directory of the dataset
-    DataSetFileStereo=/home/juan/Datasets/V2_02_medium/mav0/cam1/data.csv                       //The file of the dataset
+    DataSetDir=/home/juan/Datasets/MH_03_medium/mav0/cam0/data/                           //The directory of the dataset
+    DataSetFile=/home/juan/Datasets/MH_03_medium/mav0/cam0/data.csv                       //The file of the dataset
+    DataSetDirStereo=/home/juan/Datasets/MH_03_medium/mav0/cam1/data/                           //The directory of the dataset
+    DataSetFileStereo=/home/juan/Datasets/MH_03_medium/mav0/cam1/data.csv                       //The file of the dataset
     TimeScale=1e-9
 
 &IMU
     ImuMode=2                                                          //1= use the archquitecture specific class, 2=load full data from ImuFile
-    ImuFile=/home/juan/Datasets/V2_02_medium/mav0/imu0/data.csv         //File containing the SE3 transformation from IMU to Camera
+    ImuFile=/home/juan/Datasets/MH_03_medium/mav0/imu0/data.csv         //File containing the SE3 transformation from IMU to Camera
     CamImuSE3File=se3_EuRoC.csv                                         //TimeScale of the IMU file
     TimeScale=1e-9
 

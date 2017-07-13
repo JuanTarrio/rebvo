@@ -54,7 +54,7 @@ public:
     cam_model(){}
 
     template <typename PointType>
-    void undistortHom2Hom(PointType &p,int newton_it){
+    void undistortHom2Hom(PointType &p,int newton_it)  const{
 
         double rn,rd;
 
@@ -74,7 +74,7 @@ public:
     }
 
     template <typename PointType>
-    void distortHom2Hom(PointType &p){
+    void distortHom2Hom(PointType &p)  const{
 
         double xp=p.x/zfm,yp=p.y/zfm;
         double r2=util::norm2(xp,yp);
@@ -88,36 +88,36 @@ public:
     }
 
     template <typename PointType>
-    inline PointType Hom2Img(const PointType &ph){
+    inline PointType Hom2Img(const PointType &ph) const{
         return {ph.x+pp.x,ph.y+pp.y};
     }
 
     template <typename PointType>
-    inline PointType Img2Hom(const PointType &pi){
+    inline PointType Img2Hom(const PointType &pi) const{
         return {pi.x-pp.x,pi.y-pp.y};
     }
 
     template <class T>
-    void Hom2Img(T &ix,T &iy,const T hx, const T hy){
+    void Hom2Img(T &ix,T &iy,const T hx, const T hy) const{
         ix=hx+pp.x;
         iy=hy+pp.y;
     }
 
     template <class T>
-    void Img2Hom(T &hx,T &hy,const T ix, const T iy){
+    void Img2Hom(T &hx,T &hy,const T ix, const T iy) const{
         hx=ix-pp.x;
         hy=iy-pp.y;
     }
 
     template <typename PointType>
-    inline PointType projectHomCord(const PointType &p3d){
+    inline PointType projectHomCord(const PointType &p3d) const{
         float &&x=p3d.x/p3d.z*zfm;
         float &&y=p3d.y/p3d.z*zfm;
         float &&r=1/p3d.z;
         return {x,y,r};
     }
     template <typename PointType>
-    inline PointType projectImgCord(const PointType &p3d){
+    inline PointType projectImgCord(const PointType &p3d) const{
         float &&x=p3d.x/p3d.z*zfm+pp.x;
         float &&y=p3d.y/p3d.z*zfm+pp.y;
         float &&r=1/p3d.z;
@@ -125,7 +125,7 @@ public:
     }
 
     template <typename PointType>
-    inline PointType unprojectHomCord(const PointType &pIm){
+    inline PointType unprojectHomCord(const PointType &pIm) const{
         float &&x=pIm.x/pIm.z/zfm;
         float &&y=pIm.y/pIm.z/zfm;
         float &&z=1.0/pIm.z;
@@ -134,7 +134,7 @@ public:
 
 
     template <typename PointType>
-    inline PointType unprojectImgCord(const PointType &pIm){
+    inline PointType unprojectImgCord(const PointType &pIm) const{
         float &&x=(pIm.x-pp.x)/pIm.z/zfm;
         float &&y=(pIm.y-pp.y)/pIm.z/zfm;
         float &&z=1.0/pIm.z;
@@ -143,7 +143,7 @@ public:
 
 
     template <typename VectorType>
-    inline VectorType projectHomCordVec(const VectorType &p3d){
+    inline VectorType projectHomCordVec(const VectorType &p3d) const{
         VectorType out;
         out[0]=p3d[0]/p3d[2]*zfm;
         out[1]=p3d[1]/p3d[2]*zfm;
@@ -151,7 +151,7 @@ public:
         return out;
     }
     template <typename VectorType>
-    inline VectorType projectImgCordVec(const VectorType &p3d){
+    inline VectorType projectImgCordVec(const VectorType &p3d) const{
         VectorType out;
         out[0]=p3d[0]/p3d[2]*zfm+pp.x;
         out[1]=p3d[1]/p3d[2]*zfm+pp.y;
@@ -160,7 +160,7 @@ public:
     }
 
     template <typename VectorType>
-    inline VectorType unprojectHomCordVec(const VectorType &pIm){
+    inline VectorType unprojectHomCordVec(const VectorType &pIm) const{
         VectorType out;
         out[0]=pIm[0]/pIm[2]/zfm;
         out[1]=pIm[1]/pIm[2]/zfm;
@@ -168,7 +168,7 @@ public:
         return out;
     }
     template <typename VectorType>
-    inline VectorType unprojectImgCordVec(const VectorType &pIm){
+    inline VectorType unprojectImgCordVec(const VectorType &pIm) const{
         VectorType out;
         out[0]=(pIm[0]-pp.x)/pIm[2]/zfm;
         out[1]=(pIm[1]-pp.y)/pIm[2]/zfm;

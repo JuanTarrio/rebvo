@@ -65,6 +65,7 @@ class udp_port
     int max_p_size;
 
     bool block;
+    int sleep_us;
 
 public:
     udp_port(const char *remote_host, int port, bool bind_port=false\
@@ -79,6 +80,7 @@ public:
     bool SendPacket(unsigned char * data, int data_size);
 
     void setBlock(bool b);
+    void setSleep(float secs){sleep_us=secs*1.0e6;}
 };
 
 }

@@ -84,6 +84,12 @@ public:
         return kfto.Pose.T()*(Pose*p+Pos-kfto.Pos);
 
     }
+    TooN::Vector<3> reProjectTo(const keyframe &kfto,const TooN::Vector<3> &q) const {
+
+        return kfto.camera.projectHomCordVec(kfto.World2LocalScaled(Local2WorldScaled(camera.unprojectHomCordVec(q))));
+
+    }
+
 };
 }
 #endif // KEYFRAME_H

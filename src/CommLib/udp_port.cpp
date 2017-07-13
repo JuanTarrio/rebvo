@@ -26,9 +26,10 @@
 #include "UtilLib/util.h"
 #include <iostream>
 
-#include <sys/ioctl.h>
+#include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
+
 namespace  rebvo{
 udp_port::udp_port(const char *remote_host, int port, bool bind_port, \
                    int max_pak_size, int pak_pipe_size, int max_fragment_size)
@@ -80,6 +81,7 @@ udp_port::udp_port(const char *remote_host, int port, bool bind_port, \
     frag_buffer=new unsigned char [max_f_size];
 
     block=false;
+    sleep_us=1e3;
 
 }
 
@@ -99,8 +101,15 @@ udp_port::~udp_port(){
 
 void udp_port::setBlock(bool b){
 
-    char on=!b;
-    ioctl(sock, FIONBIO, &on);
+    if(block){
+
+        int flags = fcntl(sock, F_GETFL, 0);
+        fcntl(sock, F_SETFL, flags && ~O_NONBLOCK);
+    }else{
+        int flags = fcntl(sock, F_GETFL, 0);
+        fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    }
+
     block=b;
 }
 
@@ -234,8 +243,11 @@ bool udp_port::SendFragmented(unsigned char * data, int data_size,int fragment_s
 bool udp_port::SendPacket(unsigned char * data, int data_size){
 
     int r;
-    if((r=sendto(sock, data,data_size, !block?MSG_DONTWAIT:0, (struct sockaddr*)&si_remote,sizeof(si_remote)))!=data_size){
-        return false;
+    while((r=sendto(sock, data,data_size, !block?MSG_DONTWAIT:0, (struct sockaddr*)&si_remote,sizeof(si_remote)))!=data_size){
+        if(!block)
+            return false;
+        else
+            usleep(sleep_us);
     }
 
 

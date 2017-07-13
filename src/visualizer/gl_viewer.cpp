@@ -278,18 +278,46 @@ gl_viewer::gl_viewer(int width, int height,const char *title, float fov)
     else
         printf("\nGLVIewer: no DRI available\n");
 
+
+
+   // initFont();
+    initGL();
     InitTexture();
 
-    initGL();
+}
 
+
+void gl_viewer::initFont(){
+    const char *font_name="fixed";
+    XFontStruct* font_info;
+    int first;
+    int last;
+
+    GLuint font_base = glGenLists(256);
+    if (!glIsList(font_base)) {
+          std::cout<<"\nGlViewer: ny_init(): Out of display lists\n";
+          return;
+       }
+
+    font_info = XLoadQueryFont(display, font_name);
+
+    if (!font_info) {
+       std::cout<<"\nGlViewer: XLoadQueryFont() failed.\n";
+    }else{
+        first = font_info->min_char_or_byte2;
+        last  = font_info->max_char_or_byte2;
+        glXUseXFont(font_info->fid, first, last-first+1, font_base+first);
+    }
 }
 
 void gl_viewer::initGL(){
 
 
-    glEnable(GL_TEXTURE_2D);       /* Enable Texture Mapping */
+   // glEnable(GL_TEXTURE_2D);       /* Enable Texture Mapping */
+   // glEnable(GL_TEXTURE_1D);       /* Enable Texture Mapping */
     glShadeModel(GL_SMOOTH);
-    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+    //glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClearDepth(1.0f);
     glEnable(GL_DEPTH_TEST);
 
@@ -387,7 +415,7 @@ void gl_viewer::LoadTextureGradient(){
 
 float gl_viewer::Depth2Texture(float z){
 
-    return util::Constrain((ColorZmax-z)/(ColorZmax-ColorZmin),0.0,1.0);
+    return util::Constrain((ColorZmax-z)/(ColorZmax-ColorZmin),0.001,0.999);
 
 }
 
@@ -396,7 +424,6 @@ void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, doubl
 
 
     glPushMatrix();
-    //STR_View(df.GetDK(),df.GetDPos(),df.GetDPose());
 
     if(img_data){
         glEnable(GL_TEXTURE_2D);
@@ -472,6 +499,7 @@ void gl_viewer::drawFiller(depth_filler &df, Image <RGB24Pixel> *img_data, doubl
 */
 
                 glTexCoord1f(Depth2Texture(df.getImgPoint(x,y).dist*scale));
+                //std::cout << Depth2Texture(df.getImgPoint(x,y).dist*scale)<<" ";
                 glNormal3f(N00[0], N00[1], N00[2]);
                 glVertex3f(P00[0], P00[1], P00[2]);
 
@@ -842,7 +870,7 @@ void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,
     glDepthFunc(GL_LEQUAL);
 
     if(draw_filler>0 && kf.depthFillerAval()){
-        drawFiller(kf.depthFill(),draw_filler>1?kf.depthFill().getImgc():nullptr,kf.K,true);
+        drawFiller(kf.depthFill(),draw_filler>1?kf.depthFill().getImgc():nullptr,kf.K,false);
 
         if(draw_unc){
 
@@ -862,43 +890,24 @@ void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,
 void gl_viewer::Depth2Color(float z,float c[3]){
 
 
-    /*
-    float ColorZmed=(ColorZmax+ColorZmin)/2;
 
-    if(z>ColorZmed){
 
-        float ct=(z-ColorZmed)/(ColorZmax-ColorZmed);
-        util::keep_min(ct,1.0);
-        c[2]=ct;
-        c[1]=1-ct;
-        c[0]=0;
+    float r=util::Constrain((z-ColorZmin)/(ColorZmax-ColorZmin),0.001,0.999);
 
-    }else{
+    if(r>0.5){
 
-        float ct=(z-ColorZmin)/(ColorZmed-ColorZmin);
-        util::keep_max(ct,0.0);
-        c[2]=0;
-        c[1]=ct;
-        c[0]=1-ct;
-    }*/
-
-    float ColorZmed=(ColorZmax+ColorZmin)/2;
-
-    if(z>ColorZmed){
-
-        float ct=(z-ColorZmed)/(ColorZmax-ColorZmed);
-        util::keep_min(ct,1.0);
-        c[0]=ct;
-        c[1]=1-ct;
+        r=(r-0.5)*2;
+        c[0]=r;
+        c[1]=1-r;
         c[2]=0;
 
     }else{
 
-        float ct=(z-ColorZmin)/(ColorZmed-ColorZmin);
-        util::keep_max(ct,0.0);
+
+        r*=2;
         c[0]=0;
-        c[1]=ct;
-        c[2]=1-ct;
+        c[1]=r;
+        c[2]=1-r;
     }
 
 
@@ -1031,31 +1040,33 @@ void gl_viewer::drawQuads(TooN::Vector<3> Vel, TooN::Vector<3> g_est, double tim
 }
 
 
-void gl_viewer::drawQuadsR(TooN::Vector<4> RefErr, TooN::Vector<3> g_est,double min_dist, bool show_cc){
+void gl_viewer::drawQuadsR(TooN::Vector<4> RefErr, TooN::Vector<3> g_est,double min_dist, bool show_cc,double floor_dist){
 
 
 
     const double red_dist=0.25;
 
-
-
-
-    glBegin(GL_LINES);
-
     float c=red_dist/std::max(min_dist,red_dist);
 
 
-    glColor3f(c,0,1-c);
-
-    glVertex3f(0, 0, 0);
-    glVertex3f(-RefErr[2], -RefErr[0], -RefErr[1]);
-
-    glEnd();
 
     if(show_cc && TooN::norm(RefErr)>1e-10){
-        glColor4f(c,0,1-c,0.4);
-        drawQuad(-RefErr[2], -RefErr[0]+0.03, -RefErr[1],RefErr[3]);
+        glPushMatrix();
 
+        fixViewGt(g_est);
+        glBegin(GL_LINES);
+        glColor3f(c,0,1-c);
+        glVertex3f(0, 0, 0);
+        glVertex3f(RefErr[2], -RefErr[0], RefErr[1]);
+        glEnd();
+
+
+        glTranslatef(RefErr[2], -RefErr[0]+0.03, RefErr[1]);
+
+        glColor4f(c,0,1-c,0.4);
+        drawQuad(0,0,0,RefErr[3]);
+
+        glPopMatrix();
         //glColor4f((1-c),c,0,0.2);
         //drawSphere(-RefErr[2], -RefErr[0]+0.03, -RefErr[1],0.4,0.4,0.4,20,20,true);
     }
@@ -1068,9 +1079,51 @@ void gl_viewer::drawQuadsR(TooN::Vector<4> RefErr, TooN::Vector<3> g_est,double 
     glBegin(GL_LINES);
     glColor3f(1,0,0);
     glVertex3f(0, 0, 0);
+    g_est/=20;
     glVertex3f(g_est[0], g_est[1], g_est[2]);
 
     glEnd();
+
+
+    if(floor_dist>0){
+        TooN::Vector<3> u_g=TooN::unit(TooN::makeVector(g_est[0], g_est[1], g_est[2]));
+        TooN::Vector<3> u_p1=TooN::makeVector(1, 0, 0)^u_g;
+        TooN::Vector<3> u_p2=u_p1^u_g;
+
+        u_p1*=0.25;
+        u_p2*=0.25;
+
+        TooN::Vector<3> pp0=floor_dist*u_g+u_p1+u_p2;
+        TooN::Vector<3> pp1=floor_dist*u_g+u_p1-u_p2;
+        TooN::Vector<3> pp2=floor_dist*u_g-u_p1-u_p2;
+        TooN::Vector<3> pp3=floor_dist*u_g-u_p1+u_p2;
+
+        glColor3f(228.0/255.0,229.0/255.0,103.0/255.0);
+        glBegin(GL_LINES);
+
+        glVertex3f(pp0[0], pp0[1], pp0[2]);
+        glVertex3f(pp1[0], pp1[1], pp1[2]);
+        glVertex3f(pp1[0], pp1[1], pp1[2]);
+        glVertex3f(pp2[0], pp2[1], pp2[2]);
+        glVertex3f(pp2[0], pp2[1], pp2[2]);
+        glVertex3f(pp3[0], pp3[1], pp3[2]);
+        glVertex3f(pp3[0], pp3[1], pp3[2]);
+        glVertex3f(pp0[0], pp0[1], pp0[2]);
+
+
+        pp0=floor_dist*u_g-u_p1;
+        pp1=floor_dist*u_g+u_p1;
+        glVertex3f(pp0[0], pp0[1], pp0[2]);
+        glVertex3f(pp1[0], pp1[1], pp1[2]);
+
+        pp0=floor_dist*u_g-u_p2;
+        pp1=floor_dist*u_g+u_p2;
+        glVertex3f(pp0[0], pp0[1], pp0[2]);
+        glVertex3f(pp1[0], pp1[1], pp1[2]);
+
+        glEnd();
+
+    }
 
 
 
@@ -1143,6 +1196,35 @@ void gl_viewer::fixViewG(const TooN::Vector<3> &est_g){
     }
 }
 
+void gl_viewer::fixViewGt(const TooN::Vector<3> &est_g){
+
+
+    using namespace TooN;
+
+    if(norm(est_g)>0){
+
+        Vector <3> u_y=makeVector(0,1,0);
+        SO3 <>rot(est_g,u_y);
+
+
+        Vector <3> u_z=rot*makeVector(0,0,1);
+
+        SO3 <>rot2(makeVector(u_z[0],0,u_z[2]),makeVector(0,0,1));
+
+        const Matrix<3,3> &Pose=rot2.get_matrix()*rot.get_matrix();
+
+        double matrix[16];
+        for(int i=0;i<16;i++)
+            matrix[i]=0;
+        for(int i=0;i<3;i++)
+            for(int j=0;j<3;j++)
+                matrix[j*4+i]=Pose(j,i);
+        matrix[15]=1;
+
+        glMultMatrixd(matrix);
+    }
+}
+
 void gl_viewer::STR_View(const double &scale,const TooN::Vector<3> &pos, const TooN::Matrix<3,3> &Pose){
     double matrix[16];
     for(int i=0;i<16;i++)
@@ -1162,6 +1244,7 @@ void gl_viewer::renderGL(RenderParams &rp)
 
     glMatrixMode(GL_MODELVIEW);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
 
 
@@ -1206,7 +1289,7 @@ void gl_viewer::renderGL(RenderParams &rp)
         double min_dist=1e20;
         if(rp.d_filler && (*rp.d_filler).size()>0)
             min_dist=((*rp.d_filler)[0]).GetMinDist();
-        drawQuadsR(rp.ref_err,(TooN::Vector<3>)rp.nav.G/20,min_dist,rp.draw_crash_cuad);
+        drawQuadsR(rp.ref_err,rp.nav.G,min_dist,rp.draw_crash_cuad,rp.floor_dist);
     }
         break;
     case 2:
@@ -1224,6 +1307,7 @@ void gl_viewer::renderGL(RenderParams &rp)
 
 
     glPopMatrix();
+
 
 
     /* swap the buffers if we have doublebuffered */

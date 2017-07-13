@@ -5,6 +5,7 @@
 #include <UtilLib/cam_model.h>
 
 #include "UtilLib/linefitting.h"
+#include "visualizer/depth_filler.h"
 
 namespace rebvo{
 
@@ -205,7 +206,9 @@ class edgemap_com_decoder: public edgemap_com
     uncompressed_segment seg_list[KEYLINE_MAX];
     int seg_num;
 
+
 public:
+    depth_filler *dfill=nullptr;
 
     edgemap_com_decoder():edgemap_com(),seg_num(0){}
 
@@ -218,9 +221,11 @@ public:
 
     int HideVisible(const em_compressed_nav_pkg &pos, cam_model &cam);
 
+    void fillDepthMap(depth_filler &df, cam_model &cam, double v_thresh, double a_thresh);
 
     double GetLowerKL(const float g[], cam_model &cam, double SigmaThresh,double ProfThresh);
 
+    void dfillerHideVisible(const em_compressed_nav_pkg &pos, cam_model &cam, depth_filler *stitch_to);
 };
 }
 

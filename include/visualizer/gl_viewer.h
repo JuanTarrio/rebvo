@@ -49,6 +49,7 @@ struct RenderParams{
     std::vector <bool> *kf_show_mask=nullptr;
     std::vector <callbackFunc*> renderCallbacks;
     bool render_match;
+    double floor_dist=-1;
 };
 
 
@@ -135,7 +136,7 @@ public:
     void drawQuad(float x, float y, float z, float r=0);
     void drawQuads(TooN::Vector<3> Vel, TooN::Vector<3> g_est, double time2impact, bool show_cc=false);
 
-    void drawQuadsR(TooN::Vector<4> RefErr, TooN::Vector<3> g_est, double min_dist, bool show_cc=false);
+    void drawQuadsR(TooN::Vector<4> RefErr, TooN::Vector<3> g_est, double min_dist, bool show_cc=false, double floor_dist=-1);
 
     void drawTrayectory(const std::vector<TooN::Vector<3> > &pos_tray, const TooN::Matrix<3,3> &Pose);
     void fixView(const std::vector <TooN::Vector<3> > &pos_tray, const TooN::Matrix<3,3> &Pose);
@@ -175,9 +176,11 @@ public:
 
     void ToggleFixView(int fv){FixView=fv%3;}
     void ToggleCameraView(int cv){RenderCuad=cv%3;}
+    void fixViewGt(const TooN::Vector<3> &est_g);
 private:
     void LoadTextureGradient();
     float Depth2Texture(float z);
+    void initFont();
 };
 }
 #endif // GL_VIEWER_H
