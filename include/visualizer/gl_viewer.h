@@ -108,6 +108,8 @@ class gl_viewer
 
     RGB24Pixel              ColorGrad[512];
 
+    cam_model               *cam_mod;
+
 public:
 
     int                     RenderSurface;
@@ -125,7 +127,7 @@ public:
 
 
 public:
-    gl_viewer(int width, int height, const char *title,float fov);
+    gl_viewer(int width, int height, const char *title,float fov,cam_model *camera_model=nullptr);
     ~gl_viewer();
     void initGL();
     void resizeGL(int width, int height);
@@ -177,6 +179,8 @@ public:
     void ToggleFixView(int fv){FixView=fv%3;}
     void ToggleCameraView(int cv){RenderCuad=cv%3;}
     void fixViewGt(const TooN::Vector<3> &est_g);
+
+    void setCameraModel(cam_model *camera_model){cam_mod=camera_model;}
 private:
     void LoadTextureGradient();
     float Depth2Texture(float z);

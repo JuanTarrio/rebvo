@@ -203,7 +203,8 @@ gl_viewer::~gl_viewer()
 
 
 }
-gl_viewer::gl_viewer(int width, int height,const char *title, float fov)
+gl_viewer::gl_viewer(int width, int height, const char *title, float fov, cam_model *camera_model)
+    :cam_mod(camera_model)
 {
 
     RenderSurface=0;
@@ -879,9 +880,14 @@ void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,
         }
     }
 
+
+
+    glPopMatrix();
+
+
+    glPushMatrix();
+    STR_View(1,kf.Pos,kf.Pose);
     drawCamera(0,0,0,0.05);
-
-
     glPopMatrix();
 
 }
@@ -1322,12 +1328,45 @@ void gl_viewer::resetView(){
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(fov, (GLfloat)width / (GLfloat)height, 1.0/RHO_MAX, 1.0/RHO_MIN);
-    cam->glLookAt();
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glRotatef(180.0, 1.0, 0.0, 0.0);
+    if(cam_mod){
+
+        double far=1.0/RHO_MIN;
+        double near=1.0/RHO_MAX;
+        double fx=cam_mod->zfm;
+        double fy=cam_mod->zfm;
+        double w=cam_mod->sz.w;
+        double h=cam_mod->sz.h;
+        double cx=cam_mod->pp.x;
+        double cy=cam_mod->pp.y;
+
+
+
+        //GLdouble perspMatrix[16]={2*fx/w,0,0,0,0,2*fy/h,0,0,2*(cx/w)-1,2*(cy/h)-1,(far+near)/(far-near),1,0,0,-2*far*near/(far-near),0};
+
+        GLdouble perspMatrix[16]={2*fx/w,0,0,0,0,2*fy/h,0,0,2*(cx/w)-1,2*(cy/h)-1,-(far+near)/(far-near),-1,0,0,-2*far*near/(far-near),0};
+
+        glMultMatrixd(perspMatrix);
+
+
+        cam->glLookAt();
+        glRotatef(180.0, 1.0, 0.0, 0.0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        //
+    }else{
+        gluPerspective(fov, (GLfloat)width / (GLfloat)height, 1.0/RHO_MAX, 1.0/RHO_MIN);
+
+
+        cam->glLookAt();
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glRotatef(180.0, 1.0, 0.0, 0.0);
+    }
+
 
 
 

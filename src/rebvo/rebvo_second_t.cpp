@@ -535,36 +535,45 @@ void  REBVO::SecondThread(REBVO *cf){
 
         //Pass the buffer to the next thread
 
-        old_buf.dt=dt_frame;
-        old_buf.K=K;
-        old_buf.Kp=Kp;
-        old_buf.RKp=P_Kp;
+        new_buf.dt=dt_frame;
+        new_buf.K=K;
+        new_buf.Kp=Kp;
+        new_buf.RKp=P_Kp;
 
-        old_buf.nav.dt=dt_frame;
-        old_buf.nav.t=old_buf.t;
+        new_buf.nav.dt=dt_frame;
+        new_buf.nav.t=old_buf.t;
 
-        old_buf.nav.Rot=R;
-        old_buf.nav.RotLie=SO3<>(R).ln();
-        old_buf.nav.RotGiro=SO3<>(Rgva).ln()/dt_frame;
-        old_buf.nav.Vel=-V*K/dt_frame;
+        new_buf.nav.Rot=R;
+        new_buf.nav.RotLie=SO3<>(R).ln();
+        new_buf.nav.RotGiro=SO3<>(Rgva).ln()/dt_frame;
+        new_buf.nav.Vel=-V*K/dt_frame;
 
-        old_buf.nav.Pose=Pose;
-        old_buf.nav.PoseLie=SO3<>(Pose).ln();
-        old_buf.nav.Pos=Pos;
-        old_buf.nav.g=istate.g_est;
-        old_buf.nav.scale=K;
+        new_buf.nav.Pose=Pose;
+        new_buf.nav.PoseLie=SO3<>(Pose).ln();
+        new_buf.nav.Pos=Pos;
+        new_buf.nav.g=istate.g_est;
+        new_buf.nav.scale=K;
 
-        old_buf.s_rho_p=s_rho_q;
+        new_buf.s_rho_p=s_rho_q;
 
-        old_buf.EstimationOK=EstimationOk;
+        new_buf.EstimationOK=EstimationOk;
 
-        old_buf.imustate=istate;
+        new_buf.imustate=istate;
 
-        old_buf.dtp1=tproc.stop();
+        //******** Push KEYFRAME ***************************//
+
+          if(cf->saveKeyframes && (new_buf.p_id%25)==0){
+              cf->kf_list.push_back(keyframe(*new_buf.ef,*new_buf.gt,new_buf.t,new_buf.K,new_buf.nav.Rot,new_buf.nav.RotLie,new_buf.nav.Vel,new_buf.nav.Pose,new_buf.nav.PoseLie,new_buf.nav.Pos));
+
+              std::cout <<"\nadded keyframe\n";
+          }
+
+
+        new_buf.dtp1=tproc.stop();
 
         //Pus the nav data in the REBVO class (thread safe)
 
-        cf->pushNav(old_buf.nav);
+        cf->pushNav(new_buf.nav);
 
 
         if(cf->system_reset){   //Do a depth reset to the New Edgemap

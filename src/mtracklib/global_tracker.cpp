@@ -27,7 +27,7 @@
 #include <TooN/so3.h>
 #include <TooN/SVD.h>
 #include <TooN/Cholesky.h>
-
+#include <fstream>
 
 using namespace TooN;
 namespace  rebvo{
@@ -83,6 +83,13 @@ void global_tracker::build_field(edge_tracker &klist,int radius){
             if(field[inx].ikl>=0 && at>field[inx].dist)     //If alreafy a KL in the aux image, and the distance is less
                 continue;                                   //Dont save anything
 
+/*
+            float x_c=floor(kl.u_m.x*(float)t+kl.c_p.x);
+            float y_c=floor(kl.u_m.y*(float)t+kl.c_p.y);
+            float at=util::norm(x_c-kl.c_p.x,y_c-kl.c_p.y);                                  //Distance to the actual keyline
+            if(field[inx].ikl>=0 && at>field[inx].dist)     //If alreafy a KL in the aux image, and the distance is less
+                continue;
+*/
             field[inx].dist=at;                             //Save KL data in the aux
             field[inx].ikl=ikl;
 
@@ -287,6 +294,12 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
 
     T fi=0;
 
+    static int iter=0;
+    char debug_name[250];
+    snprintf(debug_name,250,"debug_optim%d.txt",iter);
+    iter++;
+    std::ofstream debug_file(debug_name);
+
     //For each keyline in klist (old edgemap)...
     for(int ikl=0;ikl<klist.KNum();ikl++){
 
@@ -333,6 +346,17 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
 
         kl.m_m=kl_m;        //Return gradient to it's original state
 
+
+        {
+            if(fm[ikl]<max_r){                 //Check for KL presence
+
+                KeyLine &f_kl=(*klist_f)[field[y*cam_mod.sz.w+x].ikl]; //Field keyline
+
+
+                debug_file<<x<<" "<<y<<" "<<f_kl.c_p.x<<" "<<f_kl.c_p.y<<"\n";
+            }
+
+        }
         //Optionally appy reweigting
         if(ReWeight){
             fm[ikl]*=weigth;
@@ -346,6 +370,8 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
 
 
     }
+
+    debug_file.close();
 
 
     for(int ikl=0;ikl<klist.KNum();ikl++){
@@ -1118,8 +1144,12 @@ double global_tracker::Minimizer_RV_KF(
 
 
     double mean_res=0;
-    for(int i=0;i<klist.KNum();i++)
+    std::ofstream ofile("residuals_0.txt");
+    for(int i=0;i<klist.KNum();i++){
         mean_res+=fabs(ResidualNew[i]);
+        ofile << ResidualNew[i]<<" ";
+    }
+    ofile.close();
     mean_res/=klist.KNum();
     std::cout<<"Minimizer RV: Mean error start: "<<mean_res;
 
@@ -1138,14 +1168,23 @@ double global_tracker::Minimizer_RV_KF(
         Xnew=X+h;
         Fnew=TryVelRot<T,true,true,UsePriors>(JtJnew,JtFnew,Xnew,Vel,RVel,W0,RW0,klist, P0m,pnum,match_thresh,max_s_rho,MatchNumThresh,k_hubber,Residual,ResidualNew);
 
-        mean_res=0;
-        for(int i=0;i<klist.KNum();i++)
-            mean_res+=fabs(ResidualNew[i]);
-        mean_res/=klist.KNum();
-        if(lm_iter==iter_max-1)
-        std::cout<<" end: "<<mean_res<<"\n";
+        if(lm_iter==iter_max-1){
+            std::ofstream ofile("residuals.txt");
+            mean_res=0;
+            for(int i=0;i<klist.KNum();i++){
+                mean_res+=fabs(ResidualNew[i]);
+                ofile << ResidualNew[i]<<" ";
+            }
+            ofile.close();
+            mean_res/=klist.KNum();
+
+
+            std::cout<<" end: "<<mean_res<<"\n";
+        }
 
         gain=(F-Fnew)/(0.5*h*(u*h-JtF));    //Check gain
+
+        std::cout <<"i: "<<lm_iter<<" g:"<<gain<<" F:"<<F<<" Fn:"<<Fnew<<" ";
 
         if(gain>0){ //if positive, update step!
             F=Fnew;
@@ -1156,6 +1195,7 @@ double global_tracker::Minimizer_RV_KF(
             v=2;
             eff_steps++;
             std::swap(ResidualNew,Residual);        //Swap residuals
+
 
         }else{      //if not, go to Gradient Descent
             u*=v;
