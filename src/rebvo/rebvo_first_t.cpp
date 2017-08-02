@@ -147,8 +147,16 @@ void REBVO::FirstThr(REBVO *cf) {
 
     while (!cf->quit) {
 
+
+
 		//Request free buffer on the pipeline
 		PipeBuffer &pbuf = cf->pipe.RequestBuffer(0);
+        if(cf->frame_by_frame){
+            while(!cf->frame_by_frame_advance)
+                usleep(1e5);
+            cf->frame_by_frame_advance=false;
+            std::cout <<"Advancing frame...\n";
+        }
 
         while(1){
 
@@ -260,6 +268,8 @@ void REBVO::FirstThr(REBVO *cf) {
 				cf->params.ReferencePoints, cf->params.DetectorAutoGain,
 				cf->params.DetectorMaxThresh, cf->params.DetectorMinThresh);
 
+        pbuf.ef->reEstimateThresh(cf->params.TrackPoints,cf->params.QCutOffNumBins);
+
 
         if(cf->params.StereoAvaiable){
             Image<float>::ConvertRGB2BW((*pbuf.img_pair), *pbuf.imgc_pair);
@@ -274,6 +284,8 @@ void REBVO::FirstThr(REBVO *cf) {
                     cf->params.MaxPoints, tresh, l_kl_num,
                     cf->params.ReferencePoints, cf->params.DetectorAutoGain,
                     cf->params.DetectorMaxThresh, cf->params.DetectorMinThresh);
+
+            pbuf.ef_pair->reEstimateThresh(cf->params.TrackPoints,cf->params.QCutOffNumBins);
         }
 
         //********* Grab IMU data after processing *****************//

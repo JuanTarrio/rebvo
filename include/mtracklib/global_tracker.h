@@ -29,7 +29,7 @@ public:
     global_tracker(const global_tracker&gt);
     ~global_tracker();
 
-    void build_field(edge_tracker &klist, int radius);
+    void build_field(edge_tracker &klist, int radius, float min_mod=-1);
 
 
     template <class T,bool ReWeight, bool ProcJF,bool UsePriors>
@@ -43,6 +43,8 @@ public:
     template <class T>
     inline T Calc_f_J2(int f_inx,T &df_dx,T &df_dy,KeyLine &kl,const Point2D<T> &p,const T &max_r,const T &simil_t,int &mnum,T &fi);
 
+    template <class T>
+    inline T Calc_f_J_Complete(int f_inx,T &df_dx,T &df_dy,KeyLine &kl,const Point2D<T> &p,const T &max_r,const T &simil_mod,const T &simil_ang,int &mnum,const T rho,const T rho_tol,T &fi);
 
     void SetEdgeTracker(edge_tracker *et){
         klist_f=et;
@@ -52,16 +54,13 @@ public:
 
 
     template <class T>
-    double TryVel(TooN::Matrix<3,3> &JtJ, TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist, double match_thresh, double s_rho_min,uint MatchNumThresh,T *Residuals,double reweigth_distance);
+    double TryVel(TooN::Matrix<3,3> &JtJ, TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist, double match_thresh, double s_rho_min,uint MatchNumThresh,T *Residuals,double reweigth_distance,float min_mod);
     template <class T>
     double TryVel_vect(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel,  edge_tracker &klist, T match_thresh, double s_rho_min,uint MatchNumThresh,double reweigth_distance);
     template <class T>
-    double Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,T match_thresh, int iter_max, T s_rho_min,uint MatchNumThresh,double reweigth_distance);
+    double Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,T match_thresh, int iter_max, T s_rho_min,uint MatchNumThresh,double reweigth_distance,float min_mod);
 
 
-    template <class T,bool UsePriors=false>
-    double Minimizer_RV_KF(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,  TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0,edge_tracker &klist,double match_thresh,
-                                        int iter_max,double reweigth_distance,const double &max_s_rho,const uint& MatchNumThresh,TooN::Vector<6,T> &X,TooN::Matrix<6> &RRV);
 
 };
 

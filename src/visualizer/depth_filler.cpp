@@ -56,7 +56,7 @@ void depth_filler::ResetData(){
 
 
 //Fill edge data using net_keyline structure
-void depth_filler::FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double v_thresh, int m_num_t){
+void depth_filler::FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double v_thresh, int m_num_t,bool discart){
 
 
     for (int ikl=0;ikl<kn;ikl++){
@@ -67,8 +67,15 @@ void depth_filler::FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double 
         double kl_s_rho=nkl.s_rho/NET_RHO_SCALING;
 
 
-        if(kl_s_rho/kl_rho>v_thresh || nkl.m_num<m_num_t)
+        if(kl_s_rho/kl_rho>v_thresh)
             continue;
+
+        if(nkl.m_num<m_num_t){
+            if(discart)
+                continue;
+            else
+                kl_s_rho=RHO_MAX;
+        }
 
   //      if(s_depth*rho>v_thresh)
   //          continue;
@@ -105,15 +112,17 @@ void depth_filler::FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double 
  */
 void depth_filler::FillEdgeData(edge_tracker&et,
                                 double v_thresh,
-                                int m_num_t)
+                                int m_num_t,
+                                bool discart)
 {
 
 
     for ( KeyLine &kl:et){
 
 
-        if(kl.s_rho/kl.rho>v_thresh || kl.m_num<m_num_t)
+        if(kl.s_rho/kl.rho>v_thresh )
             continue;
+
 
 
 
@@ -123,6 +132,13 @@ void depth_filler::FillEdgeData(edge_tracker&et,
         double i_rho=data[inx].I_rho*data[inx].rho;     //block information vector
 
         double kl_I_rho=1/(kl.s_rho*kl.s_rho);          //KL information matrix
+
+        if(kl.m_num<m_num_t){
+            if(discart)
+                continue;
+            else
+                kl_I_rho=1.0/(RHO_MAX*RHO_MAX);
+        }
 
         i_rho+=kl.rho*kl_I_rho;                         //Inforamtion update
         data[inx].I_rho+=kl_I_rho;

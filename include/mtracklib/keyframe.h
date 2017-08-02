@@ -57,7 +57,7 @@ public:
     edge_tracker & edges(){return *et;}
     global_tracker & tracker(){return *gt;}
 
-    void initDepthFiller(Size2D blockSize, int iter_num, double error_thresh, double m_num_thresh, depth_filler::bound_modes bound_mode);
+    void initDepthFiller(Size2D blockSize, int iter_num, double error_thresh, double m_num_thresh, depth_filler::bound_modes bound_mode, bool discart=true);
     bool depthFillerAval(){
         return df!=nullptr;
     }

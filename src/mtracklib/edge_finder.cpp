@@ -360,6 +360,47 @@ void edge_finder::detect(sspace *ss,
     l_kl_num=kn;    //Save the number of effective KL detected
 }
 
+
+//********************************************************************************
+// EstimateQuantile() uses histograms to estimate an uncertainty threshold
+// for a certain quatile
+//********************************************************************************
+
+int edge_finder::reEstimateThresh(int  knum,int n){               //Number of bins on the histo
+
+
+    float max_dog=kl[0].n_m;
+    float min_dog=kl[0].n_m;
+
+    for(int ikl=1;ikl<kn;ikl++){
+        util::keep_max(max_dog,kl[ikl].n_m);
+        util::keep_min(min_dog,kl[ikl].n_m);
+    }
+
+    int histo[n];
+
+
+    for(int i=0;i<n;i++){
+        histo[i]=0;
+    }
+
+    for(int ikl=0;ikl<kn;ikl++){
+        int i=n*(max_dog-kl[ikl].n_m)/(max_dog-min_dog);    //histogram position
+
+        i=i>n-1?n-1:i;
+        i=i<0?0:i;
+
+        histo[i]++;     //count
+    }
+
+    int i=0;
+    for(int a=0;i<n && a<knum;i++,a+=histo[i]);
+
+    return reTunedThresh=max_dog-(float)i*(max_dog-min_dog)/(float)n;
+
+}
+
+
 //************************************************************************
 // dumpToBinaryFile(): Print keyline list to file
 //************************************************************************

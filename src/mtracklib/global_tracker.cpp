@@ -58,7 +58,7 @@ global_tracker::~global_tracker()
 // the optimization
 //********************************************************************
 
-void global_tracker::build_field(edge_tracker &klist,int radius){
+void global_tracker::build_field(edge_tracker &klist,int radius, float min_mod){
 
     max_r=radius;
     klist_f=&klist;
@@ -68,9 +68,13 @@ void global_tracker::build_field(edge_tracker &klist,int radius){
     }
 
 
+
     for(int ikl=0;ikl<klist.KNum();ikl++){
 
         KeyLine &kl=klist[ikl];             //Short cut for current KL
+
+        if(min_mod>0 && kl.n_m<min_mod)
+            continue;
 
         for(int t=-radius;t<radius;t+=1){   //For a segment of +- radious
 
@@ -97,6 +101,7 @@ void global_tracker::build_field(edge_tracker &klist,int radius){
 
     }
 
+
 }
 
 
@@ -120,6 +125,67 @@ inline bool Test_f_k(const  Point2DF &f_m   //KL1 gradient m
 
     return true;
 }
+
+
+//*******************************************************************************************
+// Calc_f_J(): Search for KL match in axuiliary image and calc gradients, dont scale by s_rho
+//*******************************************************************************************
+
+template <class T>
+inline T global_tracker::Calc_f_J_Complete(const int f_inx,      //Field image index where to look
+                                  T &df_dx,T &df_dy,    //Gradient vector
+                                  KeyLine &kl,          //KeyLine gradient
+                                  const Point2D<T> &p,  //Transformed KL coordinate in image coordinates
+                                  const T &max_r,       //Maximun allowed radius
+                                  const T &simil_mod,   //Match threshold
+                                  const T &simil_cang,   //Match threshold
+                                  int &mnum,            //Match counter
+                                  const T rho,
+                                  const T rho_tol,
+                                  T &fi)                //Pixel residual
+{
+
+
+    if(field[f_inx].ikl<0){                 //Check for KL presence
+        df_dx=0;
+        df_dy=0;
+        return max_r;              //Return max posible error (weighted)
+    }
+
+    KeyLine &f_kl=(*klist_f)[field[f_inx].ikl]; //Field keyline
+
+    double cang=(kl.m_m.x*f_kl.m_m.x+kl.m_m.y*f_kl.m_m.y)/kl.n_m;
+
+    if(cang<simil_cang || fabs(kl.n_m/f_kl.n_m-1)>simil_mod || fabs(rho-f_kl.rho)>rho_tol*(f_kl.s_rho+kl.s_rho*rho/kl.rho)){    //check angle and modulus thresholds
+
+        df_dx=0;
+        df_dy=0;
+        return max_r;          //Return max posible error (weighted)
+
+
+    }
+
+
+    T dx=p.x-f_kl.c_p.x;
+    T dy=p.y-f_kl.c_p.y;
+
+    fi=(dx*f_kl.u_m.x+dy*f_kl.u_m.y);   //Residual in the direction of the gradient
+
+
+    df_dx=f_kl.u_m.x;          //Return weigthed gradient
+    df_dy=f_kl.u_m.y;
+
+    mnum++;                             //Count match
+
+    kl.m_id_f=field[f_inx].ikl;         //Forward match
+
+    return fi;                 //weigthed residual
+
+}
+
+
+template double global_tracker::Calc_f_J_Complete(const int f_inx,double &df_dx,double &df_dy,KeyLine &kl,const Point2D<double> &p,const double &max_r, const double &simil_mod, const double &simil_cang,int &mnum,const double Kr,const double rho_tol,double &fi);
+template float global_tracker::Calc_f_J_Complete(const int f_inx,float &df_dx,float &df_dy,KeyLine &kl,const Point2D<float> &p,const float &max_r, const float &simil_mod, const float &simil_cang,int &mnum,const float Kr,const float rho_tol,float &fi);
 
 
 
@@ -217,6 +283,8 @@ inline T global_tracker::Calc_f_J2(const int f_inx,      //Field image index whe
 
     kl.m_id_f=field[f_inx].ikl;         //Forward match
 
+
+
     return fi;                 //weigthed residual
 
 }
@@ -294,11 +362,8 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
 
     T fi=0;
 
-    static int iter=0;
-    char debug_name[250];
-    snprintf(debug_name,250,"debug_optim%d.txt",iter);
-    iter++;
-    std::ofstream debug_file(debug_name);
+
+
 
     //For each keyline in klist (old edgemap)...
     for(int ikl=0;ikl<klist.KNum();ikl++){
@@ -338,8 +403,8 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
         }
 
         Point2DF kl_m=kl.m_m;
-       // kl.m_m.x=RM(0,0)*kl_m.x+RM(0,1)*kl_m.y;
-       // kl.m_m.y=RM(1,0)*kl_m.x+RM(1,1)*kl_m.y;     //Temporaly rotate keylines gradient on z-axis for improved matching
+        kl.m_m.x=RM(0,0)*kl_m.x+RM(0,1)*kl_m.y;
+        kl.m_m.y=RM(1,0)*kl_m.x+RM(1,1)*kl_m.y;     //Temporaly rotate keylines gradient on z-axis for improved matching
 
         //Match and Calculate residuals and gradients
         fm[ikl]=Calc_f_J2<T>(y*cam_mod.sz.w+x,df_dPi_x[ikl],df_dPi_y[ikl],kl,p_pji,max_r,match_thresh,mnum,fi);
@@ -347,16 +412,8 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
         kl.m_m=kl_m;        //Return gradient to it's original state
 
 
-        {
-            if(fm[ikl]<max_r){                 //Check for KL presence
-
-                KeyLine &f_kl=(*klist_f)[field[y*cam_mod.sz.w+x].ikl]; //Field keyline
 
 
-                debug_file<<x<<" "<<y<<" "<<f_kl.c_p.x<<" "<<f_kl.c_p.y<<"\n";
-            }
-
-        }
         //Optionally appy reweigting
         if(ReWeight){
             fm[ikl]*=weigth;
@@ -371,7 +428,7 @@ double global_tracker::TryVelRot(TooN::Matrix<6,6,T> &JtJ,          //Estimated 
 
     }
 
-    debug_file.close();
+    //debug_file.close();
 
 
     for(int ikl=0;ikl<klist.KNum();ikl++){
@@ -787,7 +844,7 @@ template double global_tracker::Minimizer_RV<double,false>(TooN::Vector<3> &Vel,
 
 
 template <class T>
-double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist,double match_thresh, double s_rho_min,uint MatchNumThresh,T *Residuals,double reweigth_distance)
+double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const TooN::Vector<3> &Vel, edge_tracker &klist,double match_thresh, double s_rho_min,uint MatchNumThresh,T *Residuals,double reweigth_distance,float min_mod)
 {
 
     double score=0,f;
@@ -806,6 +863,10 @@ double global_tracker::TryVel(TooN::Matrix<3,3> &JtJ,TooN::Vector<3> &JtF, const
 
 
         kl.m_id_f=-1;
+
+        if(min_mod>0 && kl.n_m<min_mod)
+            continue;
+
 
         if(kl.s_rho>s_rho_min || kl.m_num<std::min(MatchNumThresh,FrameCount)){     //If uncertainty is to hi, dont use this keyline
                                                                                      //Also apply a thresh on the number of frames
@@ -990,7 +1051,7 @@ double global_tracker::TryVel_vect(TooN::Matrix<3,3> &JtJ, TooN::Vector<3> &JtF,
 }
 
 template <class T>
-double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  T match_thresh, int iter_max, T s_rho_min,uint MatchNumThresh,double reweigth_distance){
+double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  T match_thresh, int iter_max, T s_rho_min,uint MatchNumThresh,double reweigth_distance,float min_mod){
 
     TooN::Matrix<3,3> JtJ,ApI,JtJnew;
     TooN::Vector<3> JtF,JtFnew;
@@ -1000,7 +1061,7 @@ double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel
     for(int i=0;i<klist.KNum();i++)
         residuals[i]=0;
 
-    double F=TryVel(JtJ,JtF,Vel,klist,match_thresh,s_rho_min,MatchNumThresh,residuals,reweigth_distance),Fnew;
+    double F=TryVel(JtJ,JtF,Vel,klist,match_thresh,s_rho_min,MatchNumThresh,residuals,reweigth_distance,min_mod),Fnew;
 
     double v=2,tau=1e-3;
     double u=tau*TooN::max_element(JtJ).first;
@@ -1020,7 +1081,7 @@ double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel
 
          Vnew=Vel+h;
         //Fnew=TryVel_vect<float>(JtJnew,JtFnew,Vnew,klist, knum,use_a);
-        Fnew=TryVel(JtJnew,JtFnew,Vnew,klist,match_thresh,s_rho_min,MatchNumThresh,residuals,reweigth_distance);
+        Fnew=TryVel(JtJnew,JtFnew,Vnew,klist,match_thresh,s_rho_min,MatchNumThresh,residuals,reweigth_distance,min_mod);
 
         gain=(F-Fnew)/(0.5*h*(u*h-JtF));
 
@@ -1047,183 +1108,10 @@ double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel
 
 }
 
-template  double global_tracker::Minimizer_V<double>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  double match_thresh, int iter_max, double s_rho_min,uint MatchNumThresh,double reweigth_distance);
-template  double global_tracker::Minimizer_V<float>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  float match_thresh, int iter_max, float s_rho_min,uint MatchNumThresh,double reweigth_distance);
+template  double global_tracker::Minimizer_V<double>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  double match_thresh, int iter_max, double s_rho_min,uint MatchNumThresh,double reweigth_distance,float min_mod);
+template  double global_tracker::Minimizer_V<float>(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel, edge_tracker &klist,  float match_thresh, int iter_max, float s_rho_min,uint MatchNumThresh,double reweigth_distance,float min_mod);
 
 
-
-
-template <class T>
-void KltoI3PMatrixKF(edge_tracker & klist,    //
-                   const int pnum,          //Number of klist points, rounded up to a multiple of 4
-                   T* Pos)
-{
-
-    int ikl=0,ikly=pnum,iklr=2*pnum;
-    for(;ikl<klist.KNum();ikl++,ikly++,iklr++){
-        Pos[ikl]=klist[ikl].p_m.x;
-        Pos[ikly]=klist[ikl].p_m.y;
-        Pos[iklr]=klist[ikl].rho;
-    }
-
-    for(;ikl<pnum;ikl++,ikly++,iklr++){
-        Pos[ikl]=0;
-        Pos[ikly]=0;
-        Pos[iklr]=1;
-    }
-}
-
-
-//********************************************************************************
-// Optimization on the velocity and rotation using lenveng-marquart for KF bases optim
-//
-// *******************************************************************************
-
-
-template <class T,          //Presition, NEON only supperots float
-          bool UsePriors>   //Use priors switch
-double global_tracker::Minimizer_RV_KF(
-                                    TooN::Vector<3> &Vel,       //Initial estimate on the velocity (translation)
-                                    TooN::Vector<3> &W0,        //Initial estimate on the rotation
-                                    TooN::Matrix<3,3> &RVel,    //Uncertainty Model if the initial estimate will
-                                    TooN::Matrix<3,3> &RW0,     //be used as prior
-                                    edge_tracker &klist,        //KList to match to
-                                    double match_thresh,        //Match Gradient Treshold
-                                    int iter_max,               //Iteration number
-                                    double reweigth_distance,   //Distance cut-off for reweigthing
-                                    const double &max_s_rho,    //Threshold on the IDepth uncertainty
-                                    const uint& MatchNumThresh,  //Threshold on the KL match number
-                                    TooN::Vector<6,T> &X,
-                                    TooN::Matrix<6> &RRV
-                                    )
-{
-
-
-
-    if(klist.KNum()<=0)
-        return 0;
-
-
-    TooN::Matrix<6,6,T> JtJ,ApI,JtJnew;
-    TooN::Vector<6,T> JtF,JtFnew;
-    TooN::Vector<6,T> h,Xnew;
-
-
-
-    int pnum=(klist.KNum()+0x3)&(~0x3);     //Number of points up-rounded to a multiple of 4 (NE10Wrapper requirment)
-    T P0Im[pnum*3];                         //Image coordinates (x,y,rho)
-    T P0m[pnum*3];                          //3Dcoordinates
-    T Res0[pnum], Res1[pnum];               //DIstance Residuals
-    T *Residual=Res0,*ResidualNew=Res1;     //
-
-    //Convert to LTCV format
-    KltoI3PMatrixKF<T>(klist,pnum,P0Im);
-    //Proyect to 3D using NE10Wrapper
-    Ne10::ProyI3Pto3PMatrix<T>(P0m,P0Im,cam_mod.zfm,pnum);
-
-
-    double F,Fnew,F0;           //Total energy score
-    double v=2,tau=1e-3;        //LM params
-    double u,gain;
-    int eff_steps=0;
-
-    for(int i=0;i<pnum;i++)     //Init residuals
-        Residual[i]=0;
-
-    double k_hubber=reweigth_distance;  //Reweigth distance
-
-    X.template slice<0,3>()=Vel;    //Prior initial condition
-    X.template slice<3,3>()=W0;     //
-
-
-
-    //Start or continue iterating, now using reweigth
-    F0=F=TryVelRot<T,true,true,UsePriors>(JtJ,JtF,X,Vel,RVel,W0,RW0,klist, P0m,pnum,match_thresh,max_s_rho,MatchNumThresh,k_hubber,Residual,ResidualNew);
-    u=tau*TooN::max_element(JtJ).first; //Levenberg-Marquart param reset
-    v=2;
-
-
-    double mean_res=0;
-    std::ofstream ofile("residuals_0.txt");
-    for(int i=0;i<klist.KNum();i++){
-        mean_res+=fabs(ResidualNew[i]);
-        ofile << ResidualNew[i]<<" ";
-    }
-    ofile.close();
-    mean_res/=klist.KNum();
-    std::cout<<"Minimizer RV: Mean error start: "<<mean_res;
-
-
-    int lm_iter=0;
-    for(;lm_iter<iter_max;lm_iter++){
-
-        ApI=JtJ+Identity*u;
-
-        //Solve ApI*h=-JtF
-
-        Cholesky <6>svdApI(ApI);    //ApI is symetric, use cholesky
-        h=svdApI.backsub(-JtF);
-
-
-        Xnew=X+h;
-        Fnew=TryVelRot<T,true,true,UsePriors>(JtJnew,JtFnew,Xnew,Vel,RVel,W0,RW0,klist, P0m,pnum,match_thresh,max_s_rho,MatchNumThresh,k_hubber,Residual,ResidualNew);
-
-        if(lm_iter==iter_max-1){
-            std::ofstream ofile("residuals.txt");
-            mean_res=0;
-            for(int i=0;i<klist.KNum();i++){
-                mean_res+=fabs(ResidualNew[i]);
-                ofile << ResidualNew[i]<<" ";
-            }
-            ofile.close();
-            mean_res/=klist.KNum();
-
-
-            std::cout<<" end: "<<mean_res<<"\n";
-        }
-
-        gain=(F-Fnew)/(0.5*h*(u*h-JtF));    //Check gain
-
-        std::cout <<"i: "<<lm_iter<<" g:"<<gain<<" F:"<<F<<" Fn:"<<Fnew<<" ";
-
-        if(gain>0){ //if positive, update step!
-            F=Fnew;
-            X=Xnew;
-            JtJ=JtJnew;
-            JtF=JtFnew;
-            u*=std::max(0.33,1-((2*gain-1)*(2*gain-1)*(2*gain-1)));
-            v=2;
-            eff_steps++;
-            std::swap(ResidualNew,Residual);        //Swap residuals
-
-
-        }else{      //if not, go to Gradient Descent
-            u*=v;
-            v*=2;
-        }
-
-
-
-    }
-
-    Cholesky <6>svdJtJ(JtJ);
-    RRV=svdJtJ.get_inverse();  //Extract linealized uncertaintyes
-
-    Vel=X.template slice<0,3>();           //Return the estimation
-    W0=X.template slice<3,3>();
-
-    RVel=RRV.slice<0,0,3,3>();             //And the uncertaintyes
-    RW0=RRV.slice<3,3,3,3>();
-
-
-    FrameCount++;
-    return F/F0;
-
-}
-
-
-template double global_tracker::Minimizer_RV_KF<float,false>(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0, edge_tracker &klist,double match_thresh,int iter_max,double reweigth_distance,const double &max_s_rho,const uint& MatchNumThresh,TooN::Vector<6,float> &X,TooN::Matrix<6> &RRV);
-template double global_tracker::Minimizer_RV_KF<double,false>(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0, edge_tracker &klist,double match_thresh,int iter_max,double reweigth_distance,const double &max_s_rho,const uint& MatchNumThresh,TooN::Vector<6,double> &X,TooN::Matrix<6> &RRV);
 
 
 

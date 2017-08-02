@@ -380,6 +380,9 @@ int edge_tracker::FordwardMatch(edge_tracker *et    //Edgemap to match to
             continue;
         }
 
+        if(et->kl[ikl_f].m_id>=0 && et->kl[ikl_f].rho>k.rho)    //On the case of a double match (ej. occlusion)
+            continue;                                           //Keep the keyline of the front
+
         //If match, clone to et
         et->kl[ikl_f].rho=k.rho;
         et->kl[ikl_f].s_rho=k.s_rho;

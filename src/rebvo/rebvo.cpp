@@ -109,6 +109,7 @@ REBVO::REBVO(const char *configFile)
     InitOK&=config.GetConfigByName("Detector","KSigma",params.KSigma,true);
     InitOK&=config.GetConfigByName("Detector","ReferencePoints",params.ReferencePoints,true);
     InitOK&=config.GetConfigByName("Detector","MaxPoints",params.MaxPoints,true);
+    InitOK&=config.GetConfigByName("Detector","TrackPoints",params.TrackPoints,true);
     InitOK&=config.GetConfigByName("Detector","DetectorThresh",params.DetectorThresh,true);
     InitOK&=config.GetConfigByName("Detector","DetectorAutoGain",params.DetectorAutoGain,true);
 
@@ -318,6 +319,8 @@ bool REBVO::Init(){
     system_reset=false;
     quit=false;
     saveKeyframes=false;
+    frame_by_frame=false;
+    frame_by_frame_advance=false;
     Thr0=std::thread (FirstThr,this);
 
     return true;

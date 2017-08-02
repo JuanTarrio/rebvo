@@ -79,8 +79,8 @@ public:
     depth_filler(cam_model &cam, const Size2D &blockSize, const bound_modes &bound_mode);
 
     void ResetData();
-    void FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double v_thresh,int m_num_t);
-    void FillEdgeData(edge_tracker&et, double v_thresh, int m_num_t);
+    void FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double v_thresh, int m_num_t, bool discart=true);
+    void FillEdgeData(edge_tracker&et, double v_thresh, int m_num_t, bool discart=true);
     void Integrate1Step();
     void Integrate(int iter_num, bool init_cf=true);
 

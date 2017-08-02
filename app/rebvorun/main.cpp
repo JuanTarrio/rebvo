@@ -38,6 +38,8 @@ void PrintHelp(){
                r: Reset
                s: Save KF and Quit
                p: Take Snapshot
+               f: Frame by frame
+               a: Advance frame
                )help";
 
 }
@@ -111,6 +113,13 @@ int main(int argn,char ** argv)
             break;
         case 'k':
             cf.toggleKeyFrames();
+            break;
+        case 'f':
+            cf.toggleFrameByFrame();
+            cf.advanceFrameByFrame();
+            break;
+        case 'a':
+            cf.advanceFrameByFrame();
             break;
         default:
             PrintHelp();

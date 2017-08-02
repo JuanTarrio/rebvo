@@ -40,7 +40,7 @@ constexpr double  RHO_MIN=1e-3;
 constexpr double  RhoInit=1;
 
 //Maximun number of KeyLines to track for (in memory size)
-constexpr int KEYLINE_MAX=30000;
+constexpr int KEYLINE_MAX=50000;
 
 struct KeyLine{
 
@@ -50,6 +50,8 @@ struct KeyLine{
         Point2DF m_m;       //KeyLine's gradient vector
         Point2DF u_m;       //Normalized m_m
         float n_m;          //Norm of m_m
+
+        float score;        //Final score given to the keyline
 
         Point2DF c_p;       //KeyLine's image position
 
@@ -72,9 +74,9 @@ struct KeyLine{
         Point2DF m_m0;      //Grandient of matched KeyLine
         double n_m0;        //Norm of m_m0
 
-        short int p_id;     //Id of previous consecutive KeyLine
-        short int n_id;     //Id of next consecutive KeyLine
-        short int net_id;   //Network ID of the KeyLine
+        int p_id;           //Id of previous consecutive KeyLine
+        int n_id;           //Id of next consecutive KeyLine
+        int net_id;         //Network ID of the KeyLine
 
 
         int stereo_m_id;
@@ -108,6 +110,8 @@ protected:
     KeyLine *kl;
     int kn;         //Number of KLs
 
+    float reTunedThresh;
+
 public:
 
 
@@ -126,6 +130,8 @@ public:
 
     void join_edges();
 
+    int reEstimateThresh(int  knum,int n);
+
 
     //***** Quick returns*****
 
@@ -135,6 +141,7 @@ public:
 
     KeyLine & operator [](uint inx){return kl[inx];}    //Index operator to access keylines directly
 
+    float  getThresh(){return reTunedThresh;}
     //Some iterators
 
     typedef KeyLine * iterator;

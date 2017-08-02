@@ -19,7 +19,7 @@ struct net_keyline{
     u_short rho;
     u_short s_rho;
 
-    short n_kl;
+    int n_kl;
 
     u_char m_num;
 

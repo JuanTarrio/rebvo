@@ -211,14 +211,14 @@ bool keyframe::loadKeyframesFromFile(const char *name,std::vector<keyframe> &kf_
 
 }
 
-void keyframe::initDepthFiller(Size2D blockSize, int iter_num, double error_thresh, double m_num_thresh,depth_filler::bound_modes bound_mode)
+void keyframe::initDepthFiller(Size2D blockSize, int iter_num, double error_thresh, double m_num_thresh,depth_filler::bound_modes bound_mode, bool discart)
 {
     df=std::shared_ptr<depth_filler>(new depth_filler(camera,blockSize,bound_mode));
 
     if(iter_num>0){
 
         (*df).ResetData();
-        (*df).FillEdgeData(*et,error_thresh,m_num_thresh);
+        (*df).FillEdgeData(*et,error_thresh,m_num_thresh,discart);
         (*df).InitCoarseFine();
         (*df).Integrate(iter_num);
         (*df).computeDistance(TooN::Zeros);

@@ -167,7 +167,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
         COND_TIME_DEBUG(tlist.push_new();)
 
-        new_buf.gt->build_field(*new_buf.ef,cf->params.SearchRange);
+        new_buf.gt->build_field(*new_buf.ef,cf->params.SearchRange,new_buf.ef->getThresh());
 
 
         P_V=Identity*1e50;
@@ -211,9 +211,9 @@ void  REBVO::SecondThread(REBVO *cf){
             COND_TIME_DEBUG(tlist.push_new();)
 
             #ifdef USE_NE10
-            new_buf.gt->Minimizer_V<float>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,s_rho_q,cf->params.MatchNumThresh,cf->params.ReweigthDistance);   //Estimate translation only
+            new_buf.gt->Minimizer_V<float>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,s_rho_q,cf->params.MatchNumThresh,cf->params.ReweigthDistance,old_buf.ef->getThresh());   //Estimate translation only
             #else
-            new_buf.gt->Minimizer_V<double>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,s_rho_q,cf->params.MatchNumThresh,cf->params.ReweigthDistance);   //Estimate translation only
+            new_buf.gt->Minimizer_V<double>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,s_rho_q,cf->params.MatchNumThresh,cf->params.ReweigthDistance,old_buf.ef->getThresh());   //Estimate translation only
             #endif
 
             COND_TIME_DEBUG(tlist.push_new();)
@@ -509,7 +509,6 @@ void  REBVO::SecondThread(REBVO *cf){
                 istate.u_est=istate.u_est-(istate.u_est*istate.g_est)/(istate.g_est*istate.g_est)*istate.g_est;
                 TooN::normalize(istate.u_est);
 
-
                 Matrix<3> PoseP1=TooN::SO3<>(istate.g_est,makeVector(0,1,0)).get_matrix();
                 Matrix<3> PoseP2=TooN::SO3<>(PoseP1*istate.u_est,makeVector(1,0,0)).get_matrix();
 
@@ -541,7 +540,7 @@ void  REBVO::SecondThread(REBVO *cf){
         new_buf.RKp=P_Kp;
 
         new_buf.nav.dt=dt_frame;
-        new_buf.nav.t=old_buf.t;
+        new_buf.nav.t=new_buf.t;
 
         new_buf.nav.Rot=R;
         new_buf.nav.RotLie=SO3<>(R).ln();
@@ -562,7 +561,10 @@ void  REBVO::SecondThread(REBVO *cf){
 
         //******** Push KEYFRAME ***************************//
 
-          if(cf->saveKeyframes && (new_buf.p_id%25)==0){
+
+
+
+          if(cf->saveKeyframes && (new_buf.p_id%20)==0){
               cf->kf_list.push_back(keyframe(*new_buf.ef,*new_buf.gt,new_buf.t,new_buf.K,new_buf.nav.Rot,new_buf.nav.RotLie,new_buf.nav.Vel,new_buf.nav.Pose,new_buf.nav.PoseLie,new_buf.nav.Pos));
 
               std::cout <<"\nadded keyframe\n";

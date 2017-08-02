@@ -188,6 +188,7 @@ struct REBVOParameters{
     double DetectorDoGThresh;       //Relation between DoG threshold and Gradient threshold ~1/Sigma0^4
 
     int ReferencePoints;            //Reference to the number of points when autothreshold
+    int TrackPoints;                //Reference to the number of points used for track
     int MaxPoints;                  //Absolute maximun number of points
 
     double DetectorThresh;          //Manual theshold
@@ -376,6 +377,10 @@ class REBVO
     std::atomic_bool system_reset;
 
 
+    std::atomic_bool frame_by_frame;
+    std::atomic_bool frame_by_frame_advance;
+
+
     //Custom cam pipeline
     Pipeline <customCam::CustomCamPipeBuffer> cam_pipe;
     Pipeline <customCam::CustomCamPipeBuffer> cam_pipe_stereo;
@@ -452,6 +457,15 @@ public:
     bool toggleKeyFrames(){
 
         return saveKeyframes=!saveKeyframes;
+    }
+
+    bool toggleFrameByFrame(){
+
+        return frame_by_frame=!frame_by_frame;
+    }
+    bool advanceFrameByFrame(){
+
+        return frame_by_frame_advance=true;
     }
 
     //Keyframe list
