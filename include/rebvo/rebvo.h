@@ -41,6 +41,7 @@
 #include "UtilLib/imugrabber.h"
 #include "VideoLib/customcam.h"
 #include <functional>
+#include "mtracklib/pose_graph.h"
 
 
 namespace  rebvo{
@@ -427,6 +428,16 @@ class REBVO
 
 
 public:
+
+
+    //Keyframe list
+
+    std::vector <keyframe> kf_list;
+
+    pose_graph poses;
+
+
+public:
     bool	Init();
 
     static void ThirdThread(REBVO *cf);
@@ -468,9 +479,7 @@ public:
         return frame_by_frame_advance=true;
     }
 
-    //Keyframe list
 
-    std::vector <keyframe> kf_list;
 
     //Get nav data (saved on the second thread)
     NavData getNav(){

@@ -33,7 +33,7 @@
 #include "UtilLib/ttimer.h"
 #include "VideoLib/datasetcam.h"
 #include "mtracklib/scaleestimator.h"
-
+#include "mtracklib/kfvo.h"
 
 
 using namespace std;
@@ -310,6 +310,14 @@ void  REBVO::SecondThread(REBVO *cf){
             old_buf.ef->rotate_keylines(R0.get_matrix());
 
 
+            //Push relative motion into pose graph
+
+            Vector <6> relPose;
+            relPose.slice<3,3>()=SO3<>(Rgva).ln();
+            relPose.slice<0,3>()=-Rgva*istate.Vgva;
+            cf->poses.addFrameMeas(OdometryMeas(relPose,W_Xgv,K,istate.X[0]/istate.P(0,0)/K,0));
+
+
 
 
         }else{                  //Regular procesing
@@ -504,7 +512,7 @@ void  REBVO::SecondThread(REBVO *cf){
             if(n_frame>4+cf->params.InitBiasFrameNum){
 
 
-                istate.u_est=Rgva.T()*istate.u_est;
+              /*  istate.u_est=Rgva.T()*istate.u_est;
 
                 istate.u_est=istate.u_est-(istate.u_est*istate.g_est)/(istate.g_est*istate.g_est)*istate.g_est;
                 TooN::normalize(istate.u_est);
@@ -513,8 +521,8 @@ void  REBVO::SecondThread(REBVO *cf){
                 Matrix<3> PoseP2=TooN::SO3<>(PoseP1*istate.u_est,makeVector(1,0,0)).get_matrix();
 
                 Pose=PoseP2*PoseP1;
-
-                //Pose=Pose*Rgva;
+*/
+                Pose=Pose*Rgva;
                 Pos+=-Pose*istate.Vgva*K;
 
                 istate.Posgva=Pos;
@@ -562,13 +570,58 @@ void  REBVO::SecondThread(REBVO *cf){
         //******** Push KEYFRAME ***************************//
 
 
+        if(cf->kf_list.size()>0){
+
+            keyframe &current_kf=cf->kf_list.back();
 
 
-          if(cf->saveKeyframes && (new_buf.p_id%20)==0){
-              cf->kf_list.push_back(keyframe(*new_buf.ef,*new_buf.gt,new_buf.t,new_buf.K,new_buf.nav.Rot,new_buf.nav.RotLie,new_buf.nav.Vel,new_buf.nav.Pose,new_buf.nav.PoseLie,new_buf.nav.Pos));
+            int mnum=kfvo::buildForwardMatch(current_kf, *new_buf.ef,*old_buf.ef);
 
-              std::cout <<"\nadded keyframe\n";
-          }
+            mnum=kfvo::forwardCorrectAugmentate(current_kf,*new_buf.ef,Pose,Pos,10,true);
+
+            int kl_on_fov=kfvo::kls_on_fov(current_kf,Pose,Pos);
+            //kfvo::matchStereo(current_kf, *new_buf.ef, newPose, newPos,K,cf->params.MatchThreshModule,cf->params.MatchThreshAngle,cf->params.SearchRange,cf->params.LocationUncertaintyMatch);
+
+
+
+            if(mnum<std::min(cf->params.TrackPoints,new_buf.ef->KNum())*0.5){
+                cf->kf_list.push_back(keyframe(*new_buf.ef,*new_buf.gt,new_buf.t,new_buf.K,new_buf.nav.Rot,new_buf.nav.RotLie,new_buf.nav.Vel,new_buf.nav.Pose,new_buf.nav.PoseLie,new_buf.nav.Pos));
+                std::cout <<"added keyframe "<<cf->kf_list.size()<<" matchs"<<mnum<< " kl_on_fov: "<<kl_on_fov<<"\n";
+                kfvo::resetForwardMatch(cf->kf_list.back());
+            }else{
+
+
+                Vector<3> newPos=Pos;
+                Matrix<3,3> newPose=Pose;
+
+                kfvo::OptimizePos(current_kf, *new_buf.ef, newPose, newPos,K,10);
+                //Pos=newPos;
+                //Pose=newPose;
+                mnum=kfvo::forwardCorrectAugmentate(current_kf,*new_buf.ef,newPose,newPos,10,true);
+
+
+                std::cout <<"Translate depth"<<kfvo::translateDepthBack(current_kf, *new_buf.ef, newPose, newPos,K)<<" matchs"<<mnum<< " kl_on_fov: "<<kl_on_fov<<"\n";
+                //std::cout << "found "<<mnum<<" matchs\n";
+
+            }
+
+        }else{
+            cf->kf_list.push_back(keyframe(*new_buf.ef,*new_buf.gt,new_buf.t,new_buf.K,new_buf.nav.Rot,new_buf.nav.RotLie,new_buf.nav.Vel,new_buf.nav.Pose,new_buf.nav.PoseLie,new_buf.nav.Pos));
+            std::cout <<"\nadded keyframe\n";
+            kfvo::resetForwardMatch(cf->kf_list.back());
+        }
+
+/*
+        if(cf->kf_list.size()==0 || (cf->saveKeyframes && (new_buf.p_id%20)==0)){
+            cf->kf_list.push_back(keyframe(*new_buf.ef,*new_buf.gt,new_buf.t,new_buf.K,new_buf.nav.Rot,new_buf.nav.RotLie,new_buf.nav.Vel,new_buf.nav.Pose,new_buf.nav.PoseLie,new_buf.nav.Pos));
+
+            std::cout <<"\nadded keyframe\n";
+        }**/
+
+
+        cf->poses.odoMeas().back().KF_ID=cf->kf_list.size()-1;
+
+
 
 
         new_buf.dtp1=tproc.stop();

@@ -18,7 +18,7 @@ CXXFLAGS      = -pipe -std=c++11 -Wno-unused-parameter -Wno-sign-compare $(REBVO
 INCPATH       = -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I. -I../../include
 LINK          = g++
 LFLAGS        = -std=c++11 $(REBVOFLAGS) -Wl,-O1
-LIBS          = $(SUBLIBS) ../../rebvolib/librebvolib.a -L/usr/local/lib -lX11 -lv4l2 -lm -lgd -llapack -lpthread $(REBVOLIBS) 
+LIBS          = $(SUBLIBS) ../../rebvolib/librebvolib.a -L/usr/local/lib -lX11 -lv4l2 -lm -lgd -llapack -lpthread -lisam -lcholmod $(REBVOLIBS) 
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /usr/lib/x86_64-linux-gnu/qt5/bin/qmake
@@ -295,6 +295,7 @@ compiler_clean:
 		../../include/UtilLib/util.h \
 		../../include/UtilLib/timer.h \
 		../../include/UtilLib/fvector.h \
+		../../include/UtilLib/toon_util.h \
 		../../include/VideoLib/image.h \
 		../../include/VideoLib/common_types.h \
 		../../include/VideoLib/video_io.h \
@@ -310,6 +311,7 @@ compiler_clean:
 		../../include/UtilLib/imugrabber.h \
 		../../include/VideoLib/customcam.h \
 		../../include/VideoLib/videocam.h \
+		../../include/mtracklib/pose_graph.h \
 		archimu.h \
 		../../include/UtilLib/configurator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../../build/app/rebvorun/main.o main.cpp
@@ -328,6 +330,7 @@ compiler_clean:
 		../../include/UtilLib/util.h \
 		../../include/UtilLib/timer.h \
 		../../include/UtilLib/fvector.h \
+		../../include/UtilLib/toon_util.h \
 		../../include/VideoLib/image.h \
 		../../include/VideoLib/common_types.h \
 		../../include/VideoLib/video_io.h \
@@ -341,6 +344,7 @@ compiler_clean:
 		../../include/mtracklib/nav_data_defs.h \
 		../../include/VideoLib/customcam.h \
 		../../include/VideoLib/videocam.h \
+		../../include/mtracklib/pose_graph.h \
 		../../include/UtilLib/ttimer.h \
 		../../include/UtilLib/libcrc.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../../build/app/rebvorun/archimu.o archimu.cpp

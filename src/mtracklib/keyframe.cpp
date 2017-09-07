@@ -69,61 +69,18 @@ keyframe::~keyframe(){
 }
 
 
-inline void dumpMatrix(std::ofstream &file,const TooN::Matrix <3,3> &M){
-
-    for(int i=0;i<3;i++){
-        for(int j=0;j<3;j++){
-            double d=M(i,j);
-            file.write((const char*)&d,sizeof(d));
-        }
-    }
-
-}
-
-inline void dumpVector(std::ofstream &file,const TooN::Vector <3> &V){
-
-    for(int i=0;i<3;i++){
-            double d=V[i];
-            file.write((const char*)&d,sizeof(d));
-    }
-
-}
-
-inline void readMatrix(std::ifstream &file,TooN::Matrix <3,3> &M){
-
-    for(int i=0;i<3;i++){
-        for(int j=0;j<3;j++){
-            double d;
-            file.read((char*)&d,sizeof(d));
-            M(i,j)=d;
-        }
-    }
-
-}
-
-inline void readVector(std::ifstream &file,TooN::Vector <3> &V){
-
-    for(int i=0;i<3;i++){
-            double d;
-            file.read((char*)&d,sizeof(d));
-            V[i]=d;
-    }
-
-}
-
-
 
 void keyframe::dumpToBinaryFile(std::ofstream &file){
 
     file.write((const char*)&t,sizeof(t));
     file.write((const char*)&K,sizeof(K));
 
-    dumpMatrix(file,Rot);
-    dumpVector(file,RotLie);
-    dumpVector(file,Vel);
-    dumpMatrix(file,Pose);
-    dumpVector(file,PoseLie);
-    dumpVector(file,Pos);
+    util::dumpMatrix(file,Rot);
+    util::dumpVector(file,RotLie);
+    util::dumpVector(file,Vel);
+    util::dumpMatrix(file,Pose);
+    util::dumpVector(file,PoseLie);
+    util::dumpVector(file,Pos);
 
     double d=gt->getMaxSRadius();
     file.write((const char*)&d,sizeof(d));
@@ -142,12 +99,12 @@ void keyframe::loadFromBinaryFile(std::ifstream &file){
     file.read((char*)&t,sizeof(t));
     file.read((char*)&K,sizeof(K));
 
-    readMatrix(file,Rot);
-    readVector(file,RotLie);
-    readVector(file,Vel);
-    readMatrix(file,Pose);
-    readVector(file,PoseLie);
-    readVector(file,Pos);
+    util::readMatrix(file,Rot);
+    util::readVector(file,RotLie);
+    util::readVector(file,Vel);
+    util::readMatrix(file,Pose);
+    util::readVector(file,PoseLie);
+    util::readVector(file,Pos);
 
 
 

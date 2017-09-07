@@ -68,6 +68,8 @@ SOURCES       = ../src/rebvo/rebvo.cpp \
 		../src/mtracklib/global_tracker.cpp \
 		../src/mtracklib/keyframe.cpp \
 		../src/mtracklib/scaleestimator.cpp \
+		../src/mtracklib/kfvo.cpp \
+		../src/mtracklib/pose_graph.cpp \
 		../src/UtilLib/ttimer.cpp \
 		../src/UtilLib/ne10wrapper.cpp \
 		../src/UtilLib/configurator.cpp \
@@ -105,6 +107,8 @@ OBJECTS       = ../build/rebvolib/rebvo.o \
 		../build/rebvolib/global_tracker.o \
 		../build/rebvolib/keyframe.o \
 		../build/rebvolib/scaleestimator.o \
+		../build/rebvolib/kfvo.o \
+		../build/rebvolib/pose_graph.o \
 		../build/rebvolib/ttimer.o \
 		../build/rebvolib/ne10wrapper.o \
 		../build/rebvolib/configurator.o \
@@ -366,6 +370,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \
@@ -381,6 +386,7 @@ compiler_clean:
 		../include/UtilLib/imugrabber.h \
 		../include/VideoLib/customcam.h \
 		../include/VideoLib/videocam.h \
+		../include/mtracklib/pose_graph.h \
 		../include/mtracklib/scaleestimator.h \
 		../include/UtilLib/ttimer.h \
 		../include/VideoLib/datasetcam.h \
@@ -397,6 +403,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \
@@ -412,6 +419,7 @@ compiler_clean:
 		../include/UtilLib/imugrabber.h \
 		../include/VideoLib/customcam.h \
 		../include/VideoLib/videocam.h \
+		../include/mtracklib/pose_graph.h \
 		../include/UtilLib/ttimer.h \
 		../include/VideoLib/datasetcam.h \
 		../include/mtracklib/scaleestimator.h \
@@ -430,6 +438,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \
@@ -445,9 +454,11 @@ compiler_clean:
 		../include/UtilLib/imugrabber.h \
 		../include/VideoLib/customcam.h \
 		../include/VideoLib/videocam.h \
+		../include/mtracklib/pose_graph.h \
 		../include/UtilLib/ttimer.h \
 		../include/VideoLib/datasetcam.h \
-		../include/mtracklib/scaleestimator.h
+		../include/mtracklib/scaleestimator.h \
+		../include/mtracklib/kfvo.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/rebvo_second_t.o ../src/rebvo/rebvo_second_t.cpp
 
 ../build/rebvolib/rebvo_third_t.o: ../src/rebvo/rebvo_third_t.cpp ../include/rebvo/rebvo.h \
@@ -460,6 +471,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \
@@ -475,6 +487,7 @@ compiler_clean:
 		../include/UtilLib/imugrabber.h \
 		../include/VideoLib/customcam.h \
 		../include/VideoLib/videocam.h \
+		../include/mtracklib/pose_graph.h \
 		../include/UtilLib/ttimer.h \
 		../include/VideoLib/datasetcam.h \
 		../include/mtracklib/scaleestimator.h \
@@ -494,6 +507,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/UtilLib/CircList.h \
@@ -510,6 +524,7 @@ compiler_clean:
 		../include/UtilLib/imugrabber.h \
 		../include/VideoLib/customcam.h \
 		../include/VideoLib/videocam.h \
+		../include/mtracklib/pose_graph.h \
 		../include/UtilLib/configurator.h \
 		../include/VideoLib/video_encoder.h \
 		../include/VideoLib/videodecoder.h \
@@ -526,6 +541,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \
@@ -546,6 +562,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/UtilLib/CircList.h \
@@ -574,7 +591,8 @@ compiler_clean:
 		../include/VideoLib/common_types.h \
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
-		../include/UtilLib/fvector.h
+		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/v4lcam.o ../src/VideoLib/v4lcam.cpp
 
 ../build/rebvolib/video_mjpeg.o: ../src/VideoLib/video_mjpeg.cpp ../include/VideoLib/video_mjpeg.h \
@@ -582,7 +600,8 @@ compiler_clean:
 		../include/VideoLib/video_encoder.h \
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
-		../include/UtilLib/fvector.h
+		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/video_mjpeg.o ../src/VideoLib/video_mjpeg.cpp
 
 ../build/rebvolib/video_encoder.o: ../src/VideoLib/video_encoder.cpp ../include/VideoLib/video_encoder.h \
@@ -632,13 +651,15 @@ compiler_clean:
 		../include/UtilLib/cam_model.h \
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
-		../include/UtilLib/fvector.h
+		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/image_undistort.o ../src/VideoLib/image_undistort.cpp
 
 ../build/rebvolib/iimage.o: ../src/mtracklib/iimage.cpp ../include/mtracklib/iimage.h \
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h
@@ -650,6 +671,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h
@@ -660,6 +682,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h
@@ -672,6 +695,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \
@@ -687,6 +711,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \
@@ -704,6 +729,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \
@@ -722,6 +748,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \
@@ -740,13 +767,63 @@ compiler_clean:
 		../include/UtilLib/minimizer.h \
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
-		../include/UtilLib/fvector.h
+		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/scaleestimator.o ../src/mtracklib/scaleestimator.cpp
+
+../build/rebvolib/kfvo.o: ../src/mtracklib/kfvo.cpp ../include/mtracklib/kfvo.h \
+		../include/mtracklib/keyframe.h \
+		../include/mtracklib/edge_tracker.h \
+		../include/mtracklib/edge_finder.h \
+		../include/mtracklib/sspace.h \
+		../include/mtracklib/iigauss.h \
+		../include/mtracklib/iimage.h \
+		../include/UtilLib/util.h \
+		../include/UtilLib/timer.h \
+		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
+		../include/VideoLib/image.h \
+		../include/VideoLib/common_types.h \
+		../include/VideoLib/video_io.h \
+		../include/UtilLib/CircList.h \
+		../include/UtilLib/cam_model.h \
+		../include/UtilLib/NormalDistribution.h \
+		../include/mtracklib/global_tracker.h \
+		../include/UtilLib/ne10wrapper.h \
+		../include/visualizer/depth_filler.h \
+		../include/CommLib/net_keypoint.h \
+		../include/mtracklib/nav_data_defs.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/kfvo.o ../src/mtracklib/kfvo.cpp
+
+../build/rebvolib/pose_graph.o: ../src/mtracklib/pose_graph.cpp ../include/mtracklib/pose_graph.h \
+		../include/mtracklib/keyframe.h \
+		../include/mtracklib/edge_tracker.h \
+		../include/mtracklib/edge_finder.h \
+		../include/mtracklib/sspace.h \
+		../include/mtracklib/iigauss.h \
+		../include/mtracklib/iimage.h \
+		../include/UtilLib/util.h \
+		../include/UtilLib/timer.h \
+		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
+		../include/VideoLib/image.h \
+		../include/VideoLib/common_types.h \
+		../include/VideoLib/video_io.h \
+		../include/UtilLib/CircList.h \
+		../include/UtilLib/cam_model.h \
+		../include/UtilLib/NormalDistribution.h \
+		../include/mtracklib/global_tracker.h \
+		../include/UtilLib/ne10wrapper.h \
+		../include/visualizer/depth_filler.h \
+		../include/CommLib/net_keypoint.h \
+		../include/mtracklib/nav_data_defs.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/pose_graph.o ../src/mtracklib/pose_graph.cpp
 
 ../build/rebvolib/ttimer.o: ../src/UtilLib/ttimer.cpp ../include/UtilLib/ttimer.h \
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
-		../include/UtilLib/fvector.h
+		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/ttimer.o ../src/UtilLib/ttimer.cpp
 
 ../build/rebvolib/ne10wrapper.o: ../src/UtilLib/ne10wrapper.cpp ../include/UtilLib/ne10wrapper.h
@@ -772,13 +849,15 @@ compiler_clean:
 		../include/VideoLib/common_types.h \
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
-		../include/UtilLib/fvector.h
+		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/linefitting.o ../src/UtilLib/linefitting.cpp
 
 ../build/rebvolib/udp_port.o: ../src/CommLib/udp_port.cpp ../include/CommLib/udp_port.h \
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
-		../include/UtilLib/fvector.h
+		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../build/rebvolib/udp_port.o ../src/CommLib/udp_port.cpp
 
 ../build/rebvolib/net_keypoint.o: ../src/CommLib/net_keypoint.cpp ../include/CommLib/net_keypoint.h \
@@ -789,6 +868,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \
@@ -805,6 +885,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \
@@ -829,6 +910,7 @@ compiler_clean:
 		../include/UtilLib/util.h \
 		../include/UtilLib/timer.h \
 		../include/UtilLib/fvector.h \
+		../include/UtilLib/toon_util.h \
 		../include/VideoLib/image.h \
 		../include/VideoLib/common_types.h \
 		../include/VideoLib/video_io.h \

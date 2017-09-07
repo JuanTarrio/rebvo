@@ -53,6 +53,8 @@ SOURCES +=  ../src/rebvo/rebvo.cpp\
     ../src/mtracklib/global_tracker.cpp \
     ../src/mtracklib/keyframe.cpp \
     ../src/mtracklib/scaleestimator.cpp \
+    ../src/mtracklib/kfvo.cpp\
+    ../src/mtracklib/pose_graph.cpp\
     ../src/UtilLib/ttimer.cpp\
     ../src/UtilLib/ne10wrapper.cpp\
     ../src/UtilLib/configurator.cpp \
@@ -91,6 +93,8 @@ HEADERS += ../include/rebvo/rebvo.h\
     ../include/mtracklib/edge_finder.h \
     ../include/mtracklib/keyframe.h \
     ../include/mtracklib/scaleestimator.h \
+    ../include/mtracklib/kfvo.h\
+    ../include/mtracklib/pose_graph.h\
     ../include/UtilLib/configurator.h\
     ../include/UtilLib/util.h \
     ../include/UtilLib/NormalDistribution.h \
@@ -109,6 +113,7 @@ HEADERS += ../include/rebvo/rebvo.h\
     ../include/CommLib/net_keypoint.h \
     ../include/CommLib/udp_port.h \
     ../include/CommLib/edgemap_com.h \
-    ../include/visualizer/surface_integrator.h
+    ../include/visualizer/surface_integrator.h \
+    ../include/UtilLib/toon_util.h
 
 

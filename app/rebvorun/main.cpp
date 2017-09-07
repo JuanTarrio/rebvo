@@ -131,6 +131,8 @@ int main(int argn,char ** argv)
 
     if(savekf){
         std::cout <<"Saving KF: "<<(keyframe::saveKeyframes2File("kf_list.kf",cf.kf_list)?"OK":"Error")<<"\n";
+        std::cout <<"Saving PG: "<<(cf.poses.saveToFile("poses_list.ps")?"OK":"Error")<<"\n";
+
     }
 
     cf.CleanUp();

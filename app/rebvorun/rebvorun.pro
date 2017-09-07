@@ -21,7 +21,7 @@ LIBS += -L/usr/local/lib \
     -lm \
     -lgd\
     -llapack\
-    -lpthread\
+    -lpthread  -lisam -lcholmod\
     $(REBVOLIBS) #-lNE10
 
 
