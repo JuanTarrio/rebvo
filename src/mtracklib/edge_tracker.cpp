@@ -55,6 +55,10 @@ void edge_tracker::rotate_keylines(TooN::Matrix <3,3> RotF){
 
             kl[i].s_rho=kl[i].s_rho/q[2];
 
+
+            kl[i].rho_nr/=q[2];
+            kl[i].s_rho_nr=kl[i].s_rho_nr/q[2];
+
         }
 
         //Nasty rotation of the keyline tangent
@@ -97,6 +101,9 @@ int edge_tracker::Regularize_1_iter(double thresh)
 
 
         if(util::square(kn.rho-kp.rho)>util::norm2(kn.s_rho,kp.s_rho)) //If the uncertainty doest'n fit, skip...
+            continue;
+
+        if(fabs(kn.rho_nr-kp.rho_nr)>(kn.s_rho_nr+kp.s_rho_nr)) //If the uncertainty of the original data doest'n fit, skip...
             continue;
 
 
@@ -290,16 +297,19 @@ int edge_tracker::directed_matching(
         TooN::Matrix <3,3> RVel,        //Estimated uncertainty on the velocity
         TooN::Matrix <3,3> BackRot,     //Estimated back-rotation
         edge_tracker *et0,              //EdgeMap were to look for matches
+        int &kf_matchs,
         double min_thr_mod,             //Threshold on the module
         double min_thr_ang,             //Threshold on the angle
         double max_radius,              //Maximun search distance
         double loc_uncertainty,         //Location Uncertainty
         bool stereo_mode,
-        bool clear)                     //Clear the matches? default false
+        bool clear                     //Clear the matches? default false
+        )
 {
 
 
     nmatch=0;
+    kf_matchs=0;
 
 
     int i_mch;
@@ -329,6 +339,8 @@ int edge_tracker::directed_matching(
         }else{
             kl[i_kn].rho=et0->kl[i_mch].rho;
             kl[i_kn].s_rho=et0->kl[i_mch].s_rho;
+            kl[i_kn].rho_nr=et0->kl[i_mch].rho_nr;
+            kl[i_kn].s_rho_nr=et0->kl[i_mch].s_rho_nr;
         }
 
 
@@ -338,6 +350,11 @@ int edge_tracker::directed_matching(
         kl[i_kn].p_m_0=et0->kl[i_mch].p_m;
         kl[i_kn].m_m0=et0->kl[i_mch].m_m;
         kl[i_kn].n_m0=et0->kl[i_mch].n_m;
+
+        kl[i_kn].m_id_kf=et0->kl[i_mch].m_id_kf;
+
+        if(kl[i_kn].m_id_kf>=0)
+            kf_matchs++;
 
         nmatch++;
 
@@ -387,6 +404,10 @@ int edge_tracker::FordwardMatch(edge_tracker *et    //Edgemap to match to
         et->kl[ikl_f].rho=k.rho;
         et->kl[ikl_f].s_rho=k.s_rho;
 
+        //
+        et->kl[ikl_f].rho_nr=k.rho_nr;
+        et->kl[ikl_f].s_rho_nr=k.s_rho_nr;
+
         et->kl[ikl_f].m_num=k.m_num+1;
 
         et->kl[ikl_f].m_id=ikl;
@@ -395,6 +416,7 @@ int edge_tracker::FordwardMatch(edge_tracker *et    //Edgemap to match to
 
         et->kl[ikl_f].m_m0=k.m_m;
         et->kl[ikl_f].n_m0=k.n_m;
+        et->kl[ikl_f].m_id_kf=k.m_id_kf;
         nmatch++;
 
     }
@@ -679,7 +701,11 @@ void edge_tracker::UpdateInverseDepthKalman(Vector <3> vel,             //Estima
 #endif
 
         if(kl[i].m_id>=0){      //For each keyline if a match is avaiable
-            UpdateInverseDepthKalmanSimple(kl[i],vel,RVel,RW0,ReshapeQAbsolute,ReshapeQRelative,LocationUncertainty);
+            //UpdateInverseDepthKalmanSimple(kl[i],vel,RVel,RW0,ReshapeQAbsolute,ReshapeQRelative,LocationUncertainty);
+            UpdateInverseDepthKalmanARLU(kl[i],vel,kl[i].rho,kl[i].s_rho,kl[i].rho0,kl[i].s_rho0,ReshapeQAbsolute,LocationUncertainty);
+
+            double r0,sr0;
+            UpdateInverseDepthKalmanARLU(kl[i],vel,kl[i].rho_nr,kl[i].s_rho_nr,r0,sr0,ReshapeQAbsolute,LocationUncertainty);
         }
 
 
@@ -909,6 +935,116 @@ double edge_tracker::UpdateInverseDepthKalmanSimple(KeyLine &kli,
 }
 
 
+//************************************************************************
+// UpdateInverseDepthKalmanSimple() use EKF to update for depth estimates of kli
+// parameters are the same
+//************************************************************************
+
+
+double edge_tracker::UpdateInverseDepthKalmanARLU(KeyLine &kli,
+                                              Vector <3> vel,
+                                              double &rho,
+                                              double &s_rho,
+                                              double &rho0,
+                                              double &s_rho0,
+                                              double ReshapeQAbsolute,
+                                              double LocationUncertainty){
+
+
+
+    const double &zf=cam_mod.zfm;       //camera focal length
+
+    if(s_rho<0 || rho<0){       //Debug check
+        std::cout << "\nUIDK panic! "<<s_rho<<" "<<rho<<"\n";
+    }
+
+    s_rho0=s_rho;
+
+    double qx,qy,q0x,q0y;
+    qx=kli.p_m.x;       //KeyLine new homogeneus coordinates
+    qy=kli.p_m.y;
+
+
+    q0x=kli.p_m_0.x;    //Keyline old homogeneus coordinates
+    q0y=kli.p_m_0.y;
+
+
+    double v_rho=s_rho*s_rho;   //IDepth variance
+
+    double u_x=kli.m_m0.x/kli.n_m0;     //Shortcut for edge perpendicular direction
+    double u_y=kli.m_m0.y/kli.n_m0;
+
+
+
+    double Y = u_x*(qx-q0x)+u_y*(qy-q0y); //Pixel displacement proyected on u
+    double H= u_x*(vel[0]*zf-vel[2]*q0x)+u_y*(vel[1]*zf-vel[2]*q0y);
+
+
+
+    double rho_p=1/(1.0/rho+vel[2]);    //Predicted Inverse Depth
+
+    rho0=rho_p;                         //BackUp for the predicted ID
+
+    double F=1/(1+rho*vel[2]);          //Jacobian of the
+    F=F*F;                                  //prediction ecuation
+
+    double p_p=F*v_rho*F+                               //Uncertainty propagation
+            util::square(ReshapeQAbsolute);             //Absolute uncertainty model
+
+
+
+    double e=Y-H*rho_p;                     //error correction
+/*
+    Matrix <1,6> Mk;
+
+    Mk[0]=makeVector(-1,u_x*rho_p*zf,u_y*rho_p*zf,-rho_p*(u_x*q0x+u_y*q0y),u_x*(rho_p*vel[2]),u_y*(rho_p*vel[2]));  //parcial derivative of
+                                                                                                                    //the correction ecuation
+                                                                                                                    //with respecto to uncertainty sources
+    Matrix <6,6> R = Zeros;
+
+    R(0,0)=util::square(LocationUncertainty);
+    R.slice <1,1,3,3> ()=RVel;
+    R(4,4)=util::square(LocationUncertainty);
+    R(5,5)=util::square(LocationUncertainty);
+*/
+
+    //*** Kalman update ecuations ****
+    double S=H*p_p*H+LocationUncertainty*LocationUncertainty;
+
+    double K=p_p*H*(1/S);
+
+    rho=rho_p+(K*e);
+
+    v_rho=(1-K*H)*p_p;
+
+    s_rho=sqrt(v_rho);
+
+
+    //*** if inverse depth goes beyond limits apply correction ****
+
+    if(rho<RHO_MIN){
+        s_rho+=RHO_MIN-rho;
+        rho=RHO_MIN;
+    }else if(rho>RHO_MAX){
+        rho=RHO_MAX;
+        //s_rho+=RHO_MAX;
+    }else if(std::isnan(rho) || std::isnan(s_rho) || std::isinf(rho) || std::isinf(s_rho)){     //This checks should never happen
+        std::cout<<"\nKL EKF Nan Rho!"<<rho_p<< " " << p_p<< " "<<vel[2]<<"\n";
+        rho=RhoInit;
+        s_rho=RHO_MAX;
+    }else if(s_rho<0){                                                                  //only for debug
+        std::cout<<"\nKL EKF Panic! Neg VRho!"<<vel <<rho << s_rho <<"\n";
+        rho=RhoInit;
+        s_rho=RHO_MAX;
+
+    }
+
+    return rho;
+
+
+}
+
+
 
 //********************************************************************************
 // EstimateReScaling() calculates the relation between the predicted and updated
@@ -938,6 +1074,50 @@ double edge_tracker::EstimateReScaling(double &RKp,             //Estimated unce
 
     double Kp=rTr0>0?sqrt(rTr/rTr0):1;  //Estimated Ratio
     RKp=1/rTr;
+
+    if(re_escale){                      //Optionally reescale
+        for(int ikl=0;ikl<kn;ikl++){
+           kl[ikl].rho/=Kp;
+           kl[ikl].s_rho/=Kp;
+        }
+    }
+    return Kp;
+
+}
+
+
+//********************************************************************************
+// EstimateReScaling() calculates the relation between the predicted and updated
+// inverse depth and optionally apllyes a global reescaling
+//********************************************************************************
+
+double edge_tracker::EstimateReScalingOpt(double &RKp,             //Estimated uncertainty on global depth
+                                       const double &s_rho_min, //uncertainty threshold
+                                       const uint &MatchNumMin, //match number threshold
+                                       bool re_escale)
+{
+
+    if(kn<=0)
+        return 1;
+
+    double Kp=1;
+
+    for(int iter=0;iter<5;iter++){
+        double rTr=0,rTr0=0;
+        for(int ikl=0;ikl<kn;ikl++){
+
+            if(kl[ikl].m_num<MatchNumMin || kl[ikl].s_rho0<=0 || kl[ikl].s_rho>s_rho_min)
+                continue;
+            rTr+=kl[ikl].rho*kl[ikl].rho/(kl[ikl].s_rho*kl[ikl].s_rho+Kp*Kp*kl[ikl].s_rho0*kl[ikl].s_rho0);       //Weighted mean of corrected IDepth
+            rTr0+=kl[ikl].rho0*kl[ikl].rho0/(kl[ikl].s_rho*kl[ikl].s_rho+Kp*Kp*kl[ikl].s_rho0*kl[ikl].s_rho0);    //Weighted mean of predicted IDepth
+            if(std::isnan(kl[ikl].rho0 || kl[ikl].rho)){
+                printf("\n NAN: %f %f %f",kl[ikl].s_rho0,kl[ikl].rho0,kl[ikl].rho);
+            }
+        }
+
+        Kp=rTr0>0?sqrt(rTr/rTr0):1;  //Estimated Ratio
+        RKp=1/rTr0;
+    }
 
     if(re_escale){                      //Optionally reescale
         for(int ikl=0;ikl<kn;ikl++){

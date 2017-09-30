@@ -778,7 +778,7 @@ void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,
         for(int kli=0;kli<kf.edges().KNum();kli++){
             KeyLine &kl=kf.edges()[kli];
 
-            if(kl.n_id<0)
+            if(kl.n_id<0 ) //|| ( kl.m_id_kf<0 && kl.m_id_f<0)
                 continue;
 
             float x1,x2,y1,y2,z1,z2,c,dz1,dz2;
@@ -831,20 +831,27 @@ void gl_viewer::drawKeyFrame(keyframe & kf, int render_mode,keyframe * kf_match,
             glVertex3f(x1, y1, z1);
             glVertex3f(x2, y2, z2);
 
-            /*if(draw_unc){
+            if(draw_unc){
                 glColor3f(1, 1, 0);
-                double sigma_z;
 
-                sigma_z=dz1;
-
-                if(sigma_z>10)
+                if(kl.rho<kl.s_rho){
                     glColor4f(0.1, 0.1, 0,0.1);
+                }
 
-                double k=(z1+sigma_z)/z1;
-                glVertex3f(x1*k, y1*k, z1*k);
-                k=(z1-sigma_z)/z1;
-                glVertex3f(x1*k, y1*k, z1*k);
-            }*/
+                    z1=1/(kl.rho+kl.s_rho);
+                    x1=(kl.p_m.x)*z1/kf.camera.zfm;
+                    y1=(kl.p_m.y)*z1/kf.camera.zfm;
+                    glVertex3f(x1, y1, z1);
+
+
+                    z1=1/std::max(kl.rho-kl.s_rho,1e-3);
+                    x1=(kl.p_m.x)*z1/kf.camera.zfm;
+                    y1=(kl.p_m.y)*z1/kf.camera.zfm;
+                    glVertex3f(x1, y1, z1);
+
+
+
+            }
             /*
         if(kf_match && kl.kf_id>=0){
 

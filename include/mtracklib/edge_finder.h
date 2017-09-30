@@ -58,6 +58,10 @@ struct KeyLine{
         double rho;         //Estimated Inverse Depth
         double s_rho;       //Estimated Inverse Depth Uncertainty
 
+        double rho_nr;         //Estimated Inverse Depth Non-Regularized
+        double s_rho_nr;       //Estimated Inverse Depth Non-Regularized
+
+
         double rho0;        //Predicted Inverse Depth in EKF (use only if reescaling)
         double s_rho0;      //Predicted Inverse Depth Uncertainty
 
@@ -68,6 +72,7 @@ struct KeyLine{
 
         int m_id;           //Id of the matching keyline
         int m_id_f;         //Id of the matching keyline by fordward matching
+        int m_id_kf;        //Id of the matching keyline in the last keyframe
 
         int m_num;          //number of consecutive matches
 

@@ -36,7 +36,7 @@ public:
     double TryVelRot(TooN::Matrix<6,6,T> &JtJ,TooN::Vector<6,T> &JtF, const TooN::Vector<6,T> &VelRot, const TooN::Vector<3> &V0p, const TooN::Matrix<3,3> &PV0, const TooN::Vector<3> &W0p, const TooN::Matrix<3,3> &PW0, edge_tracker &klist,T *P0m,int pnum,double match_thresh,double s_rho_min, uint MatchNumThresh,T k_huber,T* DResidual,T* DResidualNew);
 
     template <class T,bool UsePriors=false>
-    double Minimizer_RV(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0, edge_tracker &klist,double match_thresh,int iter_max,int init_type,double reweigth_distance,double &rel_error,double &rel_error_score,const double &max_s_rho,const uint& MatchNumThresh,const double& init_iter);
+    double Minimizer_RV(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0, edge_tracker &klist,double match_thresh,int iter_max,int init_type,double reweigth_distance,double &rel_error,double &rel_error_score,const double &max_s_rho,const uint& MatchNumThresh,const double& init_iter,TooN::Matrix<6,6,T> &W_X);
 
     template <class T>
     inline T Calc_f_J(int f_inx,T &df_dx,T &df_dy,KeyLine &kl,const Point2D<T> &p,const T &max_r,const T &simil_t,int &mnum,T &fi);

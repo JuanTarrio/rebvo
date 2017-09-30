@@ -70,8 +70,8 @@ public:
     static double optimizeScale(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &BRelRot, const TooN::Vector<3> &BRelPos);
     static double optimizeScaleBack(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &BRelRot, const TooN::Vector<3> &BRelPos, double Kr);
 
-    static double OptimizeRelConstraint1Iter(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &BRelRot, const TooN::Vector<3> &BRelPos,TooN::Matrix <6,6> &JtJ,TooN::Vector<6>&JtF,bool etracket_2_keyframe);
-    static double OptimizeRelContraint(keyframe &mkf, edge_tracker &et,const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos, const double &K, int iter_max,TooN::Vector<6> &X,TooN::Matrix<6, 6> &R_X,bool etracket_2_keyframe);
+    static double OptimizeRelConstraint1Iter(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &BRelRot, const TooN::Vector<3> &BRelPos,TooN::Matrix <6,6> &JtJ,TooN::Vector<6>&JtF,bool etracket_2_keyframe,double k_huber,TooN::Vector <TooN::Dynamic> &residual,std::pair<int,int> &match_num);
+    static double OptimizeRelContraint(keyframe &mkf, edge_tracker &et,const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos, const double &K, int iter_max,TooN::Vector<6> &X,TooN::Matrix<6, 6> &W_X,TooN::Matrix<6, 6> &R_X,std::pair<double,double>&optimK,bool etracket_2_keyframe,double k_huber,std::pair<int,int> &match_num);
 
     static void   countMatches(keyframe &kf_to, keyframe &kf_from, int &kl_on_fov, int &kl_match, float match_mod, float match_ang, float rho_tol, float max_r);
 
@@ -83,8 +83,8 @@ public:
     static double Minimizer_RV_KF(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,  TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0,global_tracker &gt,edge_tracker &klist,cam_model &cam_mod,double Kr,double match_mod,double match_ang,double rho_tol,
                                         int iter_max,double reweigth_distance,const double &max_s_rho,const uint& MatchNumThresh,TooN::Vector<6,T> &X,TooN::Matrix<6> &RRV);
 
-    static int translateDepth(keyframe &mkf, edge_tracker &et, TooN::Matrix<3, 3> &Pose, TooN::Vector<3> &Pos, double &K);
-    static int translateDepthBack(keyframe &mkf, edge_tracker &et, TooN::Matrix<3, 3> &Pose, TooN::Vector<3> &Pos, double &K);
+    static int translateDepth_KF2F(keyframe &mkf, edge_tracker &et, TooN::Matrix<3, 3> &Pose, TooN::Vector<3> &Pos, double &K);
+    static int translateDepth_F2KF(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos, const double &K,bool optim_scale);
 
     static int matchStereo(keyframe &mkf, edge_tracker &et, TooN::Matrix<3, 3> &Pose, TooN::Vector<3> &Pos,double &K,double mod_thr,double ang_thr,int max_r,double loc_error);
 
@@ -95,16 +95,28 @@ public:
 
     static void resetForwardMatch(keyframe &mkf);
 
+    static void resetKFMatch(edge_tracker &et);
 
 
 
-    static double forwardStereoCorrect(keyframe &mkf,edge_tracker &et,const TooN::Matrix <3,3> &Pose,const TooN::Vector<3> &Pos,double dist_thesh);
-    static double forwardStereoCorrect(edge_tracker &et, KeyLine &kl, int &f_id, const TooN::Matrix<3,3> &E, double dist_thesh, const double &zf);
+    static double forwardStereoCorrect(keyframe &mkf, edge_tracker &et, const TooN::Matrix <3,3> &Pose, const TooN::Vector<3> &Pos, double dist_tolerance);
+    static double forwardStereoCorrect(edge_tracker &et, KeyLine &kl, int &f_id, const TooN::Matrix<3,3> &E, double dist_tolerance, const double &zf);
 
-    static int  forwardCorrectAugmentate(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos, double dist_thesh, bool augmentate);
-    static void forwardCorrectAugmentate(edge_tracker &et2match, keyframe &mkf, const int &kl_id, const TooN::Matrix<3,3> &E, const double &dist_thesh, const double &zf);
+    static int  forwardCorrectAugmentate(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos, double dist_thesh,const double &dist_tolerance, bool augmentate);
+    static void forwardCorrectAugmentate(edge_tracker &et2match, keyframe &mkf, const int &kl_id, const TooN::Matrix<3,3> &E, const double &dist_thesh,const double &dist_tolerance, const double &zf);
+
+    static double stereoCorrect(keyframe &mkf,edge_tracker &et,const TooN::Matrix <3,3> &Pose,const TooN::Vector<3> &Pos,double dist_tolerance);
+    static double stereoCorrect(keyframe &mkf, KeyLine &kl, const TooN::Matrix<3,3> &E, double dist_tolerance);
+
+    static int correctAugmentate(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos, const double & dist_thesh,const double &dist_tolerance, bool augmentate);
+    static void correctAugmentate(keyframe &mkf, edge_tracker &et, int kl_id, const TooN::Matrix<3,3> &E, const double &dist_thesh,const double &dist_tolerance);
+    static double mapKLUsingIDK(KeyLine &kli, KeyLine &klb, const TooN::Matrix<3, 3> &BRelRot, const TooN::Vector<3> &BRelPos, double zf, double ReshapeQRelative, double ReshapeQAbsolute, double LocationUncertainty);
+    static void mapKFUsingIDK(keyframe &mkf, edge_tracker &et, TooN::Matrix<3, 3> &Pose, TooN::Vector<3> &Pos, double ReshapeQAbsolute, double ReshapeQRelative, double LocationUncertainty);
 
 
+    static std::pair<int, int> mutualExclusionSimple(keyframe &kf0, keyframe &kf1, double dist_t, bool discart_non_mut, bool kf0_2_kf1);
+    static void translateDepth_New2Old(std::vector<keyframe> &kf_list, int iters);
+    static double optimizeScaleF2KF(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &BRelRot, const TooN::Vector<3> &BRelPos, double &W_Kp);
 };
 }
 #endif // KFVO_H

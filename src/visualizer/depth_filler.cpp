@@ -77,11 +77,11 @@ void depth_filler::FillEdgeData(net_keyline *kl, int kn, Point2DF p_off, double 
                 kl_s_rho=RHO_MAX;
         }
 
-  //      if(s_depth*rho>v_thresh)
-  //          continue;
+        //      if(s_depth*rho>v_thresh)
+        //          continue;
 
-     //   if(s_rho/rho>v_thresh)
-     //       continue;
+        //   if(s_rho/rho>v_thresh)
+        //       continue;
 
         int inx=data.GetIndex((nkl.qx+p_off.x)/bl_size.w,(nkl.qy+p_off.y)/bl_size.h);
 
@@ -133,11 +133,13 @@ void depth_filler::FillEdgeData(edge_tracker&et,
 
         double kl_I_rho=1/(kl.s_rho*kl.s_rho);          //KL information matrix
 
-        if(kl.m_num<m_num_t){
+        if(kl.m_num<m_num_t || (kl.p_id<0 || kl.n_id<0 )||  kl.rho<=0){ //(kl.m_id_kf<0 && kl.m_id_f<0) ||
             if(discart)
                 continue;
             else
                 kl_I_rho=1.0/(RHO_MAX*RHO_MAX);
+            if(kl.rho<0)
+                kl.rho=kl.rho0;
         }
 
         i_rho+=kl.rho*kl_I_rho;                         //Inforamtion update
@@ -146,6 +148,9 @@ void depth_filler::FillEdgeData(edge_tracker&et,
         double v_rho=data[inx].I_rho>0?1.0/data[inx].I_rho:1e20;
         data[inx].rho=i_rho*v_rho;
         data[inx].s_rho=sqrt(v_rho);
+
+        data[inx].rho0=data[inx].rho;
+        data[inx].s_rho0=data[inx].s_rho;
 
         data[inx].fixed=true;
 
@@ -205,7 +210,7 @@ void depth_filler::Integrate(int iter_num,bool init_cf){
             if(data[inx].fixed)
                 continue;
             data[inx].rho=1;
-            data[inx].s_rho=1e3;
+            data[inx].s_rho=RHO_MAX;    //1e3
         }
     }
 
@@ -297,26 +302,31 @@ void depth_filler::Integrate1Step(){
 
     double w=1;//1.8;
 
+    bool fix_fixed=false;
+
     for(int y=0;y<size.h;y++){
         for(int x=0;x<size.w;x++){
 
             int inx=data.GetIndex(x,y);
 
-            if(data[inx].fixed){
-                //pos_data_d[inx]=data[inx].rho;
-                //pos_data_v[inx]=data[inx].s_rho;
 
-            }else{
+            if(data[inx].fixed&& fix_fixed)
+                continue;
 
-                double r=0,sr=0;
-                int n=0;
+            double r=0,sr=0;
+            int n=0;
 
 
-                for(int dy=-1;dy<=1;dy++){
-                    for(int dx=-1;dx<=1;dx++){
+            for(int dy=-1;dy<=1;dy++){
+                for(int dx=-1;dx<=1;dx++){
 
-                        if(dx==0&&dy==0)
-                            continue;
+                    if(dx==0&&dy==0){
+                        if(data[inx].fixed && !fix_fixed){
+                            r+=data[inx].rho0;
+                            sr+=data[inx].s_rho0;
+                            n++;
+                        }
+                    }else{
 
                         int p_x=x+dx;
                         int p_y=y+dy;
@@ -327,17 +337,18 @@ void depth_filler::Integrate1Step(){
                         r+=data(p_x,p_y).rho;//data[p_y*s.w+p_x].s_rho;
                         sr+=data(p_x,p_y).s_rho;
                         n++;
-
                     }
+
                 }
-
-                data[inx].rho=(1-w)*data[inx].rho+w*r/n;
-                if(!inboundary(x,y))
-                    data[inx].s_rho=sr/n;
-
-
-
             }
+
+            data[inx].rho=(1-w)*data[inx].rho+w*r/n;
+            if(!inboundary(x,y))
+                data[inx].s_rho=sr/n;
+
+
+
+
         }
     }
 

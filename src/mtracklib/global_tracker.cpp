@@ -609,7 +609,8 @@ double global_tracker::Minimizer_RV(TooN::Vector<3> &Vel,       //Initial estima
                                     double &rel_error_score,    //Estimated relative error on the score
                                     const double &max_s_rho,    //Threshold on the IDepth uncertainty
                                     const uint& MatchNumThresh, //Threshold on the KL match number
-                                    const double& init_iter){   //Number of iterations for double init
+                                    const double& init_iter,    //Number of iterations for double init
+                                    TooN::Matrix<6,6,T> &W_X){
 
 
 
@@ -820,6 +821,7 @@ double global_tracker::Minimizer_RV(TooN::Vector<3> &Vel,       //Initial estima
     RVel=RRV.slice<0,0,3,3>();             //And the uncertaintyes
     RW0=RRV.slice<3,3,3,3>();
 
+    W_X=JtJ;
 
     if(eff_steps>0){
         rel_error=norm(h)/(norm(X)+1e-30);  //Relative step error
@@ -838,8 +840,8 @@ double global_tracker::Minimizer_RV(TooN::Vector<3> &Vel,       //Initial estima
 
 
 
-template double global_tracker::Minimizer_RV<float,false>(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0, edge_tracker &klist,double match_thresh,int iter_max,int init_type,double reweigth_distance,double &rel_error,double& rel_error_score,const double &max_s_rho,const uint& MatchNumThresh,const double& init_iter);
-template double global_tracker::Minimizer_RV<double,false>(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0, edge_tracker &klist,double match_thresh,int iter_max,int init_type,double reweigth_distance,double &rel_error,double &rel_error_score,const double &max_s_rho,const uint& MatchNumThresh,const double& init_iter);
+template double global_tracker::Minimizer_RV<float,false>(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0, edge_tracker &klist,double match_thresh,int iter_max,int init_type,double reweigth_distance,double &rel_error,double& rel_error_score,const double &max_s_rho,const uint& MatchNumThresh,const double& init_iter,TooN::Matrix<6,6,float> &W_X);
+template double global_tracker::Minimizer_RV<double,false>(TooN::Vector<3> &Vel,TooN::Vector<3> &W0,TooN::Matrix<3,3> &RVel,TooN::Matrix<3,3> &RW0, edge_tracker &klist,double match_thresh,int iter_max,int init_type,double reweigth_distance,double &rel_error,double &rel_error_score,const double &max_s_rho,const uint& MatchNumThresh,const double& init_iter,TooN::Matrix<6,6,double> &W_X);
 
 
 

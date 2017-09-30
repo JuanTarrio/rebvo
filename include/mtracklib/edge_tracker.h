@@ -19,7 +19,7 @@ public:
     void rotate_keylines(TooN::Matrix <3,3> RotF);
 
 
-    int directed_matching(TooN::Vector <3> Vel, TooN::Matrix <3,3> RVel, TooN::Matrix <3,3> BackRot, edge_tracker *et0, double min_thr_mod, double min_thr_ang, double max_radius, double loc_uncertainty, bool stereo_mode, bool clear=false);
+    int directed_matching(TooN::Vector <3> Vel, TooN::Matrix <3,3> RVel, TooN::Matrix <3,3> BackRot, edge_tracker *et0,int &kf_matchs, double min_thr_mod, double min_thr_ang, double max_radius, double loc_uncertainty, bool stereo_mode, bool clear=false);
 
     int search_match(KeyLine &k,TooN::Vector <3> Vel,TooN::Matrix <3,3> RVel,TooN::Matrix <3,3> BackRot,double min_thr_mod,double min_thr_ang,double max_radius, double loc_uncertainty);
 
@@ -34,10 +34,12 @@ public:
     void UpdateInverseDepthKalman(TooN::Vector <3> vel, TooN::Matrix <3,3> RVel, TooN::Matrix <3,3> RW0, double ReshapeQAbsolute, double ReshapeQRelative, double LocationUncertainty);
     double UpdateInverseDepthKalman(KeyLine &kli, TooN::Vector <3> vel, TooN::Matrix <3,3> RVel, TooN::Matrix<3, 3> RW0, double ReshapeQAbsolute, double ReshapeQRelative, double LocationUncertainty);
     double UpdateInverseDepthKalmanSimple(KeyLine &kli, TooN::Vector <3> vel, TooN::Matrix <3,3> RVel, TooN::Matrix<3, 3> RW0, double ReshapeQAbsolute, double ReshapeQRelative, double LocationUncertainty);
-
+    double UpdateInverseDepthKalmanARLU(KeyLine &kli, TooN::Vector <3> vel, double &rho, double &s_rho, double &rho0, double &s_rho0, double ReshapeQAbsolute, double LocationUncertainty);
     double EstimateQuantile(double s_rho_min, double s_rho_max, double percentile, int n);
 
     double EstimateReScaling(double &RKp, const double &s_rho_min, const uint &MatchNumMin, bool re_escale);
+    double EstimateReScalingOpt(double &RKp, const double &s_rho_min, const uint &MatchNumMin, bool re_escale);
+
 
 
     bool ExtRotVel(TooN::Vector <3> &rot,TooN::Matrix <3,3> &RRot,TooN::Vector <3> &vel,TooN::Matrix <3,3> &RVel);

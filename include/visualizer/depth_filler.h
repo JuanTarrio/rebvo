@@ -40,6 +40,10 @@ struct df_point{
     double depth;           //Estimated depth
     double rho;             //Estimated Inv-Depth
     double s_rho;           //Estimated Inv-Depth Uncertainty
+
+    double rho0;
+    double s_rho0;
+
     double I_rho;           //Information on Inverse Depth 1/s_rho^2
     bool visibility;        //Visibility on the plot flag
     double dist;            //Euclidean distance from the point to center of the camera

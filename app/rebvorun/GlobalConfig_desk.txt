@@ -10,6 +10,7 @@
 
     ReferencePoints=15000               //Reference to the number of points when autothreshold
     MaxPoints=25000                     //Absolute maximun number of points
+    TrackPoints=12000                     //Points used for tracking
 
     DetectorThresh=0.01                 //Manual theshold
     DetectorAutoGain=1e-6               //Auto threshold gain, 0=manual
@@ -28,7 +29,7 @@
     QCutOffNumBins=100;                         //Number of bins on the histogram for percentile calculation
     QCutOffQuantile=0.9;                        //Percentile of the KLs to use
 
-    TrackerIterNum=15;                          //Tracker number of iterations
+    TrackerIterNum=10;                          //Tracker number of iterations
     TrackerInitType=2;                          //Tracker Initialization prior (0=zero,1=last frame,2=try both)
     TrackerInitIterNum=2;                       //Double ititialization iteration number
 
@@ -46,7 +47,7 @@
     ReshapeQAbsolute=1e-4			//EKF Modelled absolute error on IDEpth
     ReshapeQRelative=1e-2			//EKF Modelled relative error on IDEpth
     LocationUncertainty=1			//Modelled Pixel uncertainty on the correction step
-    DoReScaling=1				//Apply re-scaling after EKF
+    DoReScaling=0				//Apply re-scaling after EKF
 	
     GlobalMatchThreshold=500			//Minimun number of keyline matches required for further procesing
 
@@ -92,7 +93,7 @@
     LogFile=rebvo_log.m                                                                 //Log file in .m format
     TrayFile=rebvo_tray.txt                                                             //Trayectory in TUM dataset format [t pos quat]
 
-
+    StereoAvaiable=0
 
 &DataSetCamera
 

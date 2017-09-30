@@ -9,7 +9,7 @@
     Sigma0=3.56359                      //The 2 scales used for DoG calculation
     KSigma=1.2599                       //1.7818 2.30029 2.72174 3.56359
 
-    ReferencePoints=30000               //Reference to the number of points when autothreshold
+    ReferencePoints=15000               //Reference to the number of points when autothreshold
     MaxPoints=40000                     //Absolute maximun number of points
     TrackPoints=12000                     //Points used for tracking
 
@@ -48,7 +48,7 @@
     ReshapeQAbsolute=1e-4			//EKF Modelled absolute error on IDEpth
     ReshapeQRelative=1.6968e-04			//EKF Modelled relative error on IDEpth
     LocationUncertainty=1			//Modelled Pixel uncertainty on the correction step
-    DoReScaling=0				//Apply re-scaling after EKF
+    DoReScaling=1				//Apply re-scaling after EKF
 	
     GlobalMatchThreshold=500			//Minimun number of keyline matches required for further procesing
 
@@ -98,15 +98,15 @@
 
 &DataSetCamera
 
-    DataSetDir=/home/juan/Datasets/V2_02_medium/mav0/cam0/data/                           //The directory of the dataset
-    DataSetFile=/home/juan/Datasets/V2_02_medium/mav0/cam0/data.csv                       //The file of the dataset
-    DataSetDirStereo=/home/juan/Datasets/V2_02_medium/mav0/cam1/data/                           //The directory of the dataset
-    DataSetFileStereo=/home/juan/Datasets/V2_02_medium/mav0/cam1/data.csv                       //The file of the dataset
+    DataSetDir=/home/juan/Datasets/V2_01_easy/mav0/cam0/data/                           //The directory of the dataset
+    DataSetFile=/home/juan/Datasets/V2_01_easy/mav0/cam0/data.csv                       //The file of the dataset
+    DataSetDirStereo=/home/juan/Datasets/V2_01_easy/mav0/cam1/data/                           //The directory of the dataset
+    DataSetFileStereo=/home/juan/Datasets/V2_01_easy/mav0/cam1/data.csv                       //The file of the dataset
     TimeScale=1e-9
 
 &IMU
-    ImuMode=2                                                          //1= use the archquitecture specific class, 2=load full data from ImuFile
-    ImuFile=/home/juan/Datasets/V2_02_medium/mav0/imu0/data.csv         //File containing the SE3 transformation from IMU to Camera
+    ImuMode=0                                                          //1= use the archquitecture specific class, 2=load full data from ImuFile
+    ImuFile=/home/juan/Datasets/V2_01_easy/mav0/imu0/data.csv         //File containing the SE3 transformation from IMU to Camera
     CamImuSE3File=se3_EuRoC.csv                                         //TimeScale of the IMU file
     TimeScale=1e-9
 

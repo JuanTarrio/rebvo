@@ -237,7 +237,7 @@ double ScaleEstimator::estKaGMEKBias(   const TooN::Vector<3> &s_acel,
 
 
     Matrix <7,7> Q=Zeros;
-    Q(0,0)=QKp;
+    Q(0,0)=QKp/(1+util::square(tan(X[0])));
     Q.slice<1,1,3,3>()=GProd.T()*Qrot*GProd+Qg;
     Q.slice<4,4,3,3>()=Qbias;
 

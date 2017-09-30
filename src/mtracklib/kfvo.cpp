@@ -67,7 +67,7 @@ double kfvo::OptimizePosGT(keyframe &mkf, edge_tracker &et, TooN::Matrix<3, 3> &
 
     mnum=0;
     for(KeyLine &kl:et){
-        //kl.kf_id=kl.m_id_f;
+        //kl.m_id_kf=kl.m_id_f;
         if(kl.m_id_f>=0){
             mnum++;
         }
@@ -252,6 +252,48 @@ double kfvo::optimizeScale(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3
 }
 
 
+double kfvo::optimizeScaleF2KF(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &BRelRot, const TooN::Vector<3> &BRelPos,double &W_Kp){
+
+
+
+    double Kr=1;
+
+    for(int iter=0;iter<1;iter++){
+
+
+        double rTr=0,rTr0=0;
+        for(int i=0;i<et.KNum();i++){
+            KeyLine & kl=et[i];
+
+            if(kl.m_id_kf<0){
+                continue;
+            }
+            KeyLine &kl_b=mkf.edges()[kl.m_id_kf];
+
+
+            Vector <3> Rx0=BRelRot*kfvo::unProject(makeVector(kl.p_m.x,kl.p_m.y,kl.rho),mkf.camera.zfm);
+            Vector <3> q1=kfvo::project(Rx0+BRelPos,mkf.camera.zfm);
+
+            if(q1[2]>0){
+                double v=kl.s_rho*kl.s_rho*Kr*Kr*(q1[2]/kl.rho)*(q1[2]/kl.rho)+kl_b.s_rho*kl_b.s_rho;
+
+                rTr0+=q1[2]*q1[2]/v;         //Weighted mean of corrected IDepth
+                rTr+=kl_b.rho*kl_b.rho/v;    //Weighted mean of predicted IDepth
+
+            }
+
+        }
+
+//        std::cout <<rTr<<" "<<rTr0<<"\n";
+        Kr=(rTr0>0 && rTr>0)?(rTr/rTr0):1;
+        W_Kp=rTr0;
+    }
+
+
+    return Kr;
+}
+
+
 double kfvo::optimizeScaleBack(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &BRelRot, const TooN::Vector<3> &BRelPos,double K){
 
     double Kr=mkf.K;
@@ -291,48 +333,75 @@ double kfvo::optimizeScaleBack(keyframe &mkf, edge_tracker &et, const TooN::Matr
 }
 
 
-double kfvo::OptimizeRelConstraint1Iter(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &BRelRot, const TooN::Vector<3> &BRelPos,Matrix <6,6> &JtJ,Vector<6>&JtF,bool etracket_2_keyframe){
+double kfvo::OptimizeRelConstraint1Iter(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &BRelRot, const TooN::Vector<3> &BRelPos,Matrix <6,6> &JtJ,Vector<6>&JtF,bool etracket_2_keyframe,double k_huber,Vector <Dynamic> &residual,std::pair<int,int> &match_num){
 
 
+    int kl_num=etracket_2_keyframe?et.KNum():mkf.edges().KNum();
 
-    Matrix <Dynamic, 6> J(mkf.edges().KNum(),6);
-    Vector <Dynamic>    f(mkf.edges().KNum());
+
+    Matrix <Dynamic, 6> J(kl_num,6);
+    Vector <Dynamic>    f(kl_num);
     double E=0;
-    for(int i=0;i<mkf.edges().KNum();i++){
 
+    match_num.first=0;match_num.second=0;
 
-        KeyLine  kl_b=mkf.edges()[i];
+    for(int i=0;i<kl_num;i++){
 
-        if(kl_b.m_id_f<0){
-            f[i]=0;
-            J[i]=Zeros;
-            continue;
+        KeyLine  *kl_b,*kl;
+
+        if(etracket_2_keyframe){
+            kl=&et[i];
+            if(kl->m_id_kf<0){
+                f[i]=0;
+                J[i]=Zeros;
+                continue;
+            }
+            kl_b=&mkf.edges()[kl->m_id_kf];
+        }else{
+            kl=&mkf.edges()[i];
+            if(kl->m_id_f<0){
+                f[i]=0;
+                J[i]=Zeros;
+                continue;
+            }
+            kl_b=&(et[kl->m_id_f]);
         }
-        KeyLine kl=et[kl_b.m_id_f];
-
-        if(!etracket_2_keyframe)
-            std::swap(kl_b,kl);
 
 
-        Vector <3> Rx0=BRelRot*mkf.camera.unprojectHomCordVec(makeVector(kl.p_m.x,kl.p_m.y,kl.rho));
+
+        Vector <3> Rx0=BRelRot*mkf.camera.unprojectHomCordVec(makeVector(kl->p_m.x,kl->p_m.y,kl->rho));
         Vector <3> q1=mkf.camera.projectHomCordVec(Rx0+BRelPos);
 
 
 
-        f[i]=(q1[0]-kl_b.p_m.x)*kl_b.u_m.x+(q1[1]-kl_b.p_m.y)*kl_b.u_m.y;     //f=(q1-qm)*u
+        f[i]=(q1[0]-kl_b->p_m.x)*kl_b->u_m.x+(q1[1]-kl_b->p_m.y)*kl_b->u_m.y;     //f=(q1-qm)*u
 
 
-        Matrix <1,3> dfdx=Data( q1[2]*mkf.camera.zfm*kl_b.u_m.x,
-                q1[2]*mkf.camera.zfm*kl_b.u_m.y,
-                -q1[2]*q1[0]*kl_b.u_m.x-q1[2]*q1[1]*kl_b.u_m.y);
+        Matrix <1,3> dfdx=Data( q1[2]*mkf.camera.zfm*kl_b->u_m.x,
+                q1[2]*mkf.camera.zfm*kl_b->u_m.y,
+                -q1[2]*q1[0]*kl_b->u_m.x-q1[2]*q1[1]*kl_b->u_m.y);
 
 
 
         E+=f[i]*f[i];
-        double stddev=util::norm(1.0,((dfdx*BRelPos)*kl.s_rho/q1[2])[0]);
-        f[i]/=stddev;
-        J.slice(i,0,1,3)=dfdx/stddev;
-        J.slice(i,3,1,3)=dfdx*util::crossMatrix(Rx0).T()/stddev;
+        double stddev=util::norm(1.0,((dfdx*BRelPos)*kl->s_rho/q1[2])[0]);
+
+
+        match_num.first++;
+        double weigth=1;
+        //Estimate reweighting
+        if(k_huber>0 && fabs(residual[i])>k_huber)
+            weigth=k_huber/fabs(residual[i]);
+        else
+            match_num.second++;
+
+
+        residual[i]=f[i];
+
+        f[i]*=weigth/stddev;
+        J.slice(i,0,1,3)=weigth*dfdx/stddev;
+        J.slice(i,3,1,3)=weigth*dfdx*util::crossMatrix(Rx0).T()/stddev;
+
 
 
     }
@@ -341,7 +410,113 @@ double kfvo::OptimizeRelConstraint1Iter(keyframe &mkf, edge_tracker &et, const T
     JtF=J.T()*f;
     return E;
 }
-double kfvo::OptimizeRelContraint(keyframe &mkf, edge_tracker &et,const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos, const double &K, int iter_max,TooN::Vector<6> &X,TooN::Matrix<6, 6> &R_X,bool etracket_2_keyframe){
+
+
+std::pair<int,int> kfvo::mutualExclusionSimple(keyframe &kf0,keyframe &kf1,double dist_t,bool discart_non_mut,bool kf0_2_kf1){
+
+
+    std::pair<int,int> count(0,0);
+    if(kf0_2_kf1){
+
+     //   Matrix <3,3> BRelRot=kf0.Pose.T()*kf1.Pose;
+     //   Vector <3> BRelPos=kf0.Pose.T()*(kf1.Pos-kf0.Pos)/kf1.K;
+
+
+        for(KeyLine &kl:kf0.edges()){
+
+            int m_f;
+            if((m_f=kl.m_id_f)<0)
+                continue;
+            count.first++;
+
+            int m_b=kf1.edges()[m_f].m_id_kf;
+
+            if(m_b<0){
+
+                if(discart_non_mut)
+                    kl.m_id_f=-1;
+                continue;
+            }
+
+
+
+            KeyLine &kl_m=kf0.edges()[m_b];
+
+            if(util::norm(kl.p_m.x-kl_m.p_m.x,kl.p_m.y-kl_m.p_m.y)>dist_t){
+                kl.m_id_f=-1;
+                continue;
+            }
+
+        /*    KeyLine &kl_b=kf1.edges()[m_f];
+
+            Vector<4> qr=rotateQs(makeVector(kl_b.p_m.x,kl_b.p_m.y,kl_b.rho,kl_b.s_rho),BRelRot,kf0.camera.zfm);
+
+            float dq=(kl.p_m.x-qr[0])*kl.u_m.x+(kl.p_m.y-qr[1])*kl.u_m.y;
+            float dv=(kf0.camera.zfm*BRelPos[0]-kl.p_m.x*BRelPos[2])*kl.u_m.x+(kf0.camera.zfm*BRelPos[1]-kl.p_m.y*BRelPos[2])*kl.u_m.y;
+
+            if(dq<(dv*(qr[2]-qr[3])-1) || dq>(dv*(qr[2]+qr[3])+1)){
+                kl.m_id_f=-1;
+                continue;
+            }*/
+
+            count.second++;
+
+
+        }
+    }else{
+
+     //   Matrix <3,3> BRelRot=kf1.Pose.T()*kf0.Pose;
+      //  Vector <3> BRelPos=kf1.Pose.T()*(kf0.Pos-kf1.Pos)/kf0.K;
+
+        for(KeyLine &kl:kf1.edges()){
+
+            int m_f;
+            if((m_f=kl.m_id_kf)<0)
+                continue;
+            count.first++;
+
+            int m_b=kf0.edges()[m_f].m_id_f;
+
+            if(m_b<0){
+                if(discart_non_mut)
+                    kl.m_id_kf=-1;
+                continue;
+            }
+
+
+
+            KeyLine &kl_m=kf1.edges()[m_b];
+
+            if(fabs((kl.p_m.x-kl_m.p_m.x)*kl.u_m.x+(kl.p_m.y-kl_m.p_m.y)*kl.u_m.y)>dist_t){
+                kl.m_id_kf=-1;
+                continue;
+            }
+/*
+            KeyLine &kl_b=kf0.edges()[m_f];
+
+            Vector<4> qr=rotateQs(makeVector(kl_b.p_m.x,kl_b.p_m.y,kl_b.rho,kl_b.s_rho*2),BRelRot,kf0.camera.zfm);
+
+            float dq=(kl.p_m.x-qr[0])*kl.u_m.x+(kl.p_m.y-qr[1])*kl.u_m.y;
+            float dv=(kf0.camera.zfm*BRelPos[0]-kl.p_m.x*BRelPos[2])*kl.u_m.x+(kf0.camera.zfm*BRelPos[1]-kl.p_m.y*BRelPos[2])*kl.u_m.y;
+
+            if(dq<(dv*(qr[2]-qr[3])-1) || dq>(dv*(qr[2]+qr[3])+1)){
+                kl.m_id_f=-1;
+                continue;
+            }*/
+            count.second++;
+
+        }
+
+
+    }
+
+    return count;
+}
+
+
+
+
+double kfvo::OptimizeRelContraint(keyframe &mkf, edge_tracker &et,const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos, const double &K, int iter_max,TooN::Vector<6> &X,TooN::Matrix<6, 6> &W_X,TooN::Matrix<6, 6> &R_X,std::pair<double,double>&optimK,bool etracket_2_keyframe,double k_huber,std::pair<int,int> &match_num){
 
 
 
@@ -361,7 +536,13 @@ double kfvo::OptimizeRelContraint(keyframe &mkf, edge_tracker &et,const TooN::Ma
     }
 
 
-    double E=OptimizeRelConstraint1Iter(mkf,et,BRelRot,BRelPos,JtJ,JtF,etracket_2_keyframe);
+    int kl_num=etracket_2_keyframe?et.KNum():mkf.edges().KNum();
+    Vector <Dynamic>residual(kl_num);
+    residual=Zeros;
+
+
+    double E=OptimizeRelConstraint1Iter(mkf,et,BRelRot,BRelPos,JtJ,JtF,etracket_2_keyframe,k_huber,residual,match_num);
+    E=OptimizeRelConstraint1Iter(mkf,et,BRelRot,BRelPos,JtJ,JtF,etracket_2_keyframe,k_huber,residual,match_num);
     double E0=E;
 
     double v=2,tau=1e-3;
@@ -370,16 +551,16 @@ double kfvo::OptimizeRelContraint(keyframe &mkf, edge_tracker &et,const TooN::Ma
 
     for(int iter=0;iter<iter_max;iter++){
 
-
         ApI=JtJ+Identity*u;
         Vector <6> dX=Cholesky<6>(ApI).backsub(-JtF);
+
 
         Vector <3> BRelPosNew=BRelPos+dX.slice<0,3>();
         Matrix <3,3>BRelRotNew=SO3<>(SO3<>(dX.slice<3,3>()).get_matrix()*BRelRot).get_matrix();
 
 
 
-        double Enew=OptimizeRelConstraint1Iter(mkf,et,BRelRotNew,BRelPosNew,JtJnew,JtFnew,etracket_2_keyframe);
+        double Enew=OptimizeRelConstraint1Iter(mkf,et,BRelRotNew,BRelPosNew,JtJnew,JtFnew,etracket_2_keyframe,k_huber,residual,match_num);
 
         gain=(E-Enew)/(0.5*dX*(u*dX-JtF));
 
@@ -402,28 +583,31 @@ double kfvo::OptimizeRelContraint(keyframe &mkf, edge_tracker &et,const TooN::Ma
     X.slice<0,3>()=BRelPos;
     X.slice<3,3>()=SO3<>(BRelRot).ln();
 
+
     Cholesky <6>svdJtJ(JtJ);
     R_X=svdJtJ.get_inverse();
+    W_X=JtJ;
+
+    if(etracket_2_keyframe)
+        optimK.first=optimizeScaleF2KF(mkf,et,BRelRot,BRelPos,optimK.second);
 
     return E/E0;
     //Actualizar consatraits
 }
 
 
-int kfvo::translateDepth(keyframe &mkf, edge_tracker &et, TooN::Matrix<3, 3> &Pose, TooN::Vector<3> &Pos,double &K){
+int kfvo::translateDepth_KF2F(keyframe &mkf, edge_tracker &et, TooN::Matrix<3, 3> &Pose, TooN::Vector<3> &Pos,double &K){
 
 
-    Matrix <3,3> BRelRot=mkf.Pose.T()*Pose;
-    Vector <3> BRelPos=mkf.Pose.T()*(Pos-mkf.Pos);
-
-
+    Matrix <3,3> BRelRot=Pose.T()*mkf.Pose;
+    Vector <3> BRelPos=Pose.T()*(mkf.Pos-Pos);
 
 
     int count=0;
 
-    for(KeyLine &kl:et){
-        if(kl.m_id_f>=0){
-            KeyLine &klf=mkf.edges()[kl.m_id_f];
+    for(KeyLine &klf:et){
+        if(klf.m_id_kf>=0){
+            KeyLine &kl=mkf.edges()[klf.m_id_kf];
 
             Vector <3> p0=mkf.camera.unprojectHomCordVec(makeVector(kl.p_m.x,kl.p_m.y,kl.rho));
 
@@ -441,7 +625,24 @@ int kfvo::translateDepth(keyframe &mkf, edge_tracker &et, TooN::Matrix<3, 3> &Po
     //Actualizar consatraits
 }
 
-int kfvo::translateDepthBack(keyframe &mkf, edge_tracker &et, TooN::Matrix<3, 3> &Pose, TooN::Vector<3> &Pos,double &K){
+
+void kfvo::translateDepth_New2Old(std::vector<keyframe> &kf_list,int iters){
+
+
+    for(int iter=0;iter<iters;iter++){
+        for (int i = 0; i < (int) kf_list.size()-1; i++) {
+
+            keyframe &kf0=kf_list[i];
+            keyframe &kf1=kf_list[i+1];
+
+            translateDepth_F2KF(kf0,kf1.edges(),kf1.Pose,kf1.Pos,kf1.K,false);
+        }
+    }
+
+}
+
+
+int kfvo::translateDepth_F2KF(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos,const double &K,bool optim_scale){
 
 
 
@@ -450,7 +651,8 @@ int kfvo::translateDepthBack(keyframe &mkf, edge_tracker &et, TooN::Matrix<3, 3>
     Vector <3> BRelPos=mkf.Pose.T()*(Pos-mkf.Pos);
 
 
-    mkf.K=optimizeScaleBack(mkf,et,BRelRot,BRelPos,K);
+    if(optim_scale)
+        mkf.K=optimizeScaleBack(mkf,et,BRelRot,BRelPos,K);
 
     int count=0;
 
@@ -537,8 +739,6 @@ int kfvo::buildForwardMatch(keyframe &mkf, edge_tracker &et, edge_tracker &et0){
 
     for(int i=0;i<et.KNum();i++){
 
-
-
         if(et[i].m_id>=0){
             fowMatch[et[i].m_id]=i; //match from old_frame to new frame
         }
@@ -566,11 +766,199 @@ int kfvo::buildForwardMatch(keyframe &mkf, edge_tracker &et, edge_tracker &et0){
 void kfvo::resetForwardMatch(keyframe &mkf){
     for(int i=0;i<mkf.edges().KNum();i++){
         mkf.edges()[i].m_id_f=i;
+
+        mkf.edges()[i].rho0=mkf.edges()[i].rho;
+        mkf.edges()[i].s_rho0=mkf.edges()[i].s_rho;
+    }
+}
+
+void kfvo::resetKFMatch(edge_tracker &et){
+    for(int i=0;i<et.KNum();i++){
+        et[i].m_id_kf=i;
     }
 }
 
 
-int kfvo::forwardCorrectAugmentate(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos,double dist_thesh,bool augmentate){
+double kfvo::stereoCorrect(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos,double dist_tolerance)
+{
+
+    Matrix <3,3> R=mkf.Pose.T()*Pose;
+    Vector <3> t=Pose.T()*(mkf.Pos-Pos);
+    Matrix <3,3> E=R*util::crossMatrix(t);
+
+    for(int i=0;i<et.KNum();i++)
+        stereoCorrect(mkf,et[i],E,dist_tolerance);
+    return 0;
+}
+
+
+
+double kfvo::stereoCorrect(keyframe &mkf,KeyLine &kl,const TooN::Matrix<3,3> &E,double dist_tolerance){
+
+    if(kl.m_id_kf<0)
+        return -1;
+
+
+    TooN::Vector<3> e=E*TooN::makeVector(kl.p_m.x,kl.p_m.y,mkf.camera.zfm);
+    TooN::Vector<3> r=e/util::norm(e[0],e[1]);
+    r[2]*=mkf.camera.zfm;
+
+
+    KeyLine *klm=&mkf.edges()[kl.m_id_kf];
+    double d0=fabs(klm->p_m.x*r[0]+klm->p_m.y*r[1]+r[2]);
+
+    if(d0<dist_tolerance)
+        return d0;
+
+    if(klm->n_id>=0){
+        KeyLine *klmn=&mkf.edges()[klm->n_id];
+
+        double d=fabs(klmn->p_m.x*r[0]+klmn->p_m.y*r[1]+r[2]);
+
+        if(fabs(d)<fabs(d0)){
+
+            while(1){
+
+                kl.m_id_kf=klm->n_id;
+                d0=d;
+
+                if(d0<dist_tolerance)
+                    return d0;
+
+                klm=&mkf.edges()[kl.m_id_kf];
+
+                if(klm->n_id>=0){
+
+                    klmn=&mkf.edges()[klm->n_id];
+                    d=fabs(klmn->p_m.x*r[0]+klmn->p_m.y*r[1]+r[2]);
+
+                    if(d>=d0)
+                        return d0;
+
+                }else{
+                    return d0;
+                }
+
+            }
+
+        }
+    }
+
+    if(klm->p_id>=0){
+        KeyLine *klmn=&mkf.edges()[klm->p_id];
+        double d=fabs(klmn->p_m.x*r[0]+klmn->p_m.y*r[1]+r[2]);
+        if(d<d0){
+
+            while(1){
+                kl.m_id_kf=klm->p_id;
+                d0=d;
+
+
+                if(d0<dist_tolerance)
+                    return d0;
+
+                klm=&mkf.edges()[kl.m_id_kf];
+
+                if(klm->p_id>=0){
+
+                    klmn=&mkf.edges()[klm->p_id];
+                    d=fabs(klmn->p_m.x*r[0]+klmn->p_m.y*r[1]+r[2]);
+                    if(d>=d0)
+                        return d0;
+
+                }else{
+                    return d0;
+                }
+
+            }
+
+        }
+    }
+    return d0;
+
+}
+
+
+
+
+
+int kfvo::correctAugmentate(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos,const double & dist_thesh,const double &dist_tolerance,bool augmentate){
+
+
+    Matrix <3,3> R=mkf.Pose.T()*Pose;
+    Vector <3> t=Pose.T()*(mkf.Pos-Pos);
+    Matrix <3,3> E=R*util::crossMatrix(t);
+
+    double dist[et.KNum()];
+
+    for(int i=0;i<et.KNum();i++){
+        dist[i]=stereoCorrect(mkf,et[i],E,dist_tolerance);
+    }
+
+    if(augmentate)
+        for(int i=0;i<et.KNum();i++)
+            correctAugmentate(mkf,et,i,E,dist_thesh,dist_tolerance);
+
+    int count=0;
+
+    for(int i=0;i<et.KNum();i++){
+        if(dist[i]>dist_thesh)
+            et[i].m_id_kf=-1;
+
+        if(et[i].m_id_kf>=0)
+            count++;
+    }
+    return count;
+}
+
+
+void kfvo::correctAugmentate(keyframe &mkf, edge_tracker &et,int kl_id,const TooN::Matrix<3,3> &E,const double &dist_thesh,const double &dist_tolerance){
+
+    KeyLine *kl=&et[kl_id];
+
+    if(kl->m_id_kf<0)
+        return;
+
+
+    while(1){
+        if(kl->p_id<0)
+            break;
+        KeyLine *kln=&(et)[kl->p_id];
+        if(kln->m_id_kf>=0)
+            break;
+        kln->m_id_kf=kl->m_id_kf;
+        if(stereoCorrect(mkf,*kln,E,dist_tolerance)>dist_thesh){
+            kln->m_id_kf=-1;
+            break;
+        }
+
+
+        kl=kln;
+    }
+
+    kl=&et[kl_id];
+
+    while(1){
+        if(kl->n_id<0)
+            break;
+        KeyLine *kln=&(et)[kl->n_id];
+        if(kln->m_id_kf>=0)
+            break;
+        kln->m_id_kf=kl->m_id_kf;
+        if(stereoCorrect(mkf,*kln,E,dist_tolerance)>dist_thesh){
+            kln->m_id_kf=-1;
+            break;
+        }
+
+
+        kl=kln;
+    }
+
+
+}
+
+
+int kfvo::forwardCorrectAugmentate(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos,double dist_thesh,const double &dist_tolerance,bool augmentate){
 
 
     Matrix <3,3> R=Pose.T()*mkf.Pose;
@@ -581,11 +969,11 @@ int kfvo::forwardCorrectAugmentate(keyframe &mkf, edge_tracker &et, const TooN::
     double dist[mkf.edges().KNum()];
 
     for(int i=0;i<mkf.edges().KNum();i++)
-        dist[i]=forwardStereoCorrect(et,mkf.edges()[i],mkf.edges()[i].m_id_f,E,dist_thesh,mkf.camera.zfm);
+        dist[i]=forwardStereoCorrect(et,mkf.edges()[i],mkf.edges()[i].m_id_f,E,dist_tolerance,mkf.camera.zfm);
 
     if(augmentate)
         for(int i=0;i<mkf.edges().KNum();i++)
-            forwardCorrectAugmentate(et,mkf,i,E,dist_thesh,mkf.camera.zfm);
+            forwardCorrectAugmentate(et,mkf,i,E,dist_thesh,dist_tolerance,mkf.camera.zfm);
 
     int count=0;
     for(int i=0;i<mkf.edges().KNum();i++){
@@ -599,41 +987,41 @@ int kfvo::forwardCorrectAugmentate(keyframe &mkf, edge_tracker &et, const TooN::
 }
 
 
-void kfvo::forwardCorrectAugmentate(edge_tracker &et2match,keyframe &mkf,const int &kl_id,const TooN::Matrix<3,3> &E,const double &dist_thesh,const double &zf){
+void kfvo::forwardCorrectAugmentate(edge_tracker &et2match,keyframe &mkf,const int &kl_id,const TooN::Matrix<3,3> &E,const double &dist_thesh,const double &dist_tolerance,const double &zf){
 
-    KeyLine *kl=&mkf.edges()[kl_id];
+    KeyLine *kl=&mkf.edges()[kl_id];    //keyline to use as reference
 
-    if(kl->m_id_f<0)
+    if(kl->m_id_f<0)                    //If no match.. nothing to do
         return;
 
 
     while(1){
         if(kl->p_id<0)
             break;
-        KeyLine *kln=&mkf.edges()[kl->p_id];
-        if(kln->m_id_f>=0)
+        KeyLine *kln=&mkf.edges()[kl->p_id];    //kln  is  is a neighbour
+        if(kln->m_id_f>=0)                      //if it has a match there is nothing to do
             break;
-        kln->m_id_f=kl->m_id_f;
-        if(forwardStereoCorrect(et2match,*kln,kln->m_id_f,E,dist_thesh,zf)>dist_thesh){
+        kln->m_id_f=kl->m_id_f;                 //if not... use the current match
+        if(forwardStereoCorrect(et2match,*kln,kln->m_id_f,E,dist_tolerance,zf)>dist_thesh){ //stereo correct
             kln->m_id_f=-1;
             break;
         }
 
-        kl=kln;
+        kl=kln;                                 //move on the edge forward
     }
 
-    kl=&mkf.edges()[kl_id];
+    kl=&mkf.edges()[kl_id];                     //back to he first kl
 
     while(1){
-        if(kl->n_id<0)
+        if(kl->n_id<0)                          //do the same on the other direction
             break;
 
         KeyLine *kln=&mkf.edges()[kl->n_id];
 
         if(kln->m_id_f>=0)
             break;
-        kln->m_id_f=mkf.edges()[kl_id].m_id_f;
-        if(forwardStereoCorrect(et2match,*kln,kln->m_id_f,E,dist_thesh,zf)>dist_thesh){
+        kln->m_id_f=kl->m_id_f;
+        if(forwardStereoCorrect(et2match,*kln,kln->m_id_f,E,dist_tolerance,zf)>dist_thesh){
             kln->m_id_f=-1;
             break;
         }
@@ -645,7 +1033,7 @@ void kfvo::forwardCorrectAugmentate(edge_tracker &et2match,keyframe &mkf,const i
 }
 
 
-double kfvo::forwardStereoCorrect(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos,double dist_thesh)
+double kfvo::forwardStereoCorrect(keyframe &mkf, edge_tracker &et, const TooN::Matrix<3, 3> &Pose, const TooN::Vector<3> &Pos,double dist_tolerance)
 {
 
     Matrix <3,3> R=Pose.T()*mkf.Pose;
@@ -653,13 +1041,13 @@ double kfvo::forwardStereoCorrect(keyframe &mkf, edge_tracker &et, const TooN::M
     Matrix <3,3> E=R*util::crossMatrix(t);
 
     for(int i=0;i<mkf.edges().KNum();i++)
-        forwardStereoCorrect(et,mkf.edges()[i],mkf.edges()[i].m_id_f,E,dist_thesh,mkf.camera.zfm);
+        forwardStereoCorrect(et,mkf.edges()[i],mkf.edges()[i].m_id_f,E,dist_tolerance,mkf.camera.zfm);
     return 0;
 }
 
 
 
-double kfvo::forwardStereoCorrect(edge_tracker &et,KeyLine &kl,int &f_id,const TooN::Matrix<3,3> &E,double dist_thesh,const double &zf){
+double kfvo::forwardStereoCorrect(edge_tracker &et,KeyLine &kl,int &f_id,const TooN::Matrix<3,3> &E,double dist_tolerance,const double &zf){
 
     if(f_id<0)
         return -1;
@@ -671,30 +1059,30 @@ double kfvo::forwardStereoCorrect(edge_tracker &et,KeyLine &kl,int &f_id,const T
     r[2]*=zf;
 
 
-    KeyLine *klm=&et[f_id];
-    double d0=fabs(klm->p_m.x*r[0]+klm->p_m.y*r[1]+r[2]);
+    KeyLine *klm=&et[f_id];                                 //Matched keyline
+    double d0=fabs(klm->p_m.x*r[0]+klm->p_m.y*r[1]+r[2]);   //stereo distance
 
-    if(d0<dist_thesh)
+    if(d0<dist_tolerance)
         return d0;
 
     if(klm->n_id>=0){
-        KeyLine *klmn=&et[f_id];
+        KeyLine *klmn=&et[klm->n_id];   //try n neigbour
 
-        double d=fabs(klmn->p_m.x*r[0]+klmn->p_m.y*r[1]+r[2]);
+        double d=fabs(klmn->p_m.x*r[0]+klmn->p_m.y*r[1]+r[2]);  //new distance
 
-        if(fabs(d)<fabs(d0)){
+        if(fabs(d)<fabs(d0)){           //if distance is less move in that direction
 
             while(1){
 
-                f_id=klm->n_id;
+                f_id=klm->n_id;         //change to this kl
                 d0=d;
 
-                if(d0<dist_thesh)
+                if(d0<dist_tolerance)
                     return d0;
 
                 klm=&et[f_id];
 
-                if(klm->n_id>=0){
+                if(klm->n_id>=0){       //repeat...
 
                     klmn=&et[klm->n_id];
                     d=fabs(klmn->p_m.x*r[0]+klmn->p_m.y*r[1]+r[2]);
@@ -711,8 +1099,8 @@ double kfvo::forwardStereoCorrect(edge_tracker &et,KeyLine &kl,int &f_id,const T
         }
     }
 
-    if(klm->p_id>=0){
-        KeyLine *klmn=&et[f_id];
+    if(klm->p_id>=0){                   //try the other direction
+        KeyLine *klmn=&et[klm->p_id];   //go on the neighbour
         double d=fabs(klmn->p_m.x*r[0]+klmn->p_m.y*r[1]+r[2]);
         if(d<d0){
 
@@ -721,7 +1109,7 @@ double kfvo::forwardStereoCorrect(edge_tracker &et,KeyLine &kl,int &f_id,const T
                 d0=d;
 
 
-                if(d0<dist_thesh)
+                if(d0<dist_tolerance)
                     return d0;
 
                 klm=&et[f_id];
@@ -748,7 +1136,220 @@ double kfvo::forwardStereoCorrect(edge_tracker &et,KeyLine &kl,int &f_id,const T
 
 
 
+void kfvo::mapKFUsingIDK(keyframe &mkf,
+                                     edge_tracker &et,
+                                    TooN::Matrix<3, 3> &Pose,
+                                    TooN::Vector<3> &Pos,
+                                     double ReshapeQAbsolute,
+                                     double ReshapeQRelative,
+                                     double LocationUncertainty)
+{
 
+
+    for(int i=0;i<0;i++)
+        mkf.edges().Regularize_1_iter(0.5);
+
+    Matrix <3,3> FRelRot=Pose.T()*mkf.Pose;
+    Vector <3> FRelPos=Pose.T()*(mkf.Pos-Pos);
+
+    for(int i=0;i<mkf.edges().KNum();i++)
+    {
+        KeyLine &kl=mkf.edges()[i];
+        if(kl.m_id_f>=0){
+            mapKLUsingIDK(kl,et[kl.m_id_f],FRelRot,FRelPos,mkf.camera.zfm,ReshapeQRelative,ReshapeQAbsolute,LocationUncertainty);
+
+        }
+    }
+/*
+    for(KeyLine &etkl:et){
+        if(etkl.m_id_kf>=0){
+            KeyLine &kl=mkf.edges()[etkl.kf_id];
+
+            Vector <3> q=project(FRelRot*unProject(makeVector(kl.p_m.x,kl.p_m.y,kl.rho),mkf.GetCam().zfm)+FRelPos,mkf.GetCam().zfm);
+
+            etkl.rho_kf=q[2];
+            etkl.rho=q[2];
+            etkl.s_rho=kl.s_rho;
+        }
+    }*/
+
+}
+
+
+/*
+double kfvo::mapKLUsingIDK(   KeyLine &kli,KeyLine &klb,
+                              const TooN::Matrix<3, 3> &BRelRot,
+                              const TooN::Vector<3> &BRelPos,
+                              double zf,
+                              double ReshapeQRelative,
+                              double ReshapeQAbsolute,
+                              double LocationUncertainty){
+
+
+
+
+    if(kli.s_rho<0 || kli.rho<0){       //Debug check
+        std::cout << "\nKF IDK panic! "<<kli.s_rho<<" "<<kli.rho<<"\n";
+    }
+
+    //klb=BRelRot*kli+BRelPos
+
+    double rho_p=kli.rho;
+    Vector <3> qR0=BRelRot*makeVector(kli.p_m.x/zf,kli.p_m.y/zf,1);
+
+    double v_rho=kli.s_rho*kli.s_rho;
+
+
+    double u_x=klb.u_m.x;     //Shortcut for edge perpendicular direction
+    double u_y=klb.u_m.y;
+
+    double qMx=klb.p_m.x;    //Meassurement homogeneus coordinates
+    double qMy=klb.p_m.y;
+
+
+
+    double p_p=v_rho+                               //Uncertainty propagation
+            util::square(rho_p*ReshapeQRelative)+     //Relative uncertainty model
+            util::square(ReshapeQAbsolute);             //Absolute uncertainty model
+
+
+    for(int iter=0;iter<10;iter++){
+
+
+        double qPx=zf*(qR0[0]+rho_p*BRelPos[0])/(qR0[2]+rho_p*BRelPos[2]);       //KeyLine new homogeneus coordinates
+        double qPy=zf*(qR0[1]+rho_p*BRelPos[1])/(qR0[2]+rho_p*BRelPos[2]);
+
+
+        double Y = u_x*(qMx-qPx)+u_y*(qMy-qPy); //Pixel displacement proyected on u
+        double H= (u_x*zf*(BRelPos[0]*qR0[2]-BRelPos[2]*qR0[0])+u_y*zf*(BRelPos[1]*qR0[2]-BRelPos[2]*qR0[1]))
+                /util::square(qR0[2]+BRelPos[2]*rho_p);
+
+        double e=Y-H*rho_p;                     //error correction
+
+        //*** Kalman update ecuations ****
+        double S=H*p_p*H+util::square(LocationUncertainty);
+
+        double K=p_p*H*(1/S);
+
+        rho_p=rho_p+(K*e);
+
+
+        kli.rho=rho_p;
+        kli.s_rho=sqrt((1-K*H)*p_p);
+
+    }
+
+
+    //*** if inverse depth goes beyond limits apply correction ****
+
+    if(kli.rho<RHO_MIN){
+        kli.s_rho+=RHO_MIN-kli.rho;
+        kli.rho=RHO_MIN;
+    }else if(kli.rho>RHO_MAX){
+        kli.rho=RHO_MAX;
+    }else if(isnan(kli.rho) || isnan(kli.s_rho) || isinf(kli.rho) || isinf(kli.s_rho)){     //This checks should never happen
+        std::cout<<"\nKL EKF Nan Rho!"<<rho_p<< " " << p_p<< " "<<BRelPos[2]<<"\n";
+        kli.rho=RhoInit;
+        kli.s_rho=RHO_MAX;
+    }else if(kli.s_rho<0){                                                                  //only for debug
+        std::cout<<"\nKL EKF Panic! Neg VRho!"<<BRelPos <<kli.rho << kli.s_rho <<"\n";
+        kli.rho=RhoInit;
+        kli.s_rho=RHO_MAX;
+
+    }
+
+    return kli.rho;
+
+
+}
+
+*/
+
+double kfvo::mapKLUsingIDK(   KeyLine &kli,KeyLine &klb,
+                              const TooN::Matrix<3, 3> &BRelRot,
+                              const TooN::Vector<3> &BRelPos,
+                              double zf,
+                              double ReshapeQRelative,
+                              double ReshapeQAbsolute,
+                              double LocationUncertainty){
+
+
+
+
+    if(kli.s_rho<0 || kli.rho<0){       //Debug check
+        std::cout << "\nKF IDK panic! "<<kli.s_rho<<" "<<kli.rho<<"\n";
+    }
+
+    //klb=BRelRot*kli+BRelPos
+
+    Vector <4> q=rotateQs(makeVector(kli.p_m.x,kli.p_m.y,kli.rho,kli.s_rho),BRelRot,zf);
+
+    double qx,qy,q0x,q0y;
+    qx=q[0];       //KeyLine new homogeneus coordinates
+    qy=q[1];
+
+
+    q0x=klb.p_m.x;    //Keyline old homogeneus coordinates
+    q0y=klb.p_m.y;
+
+
+    double v_rho=q[3]*q[3];   //IDepth variance
+
+    double u_x=klb.u_m.x;     //Shortcut for edge perpendicular direction
+    double u_y=klb.u_m.y;
+
+
+    double rho_p=q[2];                      //Predicted Inverse Depth
+
+
+    double p_p=v_rho+                               //Uncertainty propagation
+            util::square(q[2]*ReshapeQRelative)+     //Relative uncertainty model
+            util::square(ReshapeQAbsolute);             //Absolute uncertainty model
+
+
+
+    double Y = u_x*(q0x-qx)+u_y*(q0y-qy); //Pixel displacement proyected on u
+    double H= u_x*(BRelPos[0]*zf-BRelPos[2]*q0x)+u_y*(BRelPos[1]*zf-BRelPos[2]*q0y);
+
+    double e=Y-H*rho_p;                     //error correction
+
+    //*** Kalman update ecuations ****
+    double S=H*p_p*H+util::square(LocationUncertainty);
+
+    double K=p_p*H*(1/S);
+
+    q[2]=rho_p+(K*e);
+
+    v_rho=(1-K*H)*p_p;
+
+    q[3]=sqrt(v_rho);
+
+    Vector <4> q_up=rotateQs(q,BRelRot.T(),zf);
+
+    kli.rho=q_up[2];
+    kli.s_rho=q_up[3];
+
+    //*** if inverse depth goes beyond limits apply correction ****
+
+    if(kli.rho<RHO_MIN){
+        kli.s_rho+=RHO_MIN-kli.rho;
+        kli.rho=RHO_MIN;
+    }else if(kli.rho>RHO_MAX){
+        kli.rho=RHO_MAX;
+    }else if(isnan(kli.rho) || isnan(kli.s_rho) || isinf(kli.rho) || isinf(kli.s_rho)){     //This checks should never happen
+        std::cout<<"\nKL EKF Nan Rho!"<<rho_p<< " " << p_p<< " "<<BRelPos[2]<<"\n";
+        kli.rho=RhoInit;
+        kli.s_rho=RHO_MAX;
+    }else if(kli.s_rho<0){                                                                  //only for debug
+        std::cout<<"\nKL EKF Panic! Neg VRho!"<<BRelPos <<kli.rho << kli.s_rho <<"\n";
+        kli.rho=RhoInit;
+        kli.s_rho=RHO_MAX;
+
+    }
+
+    return kli.rho;
+
+}
 
 
 template <class T>
