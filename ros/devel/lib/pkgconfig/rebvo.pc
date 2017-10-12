@@ -1,0 +1,8 @@
+prefix=/home/juan/git/rebvo/ros/devel
+
+Name: rebvo
+Description: Description of rebvo
+Version: 0.1.0
+Cflags: -I/home/juan/git/rebvo/ros/devel/include -I/home/juan/git/rebvo/ros/src/rebvo_ros/include
+Libs: -L/home/juan/git/rebvo/ros/devel/lib -lrebvo_nodelet
+Requires: nodelet roscpp std_msgs geometry_msgs tf tf_conversions pcl pcl_ros

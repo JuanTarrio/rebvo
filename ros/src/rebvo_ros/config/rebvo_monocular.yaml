@@ -1,0 +1,72 @@
+rebvo:
+  global:
+    VideoNetEnabled: true
+    VideoNetHost: 127.0.0.1
+    VideoNetPort: 2708
+    BlockingUDP: false
+    SaveLog: true
+    LogFile: rebvo_log.m
+    TrayFile: rebvo_tray.txt
+
+  Camera:
+    ZfX: 273.50609
+    ZfY: 273.42665
+    PPx: 167.26690
+    PPy: 112.14813
+    KcR2: -0.11082
+    KcR4: 0.15637
+    KcR6: 0
+    KcP1: 0
+    KcP2: 0
+    ImageWidth: 320
+    ImageHeight: 240
+    FPS: 50
+    SoftFPS: 25
+    UseUndistort: true
+    Rotate180: false
+
+  imu:
+    ImuMode: 0
+
+
+  Detector:
+    Sigma0: 1.7818
+    KSigma: 1.2599
+    ReferencePoints: 15000
+    MaxPoints: 40000
+    TrackPoints: 12000
+    DetectorThresh: 0.01
+    DetectorAutoGain: 5e-7
+    DetectorMaxThresh: 0.5
+    DetectorMinThresh: 0.01
+    DetectorPlaneFitSize: 2
+    DetectorPosNegThresh: 0.4
+    DetectorDoGThresh: 0.095259868922420
+
+  TrackMaper:
+
+    SearchRange: 20
+    QCutOffNumBins: 100
+    QCutOffQuantile: 0.9
+    TrackerIterNum: 10
+    TrackerInitType: 2
+    TrackerInitIterNum: 2
+    TrackerMatchThresh: 1
+    MatchThreshModule: 1
+    MatchThreshAngle: 45
+    MatchNumThresh: 0
+    ReweigthDistance: 2
+    RegularizeThresh: 0.5
+    LocationUncertaintyMatch: 2
+    ReshapeQAbsolute: 1e-4
+    ReshapeQRelative: 1e-2
+    LocationUncertainty: 1
+    DoReScaling: false
+    GlobalMatchThreshold: 500
+
+  ProcesorConfig:
+    SetAffinity: true
+    CamaraT1: 1
+    CamaraT2: 2
+    CamaraT3: 3
+

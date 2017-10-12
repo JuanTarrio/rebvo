@@ -1,0 +1,23 @@
+<launch>
+
+        <node name="uvc_camera_node" pkg="uvc_camera"  type="uvc_camera_node"  output="screen" >
+            <param name="device" value="/dev/video0"/>
+            <param name="fps" value="50"/>
+            <param name="width" value="320"/>
+            <param name="height" value="240"/>
+        </node>
+
+
+
+	<node name="rebvo_node" pkg="rebvo" type="rebvo" output="screen" >
+            <rosparam command="load" file="$(find rebvo)/config/rebvo_monocular.yaml"/>
+            <param name="rebvo/imu_topic" value="/imu0"/>
+            <param name="rebvo/image_topic" value="/image_raw"/>
+            <param name="rebvo/frame_id" value="rebvo_frame"/>
+        </node>
+
+
+
+        <!-- Visualisation RVIZ -->
+        <node pkg="rviz" type="rviz" name="rviz" args="-d $(find rebvo)/resource/rebvo_uvc.rviz" output="screen"/>
+</launch> 

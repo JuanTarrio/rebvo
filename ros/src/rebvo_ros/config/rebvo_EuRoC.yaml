@@ -1,0 +1,93 @@
+rebvo:
+  global:
+    VideoNetEnabled: true
+    VideoNetHost: 127.0.0.1
+    VideoNetPort: 2708
+    BlockingUDP: false
+    SaveLog: true
+    LogFile: rebvo_log.m
+    TrayFile: rebvo_tray.txt
+
+  Camera:
+    ZfX: 458.654
+    ZfY: 457.296
+    PPx: 367.215
+    PPy: 248.375
+    KcR2: -0.28340811
+    KcR4: 0.07395907
+    KcR6: 0
+    KcP1: 0.00019359
+    KcP2: 1.76187114e-05
+    ImageWidth: 752
+    ImageHeight: 480
+    FPS: 20
+    UseUndistort: true
+    Rotate180: false
+
+  imu:
+    transCam2Imu: [-0.0216401454975, -0.064676986768, 0.00981073058949]
+    rotCam2Imu: [0.0148655429818, -0.999880929698, 0.00414029679422,
+                 0.999557249008, 0.0149672133247, 0.025715529948,
+                 -0.0257744366974, 0.00375618835797, 0.999660727178]
+    ImuMode: 1
+    SampleTime: 0.005
+    TimeDesinc: 0
+    InitBias: true
+    InitBiasFrameNum: 10
+    BiasHintX: 0.0188
+    BiasHintY: 0.0037
+    BiasHintZ: 0.0776
+    g_module: 9.8
+    GiroMeasStdDev: 1.6968e-04
+    GiroBiasStdDev: 1.9393e-05
+    AcelMeasStdDev: 2.0000e-3
+    g_module_uncer: 0.2e3
+    g_uncert: 2e-3
+    VBiasStdDev: 1e-7
+    CircBufferSize: 1000
+    ScaleStdDevMult: 1e-2
+    ScaleStdDevMax: 1e-4
+    ScaleStdDevInit: 1.2e-3
+
+
+  Detector:
+    Sigma0: 3.56359
+    KSigma: 1.2599
+    ReferencePoints: 15000
+    MaxPoints: 40000
+    TrackPoints: 12000
+    DetectorThresh: 0.01
+    DetectorAutoGain: 5e-7
+    DetectorMaxThresh: 0.5
+    DetectorMinThresh: 0.005
+    DetectorPlaneFitSize: 2
+    DetectorPosNegThresh: 0.4
+    DetectorDoGThresh: 0.095259868922420
+
+  TrackMaper:
+
+    SearchRange: 40
+    QCutOffNumBins: 100
+    QCutOffQuantile: 0.9
+    TrackerIterNum: 5
+    TrackerInitType: 0
+    TrackerInitIterNum: 2
+    TrackerMatchThresh: 0.5
+    MatchThreshModule: 1
+    MatchThreshAngle: 45
+    MatchNumThresh: 0
+    ReweigthDistance: 2
+    RegularizeThresh: 0.5
+    LocationUncertaintyMatch: 2
+    ReshapeQAbsolute: 1e-4
+    ReshapeQRelative: 1.6968e-04
+    LocationUncertainty: 1
+    DoReScaling: false
+    GlobalMatchThreshold: 500
+
+  ProcesorConfig:
+    SetAffinity: true
+    CamaraT1: 1
+    CamaraT2: 2
+    CamaraT3: 3
+

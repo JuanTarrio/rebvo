@@ -1,0 +1,9 @@
+<library path="lib/librebvo_nodelet">
+
+    <class name="rebvo/rebvo_nodelet"
+           type="rebvo::RebvoNodelet"
+           base_class_type="nodelet::Nodelet">
+        <description>rebvo Nodelet.</description>
+    </class>
+
+</library>
