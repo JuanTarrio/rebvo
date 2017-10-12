@@ -302,7 +302,7 @@ void depth_filler::Integrate1Step(){
 
     double w=1;//1.8;
 
-    bool fix_fixed=false;
+    bool fix_fixed=true;
 
     for(int y=0;y<size.h;y++){
         for(int x=0;x<size.w;x++){

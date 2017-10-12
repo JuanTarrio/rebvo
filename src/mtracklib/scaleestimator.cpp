@@ -299,6 +299,12 @@ double ScaleEstimator::estKaGMEKBias(   const TooN::Vector<3> &s_acel,
 
     Xvw=Xc;
 
+    if(TooN::isnan(Xvw)){
+
+        std::cout << k<<" "<<X<<" "<<params.x_p<<"\n"<<F<<"\n"<<Pp<<"\n"<<params.Rs<<params.Rv<<"\n";
+
+    }
+
     return k;
 }
 

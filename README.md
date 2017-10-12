@@ -1,17 +1,21 @@
 
-# REBIVO
+# REBiVO
 ## Realtime Edge Based Inertial Visual Odometry for a Monocular Camera
 
 Tarrio, J. J., & Pedre, S. (2015). Realtime Edge-Based Visual Odometry
 for a Monocular Camera. In Proceedings of the IEEE International Conference
 on Computer Vision (pp. 702-710).
 
-REBVO tracks a camera in Realtime using edges. The system is split in 3 components.
+Tarrio, J. J., & Pedre, S. (2017). Realtime edge based visual inertial odometry for MAV teleoperation in indoor environments. Journal of Intelligent and Robotic Systems.
+
+REBiVO tracks a camera in Realtime using edges and inertial data, is a slim system targeted for MAV operation. The system is split in 4 components.
 A library containing the core (rebvolib/librebvolib.a)
 An on-board app (app/rebvorun) to launch the library to do all the processing and send data over UDP
 An an OpenGL visualizer (app/visualizer) to show the newwork tranmitted data.
+A ROS wrapper (under development)
 
 Introductory video: https://youtu.be/7pn29iGklgI
+
 
 ### System requirements
 
@@ -72,10 +76,7 @@ For a custom IMU, timestamped data can be pushed using REBVO::pushIMU() function
 
 IMU fussion is done using a two stage bayesian filter. Sensor noise covariances should be set for optimal performance.
 
-Scale estimation response dynamics should be tuned for a trade-off between precision and robustness using the ScaleStdDevMult parameter.
-
 An initial guess for Giro Bias should be provided for highly biased sensors, an initial automatic guess could be used if the system is started still.
-
 
 ### Camera Drivers
 
@@ -108,12 +109,17 @@ Currently rebvo canot load compressed video directly (a feature that is gonna be
 a simple utility is provided in the Video2SimCam folder that uses OpenCV VideoCapture to uncompress
 the video in the SimCam format (can take a lot of disk space!).
 
-###Customizing the Output
+### Customizing the Output
 
 A callback function can be configured using the library function  REBVO::setOutputCallback(). This a callback is called on the third thread with a reference
 to a struct containing all the algorithm's output.
 
 The funtion REBVO::getNav() can also bue used to extract navigation parameters
+
+### Ros Support
+
+The folder ros/src/rebvo_ros contains an ROS-indigo wrapper that is under development. 2 launchers and configuration files are provided, one for monocular camera
+and the second for trying on the EuRoMav Dataset using ros bag files. The nodelet is algo a good example of how to use the library.
 
 ### Configuring the system
 
@@ -160,7 +166,11 @@ The things you have to configure in order for the system to work.
 		   noise on images with no edges. Similar to DetectorThresh,
 		   camera dependant parameters.
 
+-- Imu Mode: 1 for custom IMU, 2 for dataset IMU (EuRoC MAV format)
 
+-- Imu-Camera RotoTraslation file
+
+-- IMU Noise paramenters
 
 #### Basic configs in visualizer GlobalConfig
 
@@ -240,9 +250,8 @@ If the savelog option is enabled the system outputs 2 files, a .m log file and a
 trajectory file (timestamp tx ty tz qx qy qz qw) that can be used to benchmark
 the algorithm.
 
-
-
 ### FAQ
+
 
 -- Why rebvo doesn't use OpenCV?
 
@@ -253,10 +262,6 @@ the whole library just for image acquisition, so I write small a wrapper
 to the V4L2 library trying to make the system easier to install and 
 less dependant on third party libraries.
 
--- What about that simulation feature?
-
-If you use the rebvo 's' command it will save video for further repetition.
-You can visualize that video toggling CameraType to 1 (SimCamera)
 
 ### Contact
 

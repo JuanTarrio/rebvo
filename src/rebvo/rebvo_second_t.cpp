@@ -22,8 +22,6 @@
  *******************************************************************************/
 
 
-
-
 #include <iostream>
 #include <iomanip>
 #include <TooN/so3.h>
@@ -34,7 +32,6 @@
 #include "VideoLib/datasetcam.h"
 #include "mtracklib/scaleestimator.h"
 #include "mtracklib/kfvo.h"
-#include "mtracklib/local_pg.h"
 #include <TooN/SVD.h>
 
 
@@ -48,11 +45,6 @@ void  REBVO::SecondThread(REBVO *cf){
     using namespace TooN;
 
 
-    Matrix <3,3> RCam2Pair=Data(  0.999997256477450,   0.002312067192420,   0.000376008102351,
-                                 -0.002317135723285,   0.999898048506528,   0.014089835846697,
-                                 -0.000343393120589,  -0.014090668452670,   0.999900662638179);
-    Vector <3> TCam2Pair=makeVector(-0.110073808127139,0.000399121547014,-0.000853702503351);
-
 
     double dt_frame;
 
@@ -60,7 +52,6 @@ void  REBVO::SecondThread(REBVO *cf){
 
 
     int n_frame=0;
-
     double Kp=1,K=1;
 
     double error_vel=0;                 //Estimated error for the velocity
@@ -75,8 +66,6 @@ void  REBVO::SecondThread(REBVO *cf){
     Matrix <3,3> P_V=Identity*1e50,P_W=Identity*1e-10;
 
     IMUState istate;
-
-    LocalPGOptimizer *local_pg=new LocalPGOptimizer(Zeros,Identity*1e6);
 
 
     istate.W_Bg=util::Matrix3x3Inv(istate.RGBias*100);
@@ -164,8 +153,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
 
 
-        if(cf->kf_list.size()==0){
-
+        if(cf->params.TrackKeyFrames && cf->kf_list.size()==0){
             old_buf.K=1;
             cf->kf_list.push_back(keyframe(*old_buf.ef,*old_buf.gt,old_buf.t,old_buf.K,old_buf.nav.Rot,old_buf.nav.RotLie,old_buf.nav.Vel,old_buf.nav.Pose,old_buf.nav.PoseLie,old_buf.nav.Pos));
             std::cout <<"\nadded keyframe\n";
@@ -173,11 +161,11 @@ void  REBVO::SecondThread(REBVO *cf){
             kfvo::resetKFMatch(*old_buf.ef);
         }
 
-        keyframe &current_kf=cf->kf_list.back();
 
-
-
-        int klm_num=0;
+        int klm_num=0,num_kf_fow_m=0,num_kf_back_m=0;
+        P_V=Identity*1e50;
+        P_W=Identity*1e50;
+        R=Identity;
 
         COND_TIME_DEBUG(tlist.push_new();)
         //Estimate uncertainity cut-off for some quantile (90 percent typicaly)
@@ -189,14 +177,6 @@ void  REBVO::SecondThread(REBVO *cf){
         new_buf.gt->build_field(*new_buf.ef,cf->params.SearchRange,new_buf.ef->getThresh());
 
 
-        P_V=Identity*1e50;
-        P_W=Identity*1e50;
-
-        R=Identity;
-
-        int num_kf_fow_m=0,num_kf_back_m=0;
-        TooN::Matrix<6,6,double> W_X;
-
         //***** Use the Tracker to obtain Velocity and Rotation  ****
 
         if(cf->params.ImuMode>0){      //Imu data avaiable?? Use it!
@@ -205,6 +185,7 @@ void  REBVO::SecondThread(REBVO *cf){
 
                 if(cf->params.InitBias>0){
                     giro_init+=new_buf.imu.giro*new_buf.imu.dt;
+
                     g_init-=new_buf.imu.cacel;
                     //giro_init+=istate.dWv;
                     if(++n_giro_init>cf->params.InitBiasFrameNum){
@@ -232,6 +213,10 @@ void  REBVO::SecondThread(REBVO *cf){
 
             COND_TIME_DEBUG(tlist.push_new();)
 
+            if(cf->params.TrackerInitType==0){
+                istate.Vg=Zeros;
+            }
+
             #ifdef USE_NE10
             new_buf.gt->Minimizer_V<float>(istate.Vg,istate.P_Vg,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,s_rho_q,cf->params.MatchNumThresh,cf->params.ReweigthDistance,old_buf.ef->getThresh());   //Estimate translation only
             #else
@@ -250,6 +235,7 @@ void  REBVO::SecondThread(REBVO *cf){
             Matrix <6,6> R_Xv,R_Xgv,W_Xv,W_Xgv;
             Vector <6> Xv,Xgv,Xgva;
             EstimationOk&=new_buf.ef->ExtRotVel(istate.Vg,W_Xv,R_Xv,Xv,cf->params.LocationUncertainty,cf->params.ReweigthDistance);
+
 
 
             COND_TIME_DEBUG(tlist.push_new();)
@@ -272,10 +258,12 @@ void  REBVO::SecondThread(REBVO *cf){
             istate.dVgv=Xgv.slice<0,3>();
             istate.dWgv=Xgv.slice<3,3>();
 
+
             //***** extract rotation matrix *****
             Rgva=R;                                     //Save previous matrix
             SO3 <>R0(istate.dWgv);                      //R0 is a forward rotation
             R.T()=R0.get_matrix()*R.T();                //R is a backward rotation
+
 
             istate.Vgv=R0*istate.Vg+istate.dVgv;
             V=istate.Vgv;
@@ -334,12 +322,16 @@ void  REBVO::SecondThread(REBVO *cf){
 
             //***** Push into pose graph *****//
 
-            //Push relative motion into pose graph
-
+            //Push relative motion into pose log
             Vector <6> relPose;
             relPose.slice<3,3>()=SO3<>(Rgva).ln();
             relPose.slice<0,3>()=-Rgva*istate.Vgva;
-            cf->poses.addFrameMeas(OdometryMeas(relPose,W_Xgv,istate.As,istate.Av,istate.g_est,istate.Rs,istate.Rv,istate.P.slice<1,1,3,3>(),K,1/(istate.P(0,0)),istate.QKp,0));
+            Matrix <6,6> J_rp_x=Zeros;
+            J_rp_x.slice<3,3,3,3>()=-Identity;
+            J_rp_x.slice<0,0,3,3>()=-R;
+            J_rp_x.slice<0,3,3,3>()=util::crossMatrix(relPose.slice<0,3>());
+            Matrix <6,6> J_x_rp=TooN::SVD<>(J_rp_x).get_pinv();
+            cf->poses.addFrameMeas(OdometryMeas(relPose,J_x_rp.T()*W_Xgv*J_x_rp,istate.As,istate.Av,istate.g_est,istate.Rs,istate.Rv,istate.P.slice<1,1,3,3>(),K,1/(istate.P(0,0)),istate.QKp,0));
 
 
 
@@ -348,8 +340,9 @@ void  REBVO::SecondThread(REBVO *cf){
 
             #ifdef USE_NE10
             TooN::Matrix<6,6,float> W_X;
-            new_buf.gt->Minimizer_RV<float>(V,W,P_V,P_W,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,cf->params.TrackerInitType,cf->params.ReweigthDistance,error_vel,error_score,s_rho_q,cf->params.MatchNumThresh,cf->params.TrackerInitIterNum);
-            #else
+            new_buf.gt->Minimizer_RV<float>(V,W,P_V,P_W,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,cf->params.TrackerInitType,cf->params.ReweigthDistance,error_vel,error_score,s_rho_q,cf->params.MatchNumThresh,cf->params.TrackerInitIterNum,W_X);
+            #else        
+            TooN::Matrix<6,6,double> W_X;
             new_buf.gt->Minimizer_RV<double>(V,W,P_V,P_W,*old_buf.ef,cf->params.TrackerMatchThresh,cf->params.TrackerIterNum,cf->params.TrackerInitType,cf->params.ReweigthDistance,error_vel,error_score,s_rho_q,cf->params.MatchNumThresh,cf->params.TrackerInitIterNum,W_X);
             #endif
 
@@ -377,19 +370,15 @@ void  REBVO::SecondThread(REBVO *cf){
 
             //***** Push into pose graph *****//
 
-            //Push relative motion into pose graph
-
+            //Push relative motion into pose log
             Vector <6> relPose;
             relPose.slice<3,3>()=SO3<>(R).ln();
             relPose.slice<0,3>()=-R*V;
-
             Matrix <6,6> J_rp_x=Zeros;
             J_rp_x.slice<3,3,3,3>()=-Identity;
             J_rp_x.slice<0,0,3,3>()=-R;
             J_rp_x.slice<0,3,3,3>()=util::crossMatrix(relPose.slice<0,3>());
-
             Matrix <6,6> J_x_rp=TooN::SVD<>(J_rp_x).get_pinv();
-
             cf->poses.addFrameMeas(OdometryMeas(relPose,J_x_rp.T()*W_X*J_x_rp,new_buf.imu.cacel,Zeros,Zeros,Zeros,Zeros,Zeros,1,0,P_Kp,0));
 
 
@@ -437,65 +426,22 @@ void  REBVO::SecondThread(REBVO *cf){
                 //***** Rebuild forward matchs *****
 
 
-                num_kf_fow_m=kfvo::buildForwardMatch(current_kf, *new_buf.ef,*old_buf.ef);
-                std::cout <<"Fow M0: "<<num_kf_fow_m;
+                if(cf->params.TrackKeyFrames){
+                    keyframe &current_kf=cf->kf_list.back();
 
+                    num_kf_fow_m=kfvo::buildForwardMatch(current_kf, *new_buf.ef,*old_buf.ef);
+                    std::cout <<"Fow M0: "<<num_kf_fow_m;
 
-                Matrix <3> localPose=Pose*R;
-                Vector <3> localPos=Pos-localPose*V*K;
+                    Matrix <3> localPose=Pose*R;
+                    Vector <3> localPos=Pos-localPose*V*K;
 
-                num_kf_fow_m=kfvo::forwardCorrectAugmentate(current_kf,*new_buf.ef,localPose,localPos,10,0,true);
+                    num_kf_fow_m=kfvo::forwardCorrectAugmentate(current_kf,*new_buf.ef,localPose,localPos,10,0,true);
 
+                    std::cout <<" Fow M: "<<num_kf_fow_m<<" Back M0: "<<num_kf_back_m;
 
-                std::cout <<" Fow M: "<<num_kf_fow_m<<" Back M0: "<<num_kf_back_m;
-
-                num_kf_back_m=kfvo::correctAugmentate(current_kf,*new_buf.ef,localPose,localPos,10,0,true);
-                std::cout <<" Back M: "<<num_kf_back_m<<"\n";
-
-                //***** Estimate jacobian using new data only *****
-
-
-                //***** Estimate using kframe
-
-
-              //  Matrix <6,6> R_X_kf2f;
-               // Matrix <6,6> W_X_kf2f;
-                //Vector <6> X_kf2f;
-                //kfvo::OptimizeRelContraint(current_kf,*new_buf.ef,localPose,localPos,K,10,X_kf2f,W_X_kf2f,R_X_kf2f,true);
-
-
-                //**** Fuse using local pose graph
-
-                //Vector<6> f2f_odometry;
-               // f2f_odometry.slice<0,3>()=-R*V;
-                //f2f_odometry.slice<3,3>()=SO3<>(R).ln();
-
-              //  local_pg->pushFrame2FrameOdo({f2f_odometry,W_X});
-
-                //local_pg->addKF2FrameOdo({X_kf2f,W_X_kf2f});
-               // local_pg->addFrame2KFOdo({X_kf2f,W_X_kf2f});
-
-               // local_pg->solvePoses();
-
-
-                //***** Extract optimized position
-
-
-                //Matrix <3> Pose0=Pose;
-                //Vector <3> Pos0=Pos;
-                //local_pg->getPose(local_pg->numPoses()-1,Pose,Pos);
-
-
-                //R=Pose0.T()*Pose;
-                //V=Pose.T()*(Pos0-Pos);
-
-                //Vector <3> t_kf2f=X_kf2f.slice<0,3>();
-                //Vector <3> w_kf2f=X_kf2f.slice<3,3>();
-
-                //Pose=current_kf.Pose*SO3<>(w_kf2f).get_matrix().T();
-                //Pos=current_kf.Pos-Pose*t_kf2f;
-
-               //kfvo::mapKFUsingIDK(current_kf,*new_buf.ef,Pose,Pos,cf->params.ReshapeQAbsolute,cf->params.ReshapeQRelative,cf->params.LocationUncertainty);
+                    num_kf_back_m=kfvo::correctAugmentate(current_kf,*new_buf.ef,localPose,localPos,10,0,true);
+                    std::cout <<" Back M: "<<num_kf_back_m<<"\n";
+                }
 
 
 
@@ -511,66 +457,22 @@ void  REBVO::SecondThread(REBVO *cf){
 
                 //****** Improve Depth using kalman filter ****
 
-                new_buf.ef->UpdateInverseDepthKalman(V,P_V*0,P_W*0,cf->params.ReshapeQAbsolute,cf->params.ReshapeQRelative,cf->params.LocationUncertainty); //1e-5
+                new_buf.ef->UpdateInverseDepthKalman(V,P_V,P_W,cf->params.ReshapeQAbsolute,cf->params.ReshapeQRelative,cf->params.LocationUncertainty); //1e-5
 
-                //****** Translate depth from KeyFrame ****
-
-                //kfvo::translateDepth_KF2F(current_kf, *new_buf.ef, Pose, Pos,K);
-                //kfvo::translateDepth_F2KF(current_kf, *new_buf.ef, Pose, Pos,K);
 
                 //****** If stereo information, use it ****
 
                 if(cf->params.StereoAvaiable){
 
+                    Matrix <3,3> RCam2Pair=Data(  0.999997256477450,   0.002312067192420,   0.000376008102351,
+                                                 -0.002317135723285,   0.999898048506528,   0.014089835846697,
+                                                 -0.000343393120589,  -0.014090668452670,   0.999900662638179);
+                    Vector <3> TCam2Pair=makeVector(-0.110073808127139,0.000399121547014,-0.000853702503351);
                     new_buf.stereo_match_num=new_buf.ef->directed_matching_stereo(TCam2Pair,RCam2Pair,new_buf.ef_pair,
                                                                                   cf->params.MatchThreshModule,cf->params.MatchThreshAngle,100,
                                                                                   cf->params.LocationUncertaintyMatch,cf->params.ReshapeQAbsolute,
                                                                                   cf->params.ReshapeQRelative,cf->params.LocationUncertainty);
 
-                    //std::cout << "\nStereo M:"<<new_buf.stereo_match_num;
-
-
-
-                    (*new_buf.imgc).Reset({0,0,0});
-
-                    for(KeyLine &kl: *new_buf.ef_pair){
-                        (*new_buf.imgc)[kl.p_inx].pix.r=0;
-                        (*new_buf.imgc)[kl.p_inx].pix.g=255;
-                        (*new_buf.imgc)[kl.p_inx].pix.b=0;
-                    }
-
-                    for(KeyLine &kl: *new_buf.ef){
-
-                        Vector<3> p=makeVector(kl.p_m.x,kl.p_m.y,cf->cam.zfm)/(cf->cam.zfm*(kl.rho+kl.s_rho));
-                        Vector<3> pr=RCam2Pair*p+TCam2Pair/K;
-
-                        Point3D<float> pim=new_buf.ef_pair->GetCam().projectImgCord(Point3D<float>(pr[0],pr[1],pr[2]));
-
-
-                        p=makeVector(kl.p_m.x,kl.p_m.y,cf->cam.zfm)/(cf->cam.zfm*(kl.rho-kl.s_rho));
-                        pr=RCam2Pair*p+TCam2Pair/K;
-
-                        Point3D<float> pim2=new_buf.ef_pair->GetCam().projectImgCord(Point3D<float>(pr[0],pr[1],pr[2]));
-
-                        if(util::norm(pim.x-pim2.x,pim.y-pim2.y)>20)
-                            continue;
-
-                        int inx=(*new_buf.imgc).GetIndexRC(pim.x,pim.y);
-
-                        if(inx<0)
-                            continue;
-                        (*new_buf.imgc)[inx].pix.r=0;
-                        (*new_buf.imgc)[inx].pix.g=255;
-                        (*new_buf.imgc)[inx].pix.b=255;
-
-                        inx=(*new_buf.imgc).GetIndexRC(pim2.x,pim2.y);
-
-                        if(inx<0)
-                            continue;
-                        (*new_buf.imgc)[inx].pix.r=255;
-                        (*new_buf.imgc)[inx].pix.g=255;
-                        (*new_buf.imgc)[inx].pix.b=0;
-                    }
 
                 }
 
@@ -685,55 +587,21 @@ void  REBVO::SecondThread(REBVO *cf){
         //******** Push KEYFRAME ***************************//
 
 
-        int kl_on_fov=kfvo::kls_on_fov(current_kf,Pose,Pos);
-        //kfvo::matchStereo(current_kf, *new_buf.ef, newPose, newPos,K,cf->params.MatchThreshModule,cf->params.MatchThreshAngle,cf->params.SearchRange,cf->params.LocationUncertaintyMatch);
 
-
-
-        if(num_kf_fow_m<std::min(cf->params.TrackPoints,new_buf.ef->KNum())*0.7){
+        if(cf->saveKeyframes && cf->params.TrackKeyFrames && num_kf_back_m<std::min(cf->params.TrackPoints,new_buf.ef->KNum())*cf->params.KFSavePercent){
             cf->kf_list.push_back(keyframe(*new_buf.ef,*new_buf.gt,new_buf.t,new_buf.K,new_buf.nav.Rot,new_buf.nav.RotLie,new_buf.nav.Vel,new_buf.nav.Pose,new_buf.nav.PoseLie,new_buf.nav.Pos));
-            std::cout <<"added keyframe "<<cf->kf_list.size()<<" matchs"<<num_kf_fow_m<< " kl_on_fov: "<<kl_on_fov<<"\n";
+            std::cout <<"added keyframe "<<cf->kf_list.size()<<" matchs"<<num_kf_fow_m<<"\n";
             kfvo::resetForwardMatch(cf->kf_list.back());
             kfvo::resetKFMatch(*new_buf.ef);
-
-            delete local_pg;
-            Vector<6> pose_vec;
-            pose_vec.slice<0,3>()=new_buf.nav.Pos;
-            pose_vec.slice<3,3>()=new_buf.nav.PoseLie;
-            local_pg=new LocalPGOptimizer(pose_vec,Identity*1e6);
-
-
-        }else{
-
-          //  kfvo::OptimizePos(current_kf, *new_buf.ef, newPose, newPos,K,10);
-            //Pos=newPos;
-            //Pose=newPose;
-          //  num_kf_fow_m=kfvo::forwardCorrectAugmentate(current_kf,*new_buf.ef,newPose,newPos,10,true);
-
-
-          //  std::cout <<"Translate depth"<<kfvo::translateDepthBack(current_kf, *new_buf.ef, newPose, newPos,K)<<" matchs"<<num_kf_fow_m<< " kl_on_fov: "<<kl_on_fov<<"\n";
-            //std::cout << "found "<<mnum<<" matchs\n";
-
         }
 
-
-
-/*
-        if(cf->kf_list.size()==0 || (cf->saveKeyframes && (new_buf.p_id%20)==0)){
-            cf->kf_list.push_back(keyframe(*new_buf.ef,*new_buf.gt,new_buf.t,new_buf.K,new_buf.nav.Rot,new_buf.nav.RotLie,new_buf.nav.Vel,new_buf.nav.Pose,new_buf.nav.PoseLie,new_buf.nav.Pos));
-
-            std::cout <<"\nadded keyframe\n";
-        }**/
-
-
         cf->poses.odoMeas().back().KF_ID=cf->kf_list.size()-1;
-       // cf->poses.odoMeas().back().WK=1/P_Kp;
-
-
-
         new_buf.dtp1=tproc.stop();
 
+
+
         //Pus the nav data in the REBVO class (thread safe)
+
 
         cf->pushNav(new_buf.nav);
 

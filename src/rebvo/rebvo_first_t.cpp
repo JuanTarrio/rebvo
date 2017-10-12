@@ -179,6 +179,7 @@ void REBVO::FirstThr(REBVO *cf) {
         }
 
 
+
         //********* Grab and sync stereo frame *****************//
 
         if(cf->params.StereoAvaiable){

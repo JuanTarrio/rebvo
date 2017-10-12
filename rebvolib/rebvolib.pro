@@ -65,8 +65,7 @@ SOURCES +=  ../src/rebvo/rebvo.cpp\
     ../src/CommLib/udp_port.cpp \
     ../src/CommLib/net_keypoint.cpp \
     ../src/CommLib/edgemap_com.cpp \
-    ../src/visualizer/surface_integrator.cpp \
-    ../src/mtracklib/local_pg.cpp
+    ../src/visualizer/surface_integrator.cpp
 
 HEADERS += ../include/rebvo/rebvo.h\
     ../include/visualizer/visualizer.h\
@@ -115,8 +114,6 @@ HEADERS += ../include/rebvo/rebvo.h\
     ../include/CommLib/udp_port.h \
     ../include/CommLib/edgemap_com.h \
     ../include/visualizer/surface_integrator.h \
-    ../include/UtilLib/toon_util.h \
-    ../include/mtracklib/isam_defs.h \
-    ../include/mtracklib/local_pg.h
+    ../include/UtilLib/toon_util.h
 
 

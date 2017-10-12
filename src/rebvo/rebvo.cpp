@@ -150,6 +150,13 @@ REBVO::REBVO(const char *configFile)
     InitOK&=config.GetConfigByName("REBVO","VideoSaveBuffersize",params.VideoSaveBuffersize,true);
     InitOK&=config.GetConfigByName("REBVO","EdgeMapDelay",params.EdgeMapDelay,true);
 
+    if(config.GetConfigByName("REBVO","TrackKeyFrames",params.TrackKeyFrames,true) && params.TrackKeyFrames){
+            InitOK&=config.GetConfigByName("REBVO","KFSavePercent",params.KFSavePercent,true);
+    }else{
+        params.TrackKeyFrames=false;
+    }
+
+
     InitOK&=config.GetConfigByName("IMU","ImuMode",params.ImuMode,true);
     if(params.ImuMode>0){
 
@@ -318,7 +325,7 @@ bool REBVO::Init(){
     start_record=false;
     system_reset=false;
     quit=false;
-    saveKeyframes=false;
+    saveKeyframes=true;
     frame_by_frame=false;
     frame_by_frame_advance=false;
     Thr0=std::thread (FirstThr,this);

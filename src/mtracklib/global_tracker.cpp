@@ -105,26 +105,7 @@ void global_tracker::build_field(edge_tracker &klist,int radius, float min_mod){
 }
 
 
-//********************************************************************
-// Test_f_k(): Quick test for 2 KLs to match
-//********************************************************************
 
-template <class T>
-inline bool Test_f_k(const  Point2DF &f_m   //KL1 gradient m
-                     ,const KeyLine &kl     //KL2
-                     ,const T &simil_t)     //Similutude threshold
-{
-
-
-    T p_n2=(kl.n_m*kl.n_m);                 //norm2 of m2
-    T p_esc=kl.m_m.x*f_m.x+kl.m_m.y*f_m.y;  //scalar product of m1,m2
-
-    if(fabs(p_esc-p_n2)>simil_t*p_n2){      //| m1.m2 - m2.m2|/m2.m2 > theshold?
-        return false;
-    }
-
-    return true;
-}
 
 
 //*******************************************************************************************
@@ -1062,6 +1043,7 @@ double global_tracker::Minimizer_V(TooN::Vector<3> &Vel, TooN::Matrix<3,3> &RVel
     T residuals[klist.KNum()];
     for(int i=0;i<klist.KNum();i++)
         residuals[i]=0;
+
 
     double F=TryVel(JtJ,JtF,Vel,klist,match_thresh,s_rho_min,MatchNumThresh,residuals,reweigth_distance,min_mod),Fnew;
 

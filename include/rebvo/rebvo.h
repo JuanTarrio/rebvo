@@ -72,8 +72,8 @@ struct REBVOParameters{
 
     std::string	VideoNetHost;           //Remote host to send image, keyline and nav data (where the visualizer is run)
     int	VideoNetPort;                   //Remote port
-    int VideoNetEnabled;                //Enable video tranmission?
-    int BlockingUDP;                    //Use blocking sokets? turn on if lossing packests on transmition, may slow down the system
+    bool VideoNetEnabled;                //Enable video tranmission?
+    bool BlockingUDP;                    //Use blocking sokets? turn on if lossing packests on transmition, may slow down the system
 
 
     int VideoSave;                      //Optionally save video after running
@@ -89,6 +89,9 @@ struct REBVOParameters{
     bool SaveLog;                       //Save log on-off
     std::string LogFile;                //Log file in .m format
     std::string TrayFile;               //Trayectory in TUM dataset format [t pos quat]
+
+    bool TrackKeyFrames;                //Save keyframes on a file for future processing
+    double KFSavePercent;               //Determines the amount of saved keyframes in terms of lost keylines
 
     bool StereoAvaiable;                //Flag to determine if stereo data is avaiable
 
@@ -114,7 +117,7 @@ struct REBVOParameters{
 
     double config_fps;                  //Frames per second
     double soft_fps;                    //Forced frames per second
-    int useUndistort;                   //Use undistortion
+    bool useUndistort;                   //Use undistortion
     bool rotatedCam;                    //Rotate camera 180deg
 
 
@@ -430,10 +433,8 @@ class REBVO
 public:
 
 
-    //Keyframe list
-
+    //Keyframe list and poses log (on development)
     std::vector <keyframe> kf_list;
-
     pose_graph poses;
 
 

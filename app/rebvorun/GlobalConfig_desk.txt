@@ -93,6 +93,10 @@
     LogFile=rebvo_log.m                                                                 //Log file in .m format
     TrayFile=rebvo_tray.txt                                                             //Trayectory in TUM dataset format [t pos quat]
 
+    TrackKeyFrames=1                                                                    //Save keyframes on a file?
+    KFSavePercent=0.8                                                                   //Percentaje of keyloss for saving KF
+
+
     StereoAvaiable=0
 
 &DataSetCamera

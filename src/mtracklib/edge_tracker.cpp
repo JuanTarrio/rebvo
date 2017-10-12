@@ -31,6 +31,8 @@
 #include <TooN/SVD.h>
 #include <TooN/Cholesky.h>
 
+const bool complex_regularization=false;
+
 using namespace TooN;
 namespace  rebvo{
 
@@ -55,9 +57,10 @@ void edge_tracker::rotate_keylines(TooN::Matrix <3,3> RotF){
 
             kl[i].s_rho=kl[i].s_rho/q[2];
 
-
-            kl[i].rho_nr/=q[2];
-            kl[i].s_rho_nr=kl[i].s_rho_nr/q[2];
+            if(complex_regularization){
+                kl[i].rho_nr/=q[2];
+                kl[i].s_rho_nr=kl[i].s_rho_nr/q[2];
+            }
 
         }
 
@@ -103,8 +106,10 @@ int edge_tracker::Regularize_1_iter(double thresh)
         if(util::square(kn.rho-kp.rho)>util::norm2(kn.s_rho,kp.s_rho)) //If the uncertainty doest'n fit, skip...
             continue;
 
-        if(fabs(kn.rho_nr-kp.rho_nr)>(kn.s_rho_nr+kp.s_rho_nr)) //If the uncertainty of the original data doest'n fit, skip...
-            continue;
+        if(complex_regularization){
+            if(fabs(kn.rho_nr-kp.rho_nr)>(kn.s_rho_nr+kp.s_rho_nr)) //If the uncertainty of the original data doest'n fit, skip...
+                continue;
+        }
 
 
         double alpha=(kn.m_m.x*kp.m_m.x+kn.m_m.y*kp.m_m.y)/(kn.n_m*kp.n_m); //
@@ -114,6 +119,8 @@ int edge_tracker::Regularize_1_iter(double thresh)
 
         alpha=(alpha-thresh)/(1-thresh);    //alpha is a weigthing factor, goes from 0 if cos(angle_bethen_gradients)<thresh
                                             //to 1 if the angles coincide
+
+        alpha/=fabs(kn.rho-kp.rho)/(kn.s_rho+kp.s_rho)+1;
 
         double wr=1/(k.s_rho*k.s_rho);          //the regularization is also sigma-weighted
         double wrn=alpha/(kn.s_rho*kn.s_rho);
@@ -704,8 +711,11 @@ void edge_tracker::UpdateInverseDepthKalman(Vector <3> vel,             //Estima
             //UpdateInverseDepthKalmanSimple(kl[i],vel,RVel,RW0,ReshapeQAbsolute,ReshapeQRelative,LocationUncertainty);
             UpdateInverseDepthKalmanARLU(kl[i],vel,kl[i].rho,kl[i].s_rho,kl[i].rho0,kl[i].s_rho0,ReshapeQAbsolute,LocationUncertainty);
 
-            double r0,sr0;
-            UpdateInverseDepthKalmanARLU(kl[i],vel,kl[i].rho_nr,kl[i].s_rho_nr,r0,sr0,ReshapeQAbsolute,LocationUncertainty);
+            if(complex_regularization){
+                double r0,sr0;
+                UpdateInverseDepthKalmanARLU(kl[i],vel,kl[i].rho_nr,kl[i].s_rho_nr,r0,sr0,ReshapeQAbsolute,LocationUncertainty);
+            }
+
         }
 
 
@@ -1209,6 +1219,7 @@ bool edge_tracker::ExtRotVel(const Vector <3> &vel,     //Prevously estimated tr
         if(kl[i].m_id>=0)
             nmatch1D++;
     }
+
 
 
     Matrix<> Phi=Zeros(nmatch1D,6);
