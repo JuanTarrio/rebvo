@@ -452,7 +452,14 @@ public:
 
 
     void StartSimSave(){start_record=true;}
+
+    /**
+     * @brief Take An snapshot
+     */
     void TakeSnapshot(){saveImg=true;}
+    /**
+     * @brief Reset
+     */
     void Reset(){system_reset=true;}
 
     bool Running(){return !quit;}
@@ -482,19 +489,32 @@ public:
 
 
 
-    //Get nav data (saved on the second thread)
+    /**
+     * @brief Get nav data saved on the second thread
+     *
+     *
+    */
     NavData getNav(){
         std::lock_guard<std::mutex> locker(nav_mutex);
         NavData navdat=nav;
         return navdat;
     }
 
-    //Get REBVO params
+    /**
+     * @brief Get REBVO params
+     * @return
+     */
     const REBVOParameters& getParams(){
         return params;
     }
 
-    //Set transformation from IMU to Camera
+
+    /**
+     * @brief set RotoTranslation from cam to imu in the form Pimu=R*Pcam+t
+     * @param RCam2IMU: R
+     * @param TCam2IMU: t
+     * @return
+     */
 
     bool setCamImuSE3(const TooN::Matrix<3,3> &RCam2IMU,const TooN::Vector<3> &TCam2IMU){
         if(!quit)
@@ -505,7 +525,12 @@ public:
         return false;
     }
 
-    //add timestamped IMU data to the pipeline (thread safe)
+
+    /**
+     * @brief add timestamped IMU data to the pipeline (thread safe)
+     * @param IMU meassurement
+     * @return
+     */
     bool pushIMU(const ImuData&data){
 
         if(imu)
@@ -513,7 +538,13 @@ public:
         return false;
     }
 
-    //request a ptr to an Image object to push image on the pipeline of the custom camera
+    /**
+     * @brief request a ptr to an Image object to push an image on the pipeline of the custom camera
+     * @param ptr to store the buffer where to copy the data
+     * @param time_stamp: image timestamp (must be sync with imu)
+     * @param timeout_secs: waiting timeout
+     * @return buffer taken correctly
+     */
     bool requestCustomCamBuffer(std::shared_ptr<Image <RGB24Pixel> > &ptr,double time_stamp,double timeout_secs=0){
 
         customCam::CustomCamPipeBuffer *ccpb=cam_pipe.RequestBufferTimeoutable(0,timeout_secs);
@@ -526,6 +557,10 @@ public:
 
 
     //release the pointer for image loading on the customcam buffer
+
+    /**
+     * @brief release the buffer after copy
+     */
     void releaseCustomCamBuffer(){
 
         cam_pipe.ReleaseBuffer(0);
@@ -551,20 +586,40 @@ public:
 
     //set a callback funtion to be called on the third thread with a reference to the pipebuffer containing all the algorithm output
     //call with nullptr to release callback
+    /**
+     * @brief set a callback method to be called on the third thread with a reference to a pipebuffer containing all the algorithm output,
+     * call with nullptr to release callback
+     * @param method: method to bind to. Must take a PipeBuffer reference as argument.
+     * @param obj: object
+     */
     template <typename T>
     void setOutputCallback(bool(T::*method)(PipeBuffer &), T * obj){
         std::lock_guard<std::mutex> locker(call_mutex);
         outputFunc=std::bind(method,obj,std::placeholders::_1);
     }
+    /**
+     * @brief set a callback method to be called on the third thread with a reference to a pipebuffer containing all the algorithm output,
+     * call with nullptr to release callback
+     * @param func: function to bind to. Must take a PipeBuffer reference as argument.
+     */
 
     void setOutputCallback(bool(*func)(PipeBuffer &) ){
         std::lock_guard<std::mutex> locker(call_mutex);
         outputFunc=std::bind(func,std::placeholders::_1);
     }
 
+    /**
+     * @brief Check is everything OK
+     * @return
+     */
 	bool isInitOk() const {
 		return InitOK;
     }
+
+    /**
+     * @brief Get cam2imu rotation matrix
+     * @return TooN::Matrix <3,3> R
+     */
 
     TooN::Matrix <3,3> getCam2ImuRot(){
         if(imu)
@@ -572,6 +627,10 @@ public:
         else
             return TooN::Identity;
     }
+    /**
+     * @brief Get cam2imu translation vector
+     * @return TooN::Vector <3> t
+     */
     TooN::Vector <3> getCam2ImuPos(){
         if(imu)
             return imu->TDataSetCam2IMU;
