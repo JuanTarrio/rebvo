@@ -11,7 +11,7 @@ Tarrio, J. J., & Pedre, S. (2017). Realtime edge based visual inertial odometry 
 REBiVO tracks a camera in Realtime using edges and inertial data, is a slim system targeted for MAV operation. The system is split in 4 components.
 A library containing the core (rebvolib/librebvolib.a)
 An on-board app (app/rebvorun) to launch the library to do all the processing and send data over UDP
-An an OpenGL visualizer (app/visualizer) to show the newwork tranmitted data.
+An an OpenGL visualizer (app/visualizer) to show the newwork transmitted data.
 A ROS wrapper (under development)
 
 Introductory video: https://youtu.be/7pn29iGklgI
@@ -72,20 +72,20 @@ IMU measurements are integrated trough the ImuGrabber class, that implements a c
 For IMU data in a csv dataset style the ImuGraber supports a file loadding function (Config IMUMode=2).
 For a custom IMU, timestamped data can be pushed using REBVO::pushIMU() function.
 
-#### Imu Fussion
+#### Imu Fusion
 
-IMU fussion is done using a two stage bayesian filter. Sensor noise covariances should be set for optimal performance.
+IMU fusion is done using a two stage Bayesian filter. Sensor noise covariances should be set for optimal performance.
 
 An initial guess for Giro Bias should be provided for highly biased sensors, an initial automatic guess could be used if the system is started still.
 
 ### Camera Drivers
 
-Three classes are provided for camera managment:
+Three classes are provided for camera management:
 
 -- v4lCam is a wrapper to the C functions provided in video_io for interacting with
    the v4l2 lib.
 
--- SimCamera is a simple class designed to load uncompresed video from a file. For compressed video
+-- SimCamera is a simple class designed to load uncompressed video from a file. For compressed video
    formats check the Video2SimCam section.
 
 -- DataSetCam is used to load the images from the TUM datasets used to benchmark the
@@ -100,7 +100,7 @@ video files used by simcam.
 #### Using the custom camera
 
 If the custom camera is selected, images has to be loaded to the rebvo object. Use the REBVO:requestCustomCamBuffer()
-funtion to request an Image buffer, save your image to that buffer and call REBVO::releaseCustomCamBuffer to release.
+function to request an Image buffer, save your image to that buffer and call REBVO::releaseCustomCamBuffer to release.
 This can be done in the aplication thread, images are passed transparently using a pipe circular buffer.
 
 #### Video2SimCam Utility
@@ -170,7 +170,7 @@ The things you have to configure in order for the system to work.
 
 -- Imu-Camera RotoTraslation file
 
--- IMU Noise paramenters
+-- IMU Noise parameters
 
 #### Basic configs in visualizer GlobalConfig
 
@@ -260,7 +260,7 @@ and preprocessing.
 Then at some point we figure that it was a waste having to install
 the whole library just for image acquisition, so I write small a wrapper 
 to the V4L2 library trying to make the system easier to install and 
-less dependant on third party libraries.
+less dependent on third party libraries.
 
 
 ### Contact
