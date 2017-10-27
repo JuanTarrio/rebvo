@@ -8,9 +8,9 @@
     Sigma0=1.7818                       //The 2 scales used for DoG calculation
     KSigma=1.2599                       //1.7818 2.30029 2.72174 3.56359
 
-    ReferencePoints=10000               //Reference to the number of points when autothreshold
+    ReferencePoints=6000               //Reference to the number of points when autothreshold
     MaxPoints=25000                     //Absolute maximun number of points
-    TrackPoints=10000                     //Points used for tracking
+    TrackPoints=6000                     //Points used for tracking
 
     DetectorThresh=0.01                 //Manual theshold
     DetectorAutoGain=1e-6               //Auto threshold gain, 0=manual
@@ -55,7 +55,7 @@
 &Camera
 
 
-    CameraDevice=/dev/video0								//V4L Camera device
+    CameraDevice=/dev/video1								//V4L Camera device
 
     ZfX=273.50609  								//Camera XY focal length
     ZfY= 273.42665 
