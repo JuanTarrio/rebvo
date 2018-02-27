@@ -7,6 +7,14 @@ using namespace TooN;
 kfvo::kfvo()
 {
 }
+bool isnan(double& in) { //patch for undefined isnan(double&)
+	double tmp = in;
+	return isnan(tmp);
+}
+bool isinf(double& in) { //patch for undefined isinf(double&)
+	double tmp = in;
+	return isinf(tmp);
+}
 void kfvo::countMatches(keyframe &kf_to, keyframe &kf_from,int &kl_on_fov,int &kl_match,float match_mod,float match_ang,float rho_tol,float max_r){
 
     kl_on_fov=0;
