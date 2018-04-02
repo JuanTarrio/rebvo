@@ -1,2 +1,0 @@
-rebvo_ros
--DCATKIN_DEVEL_PREFIX=/home/juan/git/rebvo/ros/devel -DCMAKE_INSTALL_PREFIX=/home/juan/git/rebvo/ros/install -G Unix Makefiles
