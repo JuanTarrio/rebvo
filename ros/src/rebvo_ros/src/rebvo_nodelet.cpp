@@ -303,18 +303,18 @@ void RebvoNodelet::construct() {
 
 
 	// Rebvo Detector parameters
-    private_nh_.param<double>("rebvo/detector/Sigma0", rebvoPars.Sigma0, 3.56359);
-    private_nh_.param<double>("rebvo/detector/KSigma", rebvoPars.KSigma, 1.2599);
-	private_nh_.param<int>("rebvo/detector/ReferencePoints", rebvoPars.ReferencePoints, 12000);
-	private_nh_.param<int>("rebvo/detector/MaxPoints", rebvoPars.MaxPoints, 16000);
-    private_nh_.param<int>("rebvo/detector/TrackPoints", rebvoPars.TrackPoints, rebvoPars.MaxPoints);
-	private_nh_.param<double>("rebvo/detector/DetectorThresh", rebvoPars.DetectorThresh, 0.01);
-	private_nh_.param<double>("rebvo/detector/DetectorAutoGain", rebvoPars.DetectorAutoGain, 5e-7);
-	private_nh_.param<double>("rebvo/detector/DetectorMaxThresh", rebvoPars.DetectorMaxThresh, 0.5);
-	private_nh_.param<double>("rebvo/detector/DetectorMinThresh", rebvoPars.DetectorMinThresh, 0.005);
-	private_nh_.param<int>("rebvo/detector/DetectorPlaneFitSize", rebvoPars.DetectorPlaneFitSize, 2);
-	private_nh_.param<double>("rebvo/detector/DetectorPosNegThresh", rebvoPars.DetectorPosNegThresh, 0.4);
-	private_nh_.param<double>("rebvo/detector/DetectorDoGThresh", rebvoPars.DetectorDoGThresh, 0.095259868922420);
+    private_nh_.param<double>("rebvo/Detector/Sigma0", rebvoPars.Sigma0, 3.56359);
+    private_nh_.param<double>("rebvo/Detector/KSigma", rebvoPars.KSigma, 1.2599);
+	private_nh_.param<int>("rebvo/Detector/ReferencePoints", rebvoPars.ReferencePoints, 12000);
+	private_nh_.param<int>("rebvo/Detector/MaxPoints", rebvoPars.MaxPoints, 16000);
+    private_nh_.param<int>("rebvo/Detector/TrackPoints", rebvoPars.TrackPoints, rebvoPars.MaxPoints);
+	private_nh_.param<double>("rebvo/Detector/DetectorThresh", rebvoPars.DetectorThresh, 0.01);
+	private_nh_.param<double>("rebvo/Detector/DetectorAutoGain", rebvoPars.DetectorAutoGain, 5e-7);
+	private_nh_.param<double>("rebvo/Detector/DetectorMaxThresh", rebvoPars.DetectorMaxThresh, 0.5);
+	private_nh_.param<double>("rebvo/Detector/DetectorMinThresh", rebvoPars.DetectorMinThresh, 0.005);
+	private_nh_.param<int>("rebvo/Detector/DetectorPlaneFitSize", rebvoPars.DetectorPlaneFitSize, 2);
+	private_nh_.param<double>("rebvo/Detector/DetectorPosNegThresh", rebvoPars.DetectorPosNegThresh, 0.4);
+	private_nh_.param<double>("rebvo/Detector/DetectorDoGThresh", rebvoPars.DetectorDoGThresh, 0.095259868922420);
 
 	// Rebvo TrackMaper parameters
 	private_nh_.param<double>("rebvo/TrackMaper/SearchRange", rebvoPars.SearchRange, 40);

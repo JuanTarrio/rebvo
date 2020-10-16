@@ -51,11 +51,10 @@ rebvo:
 
 
   Detector:
-    Sigma0: 3.56359
+    Sigma0: 1.7818
     KSigma: 1.2599
-    ReferencePoints: 15000
-    MaxPoints: 40000
-    TrackPoints: 12000
+    ReferencePoints: 12000
+    MaxPoints: 16000
     DetectorThresh: 0.01
     DetectorAutoGain: 5e-7
     DetectorMaxThresh: 0.5
@@ -70,7 +69,7 @@ rebvo:
     QCutOffNumBins: 100
     QCutOffQuantile: 0.9
     TrackerIterNum: 5
-    TrackerInitType: 0
+    TrackerInitType: 2
     TrackerInitIterNum: 2
     TrackerMatchThresh: 0.5
     MatchThreshModule: 1
